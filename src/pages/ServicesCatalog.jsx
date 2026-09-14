@@ -234,7 +234,7 @@ const ServicesCatalog = () => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isVisible, setIsVisible] = useState({});
-  const [wave, setWave] = useState(true);
+  const [wave, setWave] = useState(true);           // re-stagger cards on filter change
   const [activeSection, setActiveSection] = useState('hero');
   const [sent, setSent] = useState(false);
   const [mthStage, setMthStage] = useState(0);
@@ -254,6 +254,7 @@ const ServicesCatalog = () => {
   const mthRingRef = useRef(null);
   const mthLineRef = useRef(null);
   const mthPctRef = useRef(null);
+   const mthPanelRef = useRef(null);   // ← add
   const mthNodesRef = useRef(null);
   const mthIdx = useRef(0);
   const emberRef = useRef(null);
@@ -304,7 +305,7 @@ const ServicesCatalog = () => {
     return () => obs.disconnect();
   }, [boot]);
 
-  /* Re-stagger cards whenever filter/search changes */
+  /* Re-stagger cards whenever filter/search changes ("reshuffle wave") */
   useEffect(() => {
     if (!boot) return;
     setWave(false);
@@ -369,7 +370,7 @@ const ServicesCatalog = () => {
           ghostRef.current.style.transform = `translate3d(${(0.5 - p) * 300}px, ${p * -50}px, 0)`;
         }
 
-        /* Parallax inside card media */
+        /* Parallax inside card media (reads first, writes second) */
         if (streamRef.current) {
           const reads = [];
           streamRef.current.querySelectorAll('.svc-media').forEach((host) => {
@@ -399,13 +400,17 @@ const ServicesCatalog = () => {
           }
 
           const steps = mthSecRef.current.querySelectorAll('.mth-step');
-          if (!reduced) {
+                    if (!reduced) {
             /* node carousel — active stage rotates to 12 o'clock */
             if (mthNodesRef.current) {
               mthNodesRef.current.setAttribute(
                 'transform', `rotate(${(-p * 288).toFixed(2)} 160 160)`);
             }
-            /* NOTE: no transform on the sticky dial — that would break the pin */
+            /* gentle parallax — dial drifts as the section scrolls */
+            if (mthPanelRef.current) {
+              mthPanelRef.current.style.transform =
+                `translate3d(0, ${((0.5 - p) * 50).toFixed(1)}px, 0)`;
+            }
           }
           let best = 0, bd = Infinity;
           steps.forEach((s, i) => {
@@ -429,7 +434,7 @@ const ServicesCatalog = () => {
       requestAnimationFrame(() => { ticking = false; update(); });
     };
 
-    update();
+        update();
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onScroll, { passive: true });
     return () => {
@@ -494,7 +499,7 @@ const ServicesCatalog = () => {
     return () => cleanups.forEach((c) => c());
   }, [bootGone, activeFilter, searchQuery]);
 
-  /* Ember field behind CTA */
+  /* Ember field behind CTA — sprite-based canvas particles */
   useEffect(() => {
     const cvs = emberRef.current;
     if (!cvs) return;
@@ -504,6 +509,7 @@ const ServicesCatalog = () => {
     let raf = 0, running = false, w = 0, h = 0;
     let lastY = window.scrollY, vel = 0;
 
+    /* pre-rendered glow sprite — one gradient, thousands of cheap draws */
     const sprite = document.createElement('canvas');
     sprite.width = sprite.height = 64;
     const s = sprite.getContext('2d');
@@ -547,7 +553,7 @@ const ServicesCatalog = () => {
 
     const draw = () => {
       ctx.clearRect(0, 0, w, h);
-      vel *= 0.94;
+      vel *= 0.94; /* scroll speed boosts rise rate, then decays */
       const box = cvs.getBoundingClientRect();
       const mx = cursorTarget.current.x - box.left;
       const my = cursorTarget.current.y - box.top;
@@ -558,6 +564,7 @@ const ServicesCatalog = () => {
         p.x += p.vx + Math.sin(p.tw) * 0.16;
         p.tw += p.ts;
 
+        /* gentle repulsion around the cursor */
         const dx = p.x - mx, dy = p.y - my;
         const d2 = dx * dx + dy * dy;
         if (d2 < 12300) {
@@ -577,6 +584,7 @@ const ServicesCatalog = () => {
       raf = requestAnimationFrame(draw);
     };
 
+    /* run only while the CTA is near the viewport */
     const io = new IntersectionObserver(([e]) => {
       if (e.isIntersecting && !running) { running = true; raf = requestAnimationFrame(draw); }
       else if (!e.isIntersecting && running) { running = false; cancelAnimationFrame(raf); }
@@ -722,6 +730,7 @@ const ServicesCatalog = () => {
         <div className="hero-glow" aria-hidden="true" />
         <div className="grain" aria-hidden="true" />
 
+        {/* Radar widget */}
         <div className="svc-radar" aria-hidden="true">
           <span className="svc-radar-sweep" />
           <i className="svc-radar-ring" /><i className="svc-radar-ring r2" />
@@ -730,6 +739,7 @@ const ServicesCatalog = () => {
           <span className="svc-radar-blip b3" />
         </div>
 
+        {/* Vertical scroll cue */}
         <div className="svc-scrollcue" aria-hidden="true">
           <span className="svc-scrollcue-line" />
           <span className="svc-scrollcue-label">SCROLL</span>
@@ -739,7 +749,7 @@ const ServicesCatalog = () => {
           <div className="svc-hero-left">
             <div className="kicker"><i /><span>{kickText}</span></div>
 
-            <h1 className="h1 svc-h1">
+            <h1 className="svc-h1">
               <span className="row">
                 <span className="w" style={{ transitionDelay: '.3s' }}>PRECISION</span>
               </span>
@@ -760,6 +770,7 @@ const ServicesCatalog = () => {
           </div>
         </div>
 
+        {/* Metrics — animated counters */}
         <div className="svc-metrics">
           {metrics.map((m, i) => (
             <div className="svc-metric" key={m.l} style={{ '--i': i }}>
@@ -826,12 +837,14 @@ const ServicesCatalog = () => {
       <section data-section="catalog" ref={(el) => (sectionRefs.current[2] = el)}
         className={`svc-catalog ${isVisible.catalog ? 'is-in' : ''}`}>
 
+        {/* Scroll-linked ghost word */}
         <div className="svc-ghostwrap" aria-hidden="true">
           <span className="svc-ghost" ref={ghostRef}>PROTOCOLS</span>
         </div>
 
         <div className="svc-catalog-grid">
 
+          {/* LEFT — cards stream */}
           <div ref={streamRef}
             className={`svc-stream ${isVisible.catalog && wave ? 'is-in' : ''}`}>
             {filteredServices.map((s, i) => (
@@ -893,8 +906,10 @@ const ServicesCatalog = () => {
             )}
           </div>
 
+          {/* RIGHT — rail */}
           <aside className="svc-rail">
 
+            {/* Emblem card */}
             <div className="svc-side svc-side-emblem">
               <span className="svc-side-glow" aria-hidden="true" />
               <div className="svc-side-head">
@@ -922,6 +937,7 @@ const ServicesCatalog = () => {
               </div>
             </div>
 
+            {/* Live system telemetry */}
             <div className="svc-side svc-side-telemetry">
               <div className="svc-side-head-row">
                 <span className="svc-side-title-sm">LIVE SYSTEM TELEMETRY</span>
@@ -955,6 +971,7 @@ const ServicesCatalog = () => {
                 </div>
               </div>
 
+              {/* Live ECG strip */}
               <div className="svc-ecg" aria-hidden="true">
                 <svg viewBox="0 0 200 40" preserveAspectRatio="none">
                   <path className="svc-ecg-path" pathLength="350"
@@ -973,6 +990,7 @@ const ServicesCatalog = () => {
               </div>
             </div>
 
+            {/* Concierge */}
             <div className="svc-side svc-side-concierge">
               <h4 className="svc-concierge-title">NEED CUSTOM ARCHITECTURE?</h4>
               <p className="svc-concierge-desc">
@@ -1007,52 +1025,53 @@ const ServicesCatalog = () => {
         </div>
       </section>
 
-      {/* METHOD — sticky dial left, scrolling stages right */}
+      {/* METHOD — scroll-driven loop dial */}
       <section data-section="method"
-        ref={(el) => { sectionRefs.current[3] = el; mthSecRef.current = el; }}
-        className={`mth ${isVisible.method ? 'is-in' : ''}`}>
+  ref={(el) => { sectionRefs.current[3] = el; mthSecRef.current = el; }}
+  className={`mth ${isVisible.method ? 'is-in' : ''}`}>
         <div className="mth-grid">
 
-          {/* Sticky left panel with dial */}
+          {/* Sticky dial */}
           <div className="mth-panel">
-            <div className="mth-dialcol">
-              <div className="kicker"><i /><span>THE SMARTGYM METHOD</span></div>
+                      {/* Dial column — scrolls with the page, no pinning */}
+          <div className="mth-dialcol" ref={mthPanelRef}>
+            <div className="kicker"><i /><span>THE SMARTGYM METHOD</span></div>
 
-              <div className="mth-dial">
-                <svg viewBox="0 0 320 320" className="mth-svg" aria-hidden="true">
-                  <circle className="mth-dial-track" cx="160" cy="160" r="128" />
-                  <circle className="mth-dial-spin" cx="160" cy="160" r="146" />
-                  <circle className="mth-dial-prog" ref={mthRingRef}
-                    cx="160" cy="160" r="128" pathLength="1"
-                    strokeDasharray="1" strokeDashoffset="1" />
-                  <g ref={mthNodesRef}>
-                    {METHOD.map((m, i) => {
-                      const a = ((-90 + i * 72) * Math.PI) / 180;
-                      const cx = 160 + 128 * Math.cos(a);
-                      const cy = 160 + 128 * Math.sin(a);
-                      return (
-                        <g key={m.n} className={`mth-node ${i === mthStage ? 'on' : ''}`}>
-                          <circle className="mth-node-halo" cx={cx} cy={cy} r="14" />
-                          <circle className="mth-node-dot" cx={cx} cy={cy} r="5" />
-                        </g>
-                      );
-                    })}
-                  </g>
-                </svg>
-                <div className="mth-dial-center" key={mthStage}>
-                  <span className="mth-dial-num">{METHOD[mthStage].n}</span>
-                  <span className="mth-dial-name">{METHOD[mthStage].title}</span>
-                </div>
-              </div>
-
-              <div className="mth-readout">
-                <span>LOOP COMPLETION</span>
-                <b><i ref={mthPctRef}>000</i>%</b>
+            <div className="mth-dial">
+              <svg viewBox="0 0 320 320" className="mth-svg" aria-hidden="true">
+                <circle className="mth-dial-track" cx="160" cy="160" r="128" />
+                <circle className="mth-dial-spin" cx="160" cy="160" r="146" />
+                <circle className="mth-dial-prog" ref={mthRingRef}
+                  cx="160" cy="160" r="128" pathLength="1"
+                  strokeDasharray="1" strokeDashoffset="1" />
+                <g ref={mthNodesRef}>
+                  {METHOD.map((m, i) => {
+                    const a = ((-90 + i * 72) * Math.PI) / 180;
+                    const cx = 160 + 128 * Math.cos(a);
+                    const cy = 160 + 128 * Math.sin(a);
+                    return (
+                      <g key={m.n} className={`mth-node ${i === mthStage ? 'on' : ''}`}>
+                        <circle className="mth-node-halo" cx={cx} cy={cy} r="14" />
+                        <circle className="mth-node-dot" cx={cx} cy={cy} r="5" />
+                      </g>
+                    );
+                  })}
+                </g>
+              </svg>
+              <div className="mth-dial-center" key={mthStage}>
+                <span className="mth-dial-num">{METHOD[mthStage].n}</span>
+                <span className="mth-dial-name">{METHOD[mthStage].title}</span>
               </div>
             </div>
+
+            <div className="mth-readout">
+              <span>LOOP COMPLETION</span>
+              <b><i ref={mthPctRef}>000</i>%</b>
+            </div>
+          </div>
           </div>
 
-          {/* Scrolling stages on right */}
+          {/* Scrolling stages */}
           <div className="mth-steps">
             <span className="mth-line" aria-hidden="true"><i ref={mthLineRef} /></span>
 
