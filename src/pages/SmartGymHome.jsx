@@ -1,6 +1,7 @@
 // SmartGymHome.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import './SmartGymHome.css';
+import { Link } from 'react-router-dom';
 
 /* ============================================================
    MOTION HELPERS
@@ -585,16 +586,16 @@ const SmartGymHome = () => {
           </a>
 
           <nav className="hdr-nav">
-            <a href="#hero" className="on">Home</a>
-            <a href="#facilities">Facilities</a>
-            <a href="#services">Services</a>
-            <a href="#pricing">Membership</a>
-            <a href="#telemetry">Insights</a>
-            <a href="#contact">Contact</a>
-          </nav>
+  <Link to="/" className="on">Home</Link>
+  <Link to="/facilities">Facilities</Link>
+  <Link to="/services">Services</Link>
+  <Link to="/pricing">Membership</Link>
+  <Link to="/telemetry">Insights</Link>
+  <Link to="/contact">Contact</Link>
+</nav>
 
           <div className="hdr-actions">
-            <a href="#join" className="btn btn-red hdr-join">JOIN NOW</a>
+            <Link to="/join" className="btn btn-red hdr-join">JOIN NOW</Link>
             <button
               className={`burger ${menuOpen ? 'x' : ''}`}
               onClick={() => setMenuOpen(!menuOpen)}
@@ -606,16 +607,29 @@ const SmartGymHome = () => {
       </header>
 
       <div className={`mnav ${menuOpen ? 'open' : ''}`} aria-hidden={!menuOpen}>
-        <nav>
-          {[['Home', '#hero'], ['Facilities', '#facilities'], ['Services', '#services'], ['Membership', '#pricing'], ['Insights', '#telemetry'], ['Contact', '#contact']].map(([l, h], i) => (
-            <a key={l} href={h} style={{ '--d': `${0.06 + i * 0.05}s` }} onClick={() => setMenuOpen(false)}>
-              <span>0{i + 1}</span>{l}
-            </a>
-          ))}
-        </nav>
-        <a href="#join" className="btn btn-red mnav-join" onClick={() => setMenuOpen(false)}>JOIN NOW {I.arrow(11)}</a>
-        <span className="mnav-foot">OPEN 24/7 // DISTRICT 01</span>
-      </div>
+  <nav>
+    <Link to="/" style={{ '--d': '0.06s' }} onClick={() => setMenuOpen(false)}>
+      <span>01</span>Home
+    </Link>
+    <Link to="/facilities" style={{ '--d': '0.11s' }} onClick={() => setMenuOpen(false)}>
+      <span>02</span>Facilities
+    </Link>
+    <Link to="/services" style={{ '--d': '0.16s' }} onClick={() => setMenuOpen(false)}>
+      <span>03</span>Services
+    </Link>
+    <Link to="/pricing" style={{ '--d': '0.21s' }} onClick={() => setMenuOpen(false)}>
+      <span>04</span>Membership
+    </Link>
+    <Link to="/telemetry" style={{ '--d': '0.26s' }} onClick={() => setMenuOpen(false)}>
+      <span>05</span>Insights
+    </Link>
+    <Link to="/contact" style={{ '--d': '0.31s' }} onClick={() => setMenuOpen(false)}>
+      <span>06</span>Contact
+    </Link>
+  </nav>
+  <Link to="/join" className="btn btn-red mnav-join" onClick={() => setMenuOpen(false)}>JOIN NOW {I.arrow(11)}</Link>
+  <span className="mnav-foot">OPEN 24/7 // DISTRICT 01</span>
+</div>
 
       {/* ============ HERO ============ */}
       <section id="hero" data-section="hero" ref={(el) => (sectionRefs.current[0] = el)}
@@ -665,8 +679,8 @@ const SmartGymHome = () => {
             </p>
 
             <div className="cta">
-              <a href="#join" className="btn btn-red btn-lg">JOIN THE MOVEMENT {I.arrow()}</a>
-              <a href="#facilities" className="btn btn-ghost btn-lg"><span className="pl">{I.play}</span>BOOK A TOUR</a>
+              <Link to="/join" className="btn btn-red btn-lg">JOIN THE MOVEMENT {I.arrow()}</Link>
+              <Link to="/facilities" className="btn btn-ghost btn-lg"><span className="pl">{I.play}</span>BOOK A TOUR</Link>
             </div>
           </div>
 
@@ -1158,11 +1172,11 @@ const SmartGymHome = () => {
       </footer>
 
       <nav className="tabbar" aria-label="Quick navigation">
-        <a href="#hero" className="on">{I.home}<span>HOME</span></a>
-        <a href="#facilities">{I.grid}<span>FACILITIES</span></a>
-        <a href="#services">{I.bolt}<span>SERVICES</span></a>
-        <a href="#join" className="tab-join">{I.flame}<span>JOIN NOW</span></a>
-      </nav>
+  <Link to="/" className="on">{I.home}<span>HOME</span></Link>
+  <Link to="/facilities">{I.grid}<span>FACILITIES</span></Link>
+  <Link to="/services">{I.bolt}<span>SERVICES</span></Link>
+  <Link to="/join" className="tab-join">{I.flame}<span>JOIN NOW</span></Link>
+</nav>
     </div>
   );
 };
