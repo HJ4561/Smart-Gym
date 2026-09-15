@@ -686,13 +686,13 @@ const ServicesCatalog = () => {
             <Link to="/">Home</Link>
             <Link to="/facilities">Facilities</Link>
             <Link to="/services" className="on">Services</Link>
-            <Link to="/#pricing">Membership</Link>
-            <Link to="/#telemetry">Insights</Link>
-            <Link to="/#contact">Contact</Link>
+            <Link to="/join">Membership</Link>
+            <Link to="/insights">Insights</Link>
+            <Link to="/contact">Contact</Link>
           </nav>
 
           <div className="hdr-actions">
-            <a href="#join" className="btn btn-red hdr-join">JOIN NOW</a>
+            <Link to="/join" className="btn btn-red hdr-join">JOIN NOW</Link>
             <button
               className={`burger ${menuOpen ? 'x' : ''}`}
               onClick={() => setMenuOpen(!menuOpen)}
@@ -708,13 +708,13 @@ const ServicesCatalog = () => {
           <Link to="/" style={{ '--d': '0.06s' }} onClick={() => setMenuOpen(false)}><span>01</span>Home</Link>
           <Link to="/facilities" style={{ '--d': '0.11s' }} onClick={() => setMenuOpen(false)}><span>02</span>Facilities</Link>
           <Link to="/services" style={{ '--d': '0.16s' }} onClick={() => setMenuOpen(false)}><span>03</span>Services</Link>
-          <Link to="/#pricing" style={{ '--d': '0.21s' }} onClick={() => setMenuOpen(false)}><span>04</span>Membership</Link>
-          <Link to="/#telemetry" style={{ '--d': '0.26s' }} onClick={() => setMenuOpen(false)}><span>05</span>Insights</Link>
-          <Link to="/#contact" style={{ '--d': '0.31s' }} onClick={() => setMenuOpen(false)}><span>06</span>Contact</Link>
+          <Link to="/join" style={{ '--d': '0.21s' }} onClick={() => setMenuOpen(false)}><span>04</span>Membership</Link>
+          <Link to="/insights" style={{ '--d': '0.26s' }} onClick={() => setMenuOpen(false)}><span>05</span>Insights</Link>
+          <Link to="/contact" style={{ '--d': '0.31s' }} onClick={() => setMenuOpen(false)}><span>06</span>Contact</Link>
         </nav>
-        <a href="#join" className="btn btn-red mnav-join" onClick={() => setMenuOpen(false)}>
+        <Link to="/join" className="btn btn-red mnav-join" onClick={() => setMenuOpen(false)}>
           JOIN NOW {I.arrow(11)}
-        </a>
+        </Link>
         <span className="mnav-foot">OPEN 24/7 // DISTRICT 01</span>
       </div>
 

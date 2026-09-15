@@ -590,7 +590,7 @@ const SmartGymHome = () => {
   <Link to="/facilities">Facilities</Link>
   <Link to="/services">Services</Link>
   <Link to="/join">Membership</Link>
-  <Link to="/telemetry">Insights</Link>
+  <Link to="/insights">Insights</Link>
   <Link to="/contact">Contact</Link>
 </nav>
 
@@ -620,7 +620,7 @@ const SmartGymHome = () => {
     <Link to="/join" style={{ '--d': '0.21s' }} onClick={() => setMenuOpen(false)}>
       <span>04</span>Membership
     </Link>
-    <Link to="/telemetry" style={{ '--d': '0.26s' }} onClick={() => setMenuOpen(false)}>
+    <Link to="/insights" style={{ '--d': '0.26s' }} onClick={() => setMenuOpen(false)}>
       <span>05</span>Insights
     </Link>
     <Link to="/contact" style={{ '--d': '0.31s' }} onClick={() => setMenuOpen(false)}>

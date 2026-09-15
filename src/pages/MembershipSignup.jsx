@@ -613,8 +613,8 @@ const MembershipSignup = () => {
             <Link to="/facilities">Facilities</Link>
             <Link to="/services">Services</Link>
             <Link to="/join" className="on">Membership</Link>
-            <Link to="/#telemetry">Insights</Link>
-            <Link to="/#contact">Contact</Link>
+            <Link to="/insights">Insights</Link>
+            <Link to="/contact">Contact</Link>
           </nav>
           <div className="hdr-actions">
             <span className="hdr-avatar" aria-hidden="true"><img src={IMG.avatar} alt="" /></span>
@@ -634,8 +634,8 @@ const MembershipSignup = () => {
           <Link to="/facilities" style={{ '--d': '0.11s' }} onClick={() => setMenuOpen(false)}><span>02</span>Facilities</Link>
           <Link to="/services" style={{ '--d': '0.16s' }} onClick={() => setMenuOpen(false)}><span>03</span>Services</Link>
           <Link to="/join" style={{ '--d': '0.21s' }} onClick={() => setMenuOpen(false)}><span>04</span>Membership</Link>
-          <Link to="/#telemetry" style={{ '--d': '0.26s' }} onClick={() => setMenuOpen(false)}><span>05</span>Insights</Link>
-          <Link to="/#contact" style={{ '--d': '0.31s' }} onClick={() => setMenuOpen(false)}><span>06</span>Contact</Link>
+          <Link to="/insights" style={{ '--d': '0.26s' }} onClick={() => setMenuOpen(false)}><span>05</span>Insights</Link>
+          <Link to="/contact" style={{ '--d': '0.31s' }} onClick={() => setMenuOpen(false)}><span>06</span>Contact</Link>
         </nav>
         <span className="mnav-foot">OPEN 24/7 // DISTRICT 01</span>
       </div>
@@ -1121,7 +1121,7 @@ const MembershipSignup = () => {
                     <b>Team or Corporate Account?</b>
                     <i>Group billing &amp; exclusive telemetry slots</i>
                   </div>
-                  <a href="#contact" className="en-corp-link">INQUIRE {I.arrow(10)}</a>
+                  <Link to="/contact" className="en-corp-link">INQUIRE {I.arrow(10)}</Link>
                 </div>
 
               </div>

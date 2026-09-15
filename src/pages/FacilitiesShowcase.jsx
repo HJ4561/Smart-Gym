@@ -536,14 +536,14 @@ const FacilitiesShowcase = () => {
           <nav className="hdr-nav">
             <Link to="/">Home</Link>
             <Link to="/facilities" className="on">Facilities</Link>
-            <Link to="/#services">Services</Link>
+            <Link to="/services">Services</Link>
             <Link to="/join">Membership</Link>
-            <Link to="/#telemetry">Insights</Link>
-            <Link to="/#contact">Contact</Link>
+            <Link to="/insights">Insights</Link>
+            <Link to="/contact">Contact</Link>
           </nav>
 
           <div className="hdr-actions">
-            <a href="/join" className="btn btn-red hdr-join">JOIN NOW</a>
+            <Link to="/join" className="btn btn-red hdr-join">JOIN NOW</Link>
             <button
               className={`burger ${menuOpen ? 'x' : ''}`}
               onClick={() => setMenuOpen(!menuOpen)}

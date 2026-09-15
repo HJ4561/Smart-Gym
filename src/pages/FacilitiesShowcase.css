@@ -9,7 +9,8 @@
 ============================================================ */
 .fac-hero {
   position: relative;
-  min-height: 100svh;
+  min-height: 80vh;        /* fallback */
+  min-height: 80svh;       /* was 88svh */
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -64,7 +65,7 @@
   z-index: 3;
   width: min(1240px, calc(100% - 80px));
   margin: 0 auto;
-  padding: 150px 0 150px;
+  padding: 104px 0 96px;   /* was 118px 0 118px */
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: end;
@@ -72,7 +73,11 @@
   will-change: transform, opacity;
 }
 .fac-hero-left { min-width: 0; }
-.fac-h1 { font-size: clamp(64px, 11vw, 156px); }
+.h1 {
+  font-size: clamp(56px, 9vw, 132px);   /* was clamp(72px, 12vw, 176px) */
+  line-height: 0.85;
+  text-transform: uppercase; color: #fff; letter-spacing: 0.01em;
+}
 .fac-h1 .w.red { color: var(--red); text-shadow: 0 0 40px rgba(229,25,55,0.35); }
 
 .fac-hero-cta {
@@ -787,7 +792,7 @@
 @media (max-width: 1024px) {
   .fac-hero-body {
     grid-template-columns: 1fr;
-    padding: 130px 0 130px;
+    padding: 96px 0 92px;   /* was 110px 0 110px */
   }
   .fac-capacity { width: 100%; }
   .tel-card { padding: 24px; }
@@ -817,7 +822,7 @@
   .bkm-slots { grid-template-columns: repeat(4, 1fr); }
 }
 @media (max-width: 640px) {
-  .fac-hero-body { padding: 120px 0 120px; }
+  .fac-hero-body { padding: 92px 0 84px; }  /* was 104px 0 104px */
   .fac-h1 { font-size: clamp(52px, 15vw, 90px); }
   .fac-cards { grid-template-columns: 1fr; }
   .fac-filters-wrap { width: calc(100% - 32px); }

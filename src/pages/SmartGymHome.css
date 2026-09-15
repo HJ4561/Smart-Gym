@@ -232,7 +232,8 @@ h1, h2, h3 { font-family: 'Bebas Neue', sans-serif; font-weight: 400; }
 
 /* ============ HERO ============ */
 .hero {
-  position: relative; min-height: 100svh;
+  position: relative; min-height: 80vh;   /* fallback */
+  min-height: 80svh;                       /* back from 72svh — matches .fac-hero */
   display: flex; flex-direction: column; justify-content: flex-end;
   overflow: hidden; background: var(--abyss);
 }
@@ -265,7 +266,7 @@ h1, h2, h3 { font-family: 'Bebas Neue', sans-serif; font-weight: 400; }
 
 .hero-body {
   position: relative; z-index: 3; width: min(1240px, calc(100% - 80px)); margin: 0 auto;
-  padding: 150px 0 150px;
+   padding: 104px 0 96px;   /* back from 92px 0 84px — matches .fac-hero-body */
   display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 40px;
   will-change: transform, opacity;
 }
@@ -278,7 +279,8 @@ h1, h2, h3 { font-family: 'Bebas Neue', sans-serif; font-weight: 400; }
 
 .skew { transform: skewY(var(--skew, 0deg)); will-change: transform; }
 .h1 {
-  font-size: clamp(72px, 12vw, 176px); line-height: 0.85;
+  font-size: clamp(56px, 9vw, 132px);   /* was clamp(72px, 12vw, 176px) */
+  line-height: 0.85;
   text-transform: uppercase; color: #fff; letter-spacing: 0.01em;
 }
 .h1 .row {
@@ -417,7 +419,8 @@ h1, h2, h3 { font-family: 'Bebas Neue', sans-serif; font-weight: 400; }
 
 /* hero bottom stats */
 .hero-stats {
-  position: relative; z-index: 3; width: min(1240px, calc(100% - 80px)); margin: 0 auto 108px;
+  position: relative; z-index: 3; width: min(1240px, calc(100% - 80px)); 
+    margin: 0 auto 108px;    /* back to original */
   display: flex; align-items: center; gap: 28px;
   opacity: 0; transform: translateY(16px); transition: all .8s var(--ez) 1.25s;
 }
