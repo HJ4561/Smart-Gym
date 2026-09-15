@@ -1,6 +1,8 @@
 // pages/FacilitiesShowcase.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { useLang } from '../i18n/LangContext';
+import LangSwitch from '../i18n/LangSwitch';
 import './FacilitiesShowcase.css';
 
 /* ============================================================
@@ -39,6 +41,7 @@ const Counter = ({ to, active, decimals = 0, duration = 1500 }) => {
 const useDecode = (text, start) => {
   const [out, setOut] = useState(text);
   useEffect(() => {
+    setOut(text);
     if (!start) return;
     const glyphs = '█▓▒░<>/' + String.fromCharCode(92) + '|—';
     let frame = 0;
@@ -107,10 +110,8 @@ const I = {
 };
 
 /* ============================================================
-   CONTENT
+   STATIC IMAGE PATHS
 ============================================================ */
-const BELT_ITEMS = ['AQUATICS', 'COMBAT', 'COURTS', 'RECOVERY', 'STRENGTH', 'VOLLEYBALL', 'OPEN 24/7'];
-
 const IMG = {
   heroBg: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1920&q=80',
   pool: 'https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=1400&q=80',
@@ -121,81 +122,16 @@ const IMG = {
   strength: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1400&q=80',
 };
 
-const filters = [
-  { id: 'all', label: 'ALL ARENAS' },
-  { id: 'aquatics', label: 'AQUATICS' },
-  { id: 'combat', label: 'COMBAT' },
-  { id: 'courts', label: 'COURTS' },
-  { id: 'recovery', label: 'RECOVERY' },
-  { id: 'strength', label: 'STRENGTH' },
-];
-
-const facilities = [
-  {
-    id: 1, category: 'aquatics', sector: 'Sector 01', location: '50M Hydro Arena',
-    title: 'Olympic Swimming Pool', tag: 'HYDRO-PERFORMANCE',
-    status: 'OPEN', statusCls: 'ok', load: 75, nextSlot: '10:00',
-    desc: 'Precision 8-lane racing reservoir with automated lap telemetry cameras, ozone purification, and anti-turbulence lane dividers.',
-    meta: [['LANES', '6/8', 'ACT'], ['TEMP', '26°C'], ['PURITY', '99.8%']],
-    cta: 'BOOK A LANE', ctaIcon: I.pool, img: IMG.pool,
-  },
-  {
-    id: 2, category: 'courts', sector: 'Sector 02', location: 'FIBA Hardwood',
-    title: 'Pro Basketball Court', tag: 'HARDCOURT AGILITY',
-    status: 'DROP-IN ACTIVE', statusCls: 'busy', load: 70, nextSlot: '18:00',
-    desc: 'Northern hard maple cushioned flooring with 4K ceiling trajectory cameras, automated shot-tracking analytics, and NBA breakaway rims.',
-    meta: [['ACTIVE', '14/20'], ['SENSORS', '12 CAM'], ['NEXT SLOT', '18:00']],
-    cta: 'RESERVE HALF-COURT', ctaIcon: I.basket, img: IMG.basketball,
-  },
-  {
-    id: 3, category: 'combat', sector: 'Sector 03', location: 'The Pit',
-    title: 'Combat & Boxing Pit', tag: 'FIGHT CONDITIONING',
-    status: 'SPARRING OPEN', statusCls: 'busy', load: 88, nextSlot: '19:15',
-    desc: 'Full regulation competition Octagon cage, 16 force-sensor heavy bags, speed bag clusters, and tatami grappling mats for MMA conditioning.',
-    meta: [['BAGS', '11/16'], ['CAGE', 'ACTIVE'], ['COACH', 'ON-SITE']],
-    cta: 'JOIN CLASS', ctaIcon: I.mma, img: IMG.combat,
-  },
-  {
-    id: 4, category: 'recovery', sector: 'Sector 04', location: 'Bio-Recovery Pods',
-    title: 'Steam & Cryo Recovery', tag: 'BIOMETRIC THERMAL',
-    status: 'AVAILABLE', statusCls: 'ok', load: 45, nextSlot: 'NOW',
-    desc: 'Eucalyptus vapor thermal suites, −110°C full-body electric cryotherapy chambers, contrast baths, and pneumatic compression lounges.',
-    meta: [['STEAM', '45°C'], ['CRYO', '-110°C'], ['PLUNGE', '4°C']],
-    cta: 'BOOK SESSION', ctaIcon: I.cryo, img: IMG.recovery,
-  },
-  {
-    id: 5, category: 'courts', sector: 'Sector 05', location: 'Pro Court',
-    title: 'Volleyball Arena', tag: 'LEAGUE PLAY',
-    status: 'LEAGUE PLAY', statusCls: 'info', load: 65, nextSlot: '19:30',
-    desc: 'Impact-dissipating synthetic sports flooring with quick-tension carbon posts, anti-glare overhead diffuse LED arrays, and jump force sensors.',
-    meta: [['MATCH', 'SET 2'], ['FLOOR', 'SYNTH'], ['OPEN AT', '19:30']],
-    cta: 'VIEW SCHEDULE', ctaIcon: I.calendar, img: IMG.volleyball, ghost: true,
-  },
-  {
-    id: 6, category: 'strength', sector: 'Sector 06', location: 'Iron Sanctuary',
-    title: 'Heavy Iron Arena', tag: 'HEAVY LOAD',
-    status: 'OPEN ACCESS', statusCls: 'ok', load: 83, nextSlot: 'NOW',
-    desc: '18 competition power cages, Eleiko calibrated steel bumpers, acoustic deadlift drop zones, and automated velocity-based training sensors.',
-    meta: [['RACKS', '15/18'], ['MAX LOAD', 'CALIB'], ['VBT GRID', 'SYNC']],
-    cta: 'RESERVE PLATFORM', ctaIcon: I.dumbbell, img: IMG.strength,
-  },
-];
-
-const telemetryStats = [
-  { v: '0.04s', l: 'SYNC LATENCY' },
-  { v: 'HEPA 14', l: 'AIR QUALITY' },
-];
-
 const SLOT_HOURS = ['06:00', '08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00'];
-const DURATIONS = ['45 MIN', '60 MIN', '90 MIN'];
+const DURATION_KEYS = ['bkm.dur1', 'bkm.dur2', 'bkm.dur3'];
 
 /* ============================================================
    BOOKING DRAWER
 ============================================================ */
-const BookingDrawer = ({ facility, onClose }) => {
+const BookingDrawer = ({ facility, onClose, t }) => {
   const [slot, setSlot] = useState(null);
-  const [dur, setDur] = useState('60 MIN');
-  const [phase, setPhase] = useState('form'); // form | sending | done
+  const [durKey, setDurKey] = useState('bkm.dur2');
+  const [phase, setPhase] = useState('form');
   const [ref] = useState(() => 'SG-' + Math.random().toString(36).slice(2, 7).toUpperCase());
   const panelRef = useRef(null);
 
@@ -214,15 +150,16 @@ const BookingDrawer = ({ facility, onClose }) => {
 
   useEffect(() => {
     if (phase !== 'sending') return;
-    const t = setTimeout(() => setPhase('done'), 1200);
-    return () => clearTimeout(t);
+    const tid = setTimeout(() => setPhase('done'), 1200);
+    return () => clearTimeout(tid);
   }, [phase]);
 
   return (
-    <div className="bkm" role="dialog" aria-modal="true" aria-label={`Book ${facility.title}`}
+    <div className="bkm" role="dialog" aria-modal="true"
+      aria-label={`${t('bkm.book')} ${facility.title}`}
       onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="bkm-panel" ref={panelRef} tabIndex={-1}>
-        <button className="bkm-x" onClick={onClose} aria-label="Close booking panel">×</button>
+        <button className="bkm-x" onClick={onClose} aria-label={t('bkm.close')}>×</button>
 
         {phase === 'done' ? (
           <div className="bkm-done">
@@ -230,43 +167,42 @@ const BookingDrawer = ({ facility, onClose }) => {
               <circle cx="26" cy="26" r="24" fill="none" />
               <path fill="none" d="M14 27l8 8 16-16" />
             </svg>
-            <h3>BOOKING CONFIRMED</h3>
-            <p className="bkm-done-sum">{facility.title} · {slot} · {dur}</p>
-            <span className="bkm-ref">REF {ref}</span>
-            <p className="bkm-note">
-              Confirmation synced to your biometric profile.
-              Your gate opens 15 minutes before the slot.
-            </p>
-            <button className="btn btn-red" onClick={onClose}>DONE {I.arrow(11)}</button>
+            <h3>{t('bkm.confirmed')}</h3>
+            <p className="bkm-done-sum">{facility.title} · {slot} · {t(durKey)}</p>
+            <span className="bkm-ref">{t('bkm.ref')} {ref}</span>
+            <p className="bkm-note">{t('bkm.note')}</p>
+            <button className="btn btn-red" onClick={onClose}>{t('bkm.done')} {I.arrow(11)}</button>
           </div>
         ) : (
           <>
             <div className="bkm-head">
               <em className="fc-tag">{facility.tag}</em>
               <h3>{facility.title}</h3>
-              <span className={`fc-status ${facility.statusCls}`}><i />STATUS: {facility.status}</span>
+              <span className={`fc-status ${facility.statusCls}`}>
+                <i />{t('bkm.status')} {facility.status}
+              </span>
             </div>
 
             <div className="bkm-sec">
-              <span className="bkm-lab">SELECT TIME SLOT</span>
+              <span className="bkm-lab">{t('bkm.pickSlot')}</span>
               <div className="bkm-slots">
                 {SLOT_HOURS.map((s, i) => (
                   <button key={s}
                     className={`bkm-slot ${slot === s ? 'on' : ''} ${isFull(i) ? 'full' : ''}`}
                     disabled={isFull(i)}
                     onClick={() => setSlot(s)}>
-                    {s}{isFull(i) && <em>FULL</em>}
+                    {s}{isFull(i) && <em>{t('bkm.full')}</em>}
                   </button>
                 ))}
               </div>
             </div>
 
             <div className="bkm-sec">
-              <span className="bkm-lab">DURATION</span>
+              <span className="bkm-lab">{t('bkm.duration')}</span>
               <div className="bkm-slots bkm-slots-3">
-                {DURATIONS.map((d) => (
-                  <button key={d} className={`bkm-slot ${dur === d ? 'on' : ''}`} onClick={() => setDur(d)}>
-                    {d}
+                {DURATION_KEYS.map((d) => (
+                  <button key={d} className={`bkm-slot ${durKey === d ? 'on' : ''}`} onClick={() => setDurKey(d)}>
+                    {t(d)}
                   </button>
                 ))}
               </div>
@@ -274,15 +210,15 @@ const BookingDrawer = ({ facility, onClose }) => {
 
             <div className="bkm-foot">
               <div className="bkm-price">
-                <span>SESSION RATE</span>
+                <span>{t('bkm.rate')}</span>
                 <b>$40</b>
               </div>
               <button className="btn btn-red bkm-confirm"
                 disabled={!slot || phase !== 'form'}
                 onClick={() => setPhase('sending')}>
                 {phase === 'sending'
-                  ? <><span className="bkm-spin" />SYNCING…</>
-                  : <>CONFIRM BOOKING {I.arrow(11)}</>}
+                  ? <><span className="bkm-spin" />{t('bkm.syncing')}</>
+                  : <>{t('bkm.confirm')} {I.arrow(11)}</>}
               </button>
             </div>
           </>
@@ -296,6 +232,8 @@ const BookingDrawer = ({ facility, onClose }) => {
    COMPONENT
 ============================================================ */
 const FacilitiesShowcase = () => {
+  const { t } = useLang();
+
   const [bootPct, setBootPct] = useState(0);
   const [boot, setBoot] = useState(false);
   const [bootGone, setBootGone] = useState(false);
@@ -304,8 +242,116 @@ const FacilitiesShowcase = () => {
   const [isVisible, setIsVisible] = useState({});
   const [booking, setBooking] = useState(null);
 
-  // live simulated telemetry — loads drift every 4s
-  const [loads, setLoads] = useState(() => Object.fromEntries(facilities.map((f) => [f.id, f.load])));
+  /* ---------- Translated content ---------- */
+  const BELT_ITEMS = [
+    t('fac.belt.aquatics'),
+    t('fac.belt.combat'),
+    t('fac.belt.courts'),
+    t('fac.belt.recovery'),
+    t('fac.belt.strength'),
+    t('fac.belt.volley'),
+    t('fac.belt.open'),
+  ];
+
+  const filters = [
+    { id: 'all',      label: t('fac.f.all') },
+    { id: 'aquatics', label: t('fac.f.aquatics') },
+    { id: 'combat',   label: t('fac.f.combat') },
+    { id: 'courts',   label: t('fac.f.courts') },
+    { id: 'recovery', label: t('fac.f.recovery') },
+    { id: 'strength', label: t('fac.f.strength') },
+  ];
+
+  const facilities = [
+    {
+      id: 1, category: 'aquatics',
+      sector: t('fac.c1.sector'), location: t('fac.c1.location'),
+      title: t('fac.c1.title'), tag: t('fac.c1.tag'),
+      status: t('fac.c1.status'), statusCls: 'ok', load: 75, nextSlot: '10:00',
+      desc: t('fac.c1.desc'),
+      meta: [
+        [t('fac.c1.m1k'), t('fac.c1.m1v'), t('fac.c1.m1s')],
+        [t('fac.c1.m2k'), t('fac.c1.m2v')],
+        [t('fac.c1.m3k'), t('fac.c1.m3v')],
+      ],
+      cta: t('fac.c1.cta'), ctaIcon: I.pool, img: IMG.pool,
+    },
+    {
+      id: 2, category: 'courts',
+      sector: t('fac.c2.sector'), location: t('fac.c2.location'),
+      title: t('fac.c2.title'), tag: t('fac.c2.tag'),
+      status: t('fac.c2.status'), statusCls: 'busy', load: 70, nextSlot: '18:00',
+      desc: t('fac.c2.desc'),
+      meta: [
+        [t('fac.c2.m1k'), t('fac.c2.m1v')],
+        [t('fac.c2.m2k'), t('fac.c2.m2v')],
+        [t('fac.c2.m3k'), t('fac.c2.m3v')],
+      ],
+      cta: t('fac.c2.cta'), ctaIcon: I.basket, img: IMG.basketball,
+    },
+    {
+      id: 3, category: 'combat',
+      sector: t('fac.c3.sector'), location: t('fac.c3.location'),
+      title: t('fac.c3.title'), tag: t('fac.c3.tag'),
+      status: t('fac.c3.status'), statusCls: 'busy', load: 88, nextSlot: '19:15',
+      desc: t('fac.c3.desc'),
+      meta: [
+        [t('fac.c3.m1k'), t('fac.c3.m1v')],
+        [t('fac.c3.m2k'), t('fac.c3.m2v')],
+        [t('fac.c3.m3k'), t('fac.c3.m3v')],
+      ],
+      cta: t('fac.c3.cta'), ctaIcon: I.mma, img: IMG.combat,
+    },
+    {
+      id: 4, category: 'recovery',
+      sector: t('fac.c4.sector'), location: t('fac.c4.location'),
+      title: t('fac.c4.title'), tag: t('fac.c4.tag'),
+      status: t('fac.c4.status'), statusCls: 'ok', load: 45, nextSlot: 'NOW',
+      desc: t('fac.c4.desc'),
+      meta: [
+        [t('fac.c4.m1k'), t('fac.c4.m1v')],
+        [t('fac.c4.m2k'), t('fac.c4.m2v')],
+        [t('fac.c4.m3k'), t('fac.c4.m3v')],
+      ],
+      cta: t('fac.c4.cta'), ctaIcon: I.cryo, img: IMG.recovery,
+    },
+    {
+      id: 5, category: 'courts',
+      sector: t('fac.c5.sector'), location: t('fac.c5.location'),
+      title: t('fac.c5.title'), tag: t('fac.c5.tag'),
+      status: t('fac.c5.status'), statusCls: 'info', load: 65, nextSlot: '19:30',
+      desc: t('fac.c5.desc'),
+      meta: [
+        [t('fac.c5.m1k'), t('fac.c5.m1v')],
+        [t('fac.c5.m2k'), t('fac.c5.m2v')],
+        [t('fac.c5.m3k'), t('fac.c5.m3v')],
+      ],
+      cta: t('fac.c5.cta'), ctaIcon: I.calendar, img: IMG.volleyball, ghost: true,
+    },
+    {
+      id: 6, category: 'strength',
+      sector: t('fac.c6.sector'), location: t('fac.c6.location'),
+      title: t('fac.c6.title'), tag: t('fac.c6.tag'),
+      status: t('fac.c6.status'), statusCls: 'ok', load: 83, nextSlot: 'NOW',
+      desc: t('fac.c6.desc'),
+      meta: [
+        [t('fac.c6.m1k'), t('fac.c6.m1v')],
+        [t('fac.c6.m2k'), t('fac.c6.m2v')],
+        [t('fac.c6.m3k'), t('fac.c6.m3v')],
+      ],
+      cta: t('fac.c6.cta'), ctaIcon: I.dumbbell, img: IMG.strength,
+    },
+  ];
+
+  const telemetryStats = [
+    { v: '0.04s',    l: t('fac.tel.stat1') },
+    { v: 'HEPA 14',  l: t('fac.tel.stat2') },
+  ];
+
+  // live simulated telemetry
+  const [loads, setLoads] = useState(() =>
+    Object.fromEntries(facilities.map((f) => [f.id, f.load]))
+  );
   useEffect(() => {
     const id = setInterval(() => {
       setLoads((prev) => {
@@ -329,17 +375,17 @@ const FacilitiesShowcase = () => {
 
   const slotCountdown = (hhmm) => {
     const [h, m] = hhmm.split(':').map(Number);
-    const t = new Date();
-    t.setHours(h, m, 0, 0);
-    if (t.getTime() < now) t.setDate(t.getDate() + 1);
-    const diff = Math.max(0, t - now);
+    const tt = new Date();
+    tt.setHours(h, m, 0, 0);
+    if (tt.getTime() < now) tt.setDate(tt.getDate() + 1);
+    const diff = Math.max(0, tt - now);
     const hh = Math.floor(diff / 3600000);
     const mm = Math.floor((diff % 3600000) / 60000);
     return `${hh}H ${String(mm).padStart(2, '0')}M`;
   };
 
   const sectionRefs = useRef([]);
-  const kickText = useDecode('BIOMETRIC TELEMETRY // LIVE OPERATIONS GRID', isVisible.hero && boot);
+  const kickText = useDecode(t('fac.kicker'), isVisible.hero && boot);
 
   const hdrRef = useRef(null);
   const progRef = useRef(null);
@@ -369,11 +415,11 @@ const FacilitiesShowcase = () => {
 
   useEffect(() => {
     if (!boot) return;
-    const t = setTimeout(() => {
+    const tid = setTimeout(() => {
       setBootGone(true);
       document.body.style.overflow = '';
     }, 950);
-    return () => clearTimeout(t);
+    return () => clearTimeout(tid);
   }, [boot]);
 
   /* IntersectionObserver */
@@ -393,7 +439,7 @@ const FacilitiesShowcase = () => {
     return () => obs.disconnect();
   }, [boot]);
 
-  /* Master rAF scroll rig */
+  /* Master rAF */
   useEffect(() => {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const onMove = (e) => { cursorTarget.current = { x: e.clientX, y: e.clientY }; };
@@ -475,13 +521,11 @@ const FacilitiesShowcase = () => {
     return () => { cancelAnimationFrame(raf); window.removeEventListener('mouseover', over); };
   }, []);
 
-  /* Menu scroll lock */
   useEffect(() => {
     document.body.classList.toggle('no-scroll', menuOpen);
     return () => document.body.classList.remove('no-scroll');
   }, [menuOpen]);
 
-  /* card spotlight + 3D tilt (vars inherit down to .fc-in::before) */
   const cardMove = (e) => {
     const el = e.currentTarget, r = el.getBoundingClientRect();
     const px = (e.clientX - r.left) / r.width;
@@ -520,12 +564,12 @@ const FacilitiesShowcase = () => {
             <span className="boot-mark">SMART<em>GYM</em></span>
             <span className="boot-count">{bootPct}<i>%</i></span>
             <span className="boot-bar"><i style={{ transform: `scaleX(${bootPct / 100})` }} /></span>
-            <span className="boot-label">CALIBRATING TELEMETRY GRID</span>
+            <span className="boot-label">{t('fac.boot')}</span>
           </div>
         </div>
       )}
 
-      {/* ============ HEADER ============ */}
+      {/* HEADER */}
       <header className="hdr" ref={hdrRef}>
         <div className="hdr-in">
           <Link className="brand" to="/" aria-label="Smart Gym home">
@@ -534,16 +578,17 @@ const FacilitiesShowcase = () => {
           </Link>
 
           <nav className="hdr-nav">
-            <Link to="/">Home</Link>
-            <Link to="/facilities" className="on">Facilities</Link>
-            <Link to="/services">Services</Link>
-            <Link to="/join">Membership</Link>
-            <Link to="/insights">Insights</Link>
-            <Link to="/contact">Contact</Link>
+            <Link to="/">{t('nav.home')}</Link>
+            <Link to="/facilities" className="on">{t('nav.facilities')}</Link>
+            <Link to="/services">{t('nav.services')}</Link>
+            <Link to="/join">{t('nav.membership')}</Link>
+            <Link to="/insights">{t('nav.insights')}</Link>
+            <Link to="/contact">{t('nav.contact')}</Link>
           </nav>
 
           <div className="hdr-actions">
-            <Link to="/join" className="btn btn-red hdr-join">JOIN NOW</Link>
+            <LangSwitch variant="header" />
+            <Link to="/join" className="btn btn-red hdr-join">{t('nav.joinNow')}</Link>
             <button
               className={`burger ${menuOpen ? 'x' : ''}`}
               onClick={() => setMenuOpen(!menuOpen)}
@@ -556,20 +601,21 @@ const FacilitiesShowcase = () => {
 
       <div className={`mnav ${menuOpen ? 'open' : ''}`} aria-hidden={!menuOpen}>
         <nav>
-          <Link to="/" style={{ '--d': '0.06s' }} onClick={() => setMenuOpen(false)}><span>01</span>Home</Link>
-          <Link to="/facilities" style={{ '--d': '0.11s' }} onClick={() => setMenuOpen(false)}><span>02</span>Facilities</Link>
-          <Link to="/services" style={{ '--d': '0.16s' }} onClick={() => setMenuOpen(false)}><span>03</span>Services</Link>
-          <Link to="/pricing" style={{ '--d': '0.21s' }} onClick={() => setMenuOpen(false)}><span>04</span>Membership</Link>
-          <Link to="/telemetry" style={{ '--d': '0.26s' }} onClick={() => setMenuOpen(false)}><span>05</span>Insights</Link>
-          <Link to="/contact" style={{ '--d': '0.31s' }} onClick={() => setMenuOpen(false)}><span>06</span>Contact</Link>
+          <Link to="/" style={{ '--d': '0.06s' }} onClick={() => setMenuOpen(false)}><span>01</span>{t('nav.home')}</Link>
+          <Link to="/facilities" style={{ '--d': '0.11s' }} onClick={() => setMenuOpen(false)}><span>02</span>{t('nav.facilities')}</Link>
+          <Link to="/services" style={{ '--d': '0.16s' }} onClick={() => setMenuOpen(false)}><span>03</span>{t('nav.services')}</Link>
+          <Link to="/join" style={{ '--d': '0.21s' }} onClick={() => setMenuOpen(false)}><span>04</span>{t('nav.membership')}</Link>
+          <Link to="/insights" style={{ '--d': '0.26s' }} onClick={() => setMenuOpen(false)}><span>05</span>{t('nav.insights')}</Link>
+          <Link to="/contact" style={{ '--d': '0.31s' }} onClick={() => setMenuOpen(false)}><span>06</span>{t('nav.contact')}</Link>
         </nav>
+        <LangSwitch variant="mobile" />
         <Link to="/join" className="btn btn-red mnav-join" onClick={() => setMenuOpen(false)}>
-          JOIN NOW {I.arrow(11)}
+          {t('nav.joinNow')} {I.arrow(11)}
         </Link>
-        <span className="mnav-foot">OPEN 24/7 // DISTRICT 01</span>
+        <span className="mnav-foot">{t('nav.foot')}</span>
       </div>
 
-      {/* ============ HERO ============ */}
+      {/* HERO */}
       <section id="facilities" data-section="hero" ref={(el) => (sectionRefs.current[0] = el)}
         className={`fac-hero ${isVisible.hero ? 'is-in' : ''}`}>
 
@@ -587,22 +633,18 @@ const FacilitiesShowcase = () => {
 
             <h1 className="h1 fac-h1">
               <span className="row">
-                <span className="w" style={{ transitionDelay: '.3s' }}>ELITE</span>
+                <span className="w" style={{ transitionDelay: '.3s' }}>{t('fac.hero.l1')}</span>
               </span>
               <span className="row">
-                <span className="w red" style={{ transitionDelay: '.45s' }}>ENVIRONMENTS</span>
+                <span className="w red" style={{ transitionDelay: '.45s' }}>{t('fac.hero.l2')}</span>
               </span>
             </h1>
 
-            <p className="lede">
-              Engineered spaces fine-tuned for kinetic output, metabolic conditioning,
-              and elite recovery. Track real-time occupancy load, environmental telemetry,
-              and active training slots across all sectors.
-            </p>
+            <p className="lede">{t('fac.hero.lede')}</p>
 
             <div className="fac-hero-cta">
-              <Link to="/facilities-grid" className="btn btn-red btn-lg">EXPLORE FLOOR PLAN {I.arrow()}</Link>
-              <Link to="/telemetry" className="btn btn-ghost btn-lg">VIEW TELEMETRY</Link>
+              <a href="#facilities-grid" className="btn btn-red btn-lg">{t('fac.hero.cta1')} {I.arrow()}</a>
+              <a href="#telemetry" className="btn btn-ghost btn-lg">{t('fac.hero.cta2')}</a>
             </div>
           </div>
 
@@ -619,15 +661,15 @@ const FacilitiesShowcase = () => {
               </svg>
               <div className="ring-label">
                 <span className="ring-value">82%</span>
-                <span className="ring-sub">LOAD</span>
+                <span className="ring-sub">{t('fac.cap.load')}</span>
               </div>
             </div>
             <div className="fac-capacity-info">
-              <div className="fac-capacity-title">CAMPUS CAPACITY</div>
+              <div className="fac-capacity-title">{t('fac.cap.title')}</div>
               <div className="fac-capacity-detail">
-                <b><Counter to={412} active={isVisible.hero} /></b> / 500 Athletes Checked In
+                <b><Counter to={412} active={isVisible.hero} /></b> / 500 {t('fac.cap.detail')}
               </div>
-              <div className="fac-capacity-status"><span className="live-dot" />PEAK VELOCITY WINDOW</div>
+              <div className="fac-capacity-status"><span className="live-dot" />{t('fac.cap.status')}</div>
             </div>
           </div>
         </div>
@@ -637,7 +679,7 @@ const FacilitiesShowcase = () => {
             <div className="belt-track">
               {[0, 1].map((h) => (
                 <div className="belt-half" key={h}>
-                  {[...BELT_ITEMS, ...BELT_ITEMS].map((t, i) => <span key={i}>{t}<em>✦</em></span>)}
+                  {[...BELT_ITEMS, ...BELT_ITEMS].map((tag, i) => <span key={i}>{tag}<em>✦</em></span>)}
                 </div>
               ))}
             </div>
@@ -645,28 +687,25 @@ const FacilitiesShowcase = () => {
         </div>
       </section>
 
-      {/* ============ LIVE STATUS TICKER ============ */}
+      {/* TICKER */}
       <div className="ticker fac-ticker" aria-hidden="true">
         <div className="ticker-track">
           {[0, 1].map((h) => (
             <div className="ticker-half" key={h}>
-              {tickerItems.map((t, i) => <span key={i}><i className={t.cls} />{t.s}<b>{t.st}</b></span>)}
+              {tickerItems.map((item, i) => <span key={i}><i className={item.cls} />{item.s}<b>{item.st}</b></span>)}
             </div>
           ))}
         </div>
       </div>
 
-      {/* ============ FILTER + GRID ============ */}
+      {/* FILTER + GRID */}
       <section id="facilities-grid" data-section="grid" ref={(el) => (sectionRefs.current[1] = el)}
         className={`fac-grid-sec ${isVisible.grid ? 'is-in' : ''}`}>
 
         <header className="shead">
-          <div className="stag"><i />LIVE AVAILABILITY</div>
-          <h2 className="stitle"><MaskWords text="CHOOSE YOUR ARENA" /></h2>
-          <p className="ssub">
-            Every sector reports live occupancy, environment readings and next open
-            slots. Pick one — booking syncs straight to your biometric profile.
-          </p>
+          <div className="stag"><i />{t('fac.stag')}</div>
+          <h2 className="stitle"><MaskWords text={t('fac.title')} /></h2>
+          <p className="ssub">{t('fac.sub')}</p>
         </header>
 
         <div className="fac-filters-wrap">
@@ -681,7 +720,6 @@ const FacilitiesShowcase = () => {
           </div>
         </div>
 
-        {/* key={activeFilter} remounts cards so the stagger replays on filter change */}
         <div className="fac-cards" key={activeFilter}>
           {filteredFacilities.map((f, i) => (
             <article className="facility-card" key={f.id} style={{ '--i': i }}
@@ -691,7 +729,7 @@ const FacilitiesShowcase = () => {
                   <img src={f.img} alt={f.title} loading="lazy" />
                   <div className="fc-media-shade" />
                   <span className={`fc-status ${f.statusCls}`}>
-                    <i />STATUS: {f.status}
+                    <i />{t('bkm.status')} {f.status}
                   </span>
                   <span className="fc-num">S/{String(f.id).padStart(2, '0')}</span>
                   <div className="fc-labels">
@@ -705,10 +743,9 @@ const FacilitiesShowcase = () => {
                   <h3>{f.title}</h3>
                   <p>{f.desc}</p>
 
-                  {/* live load meter */}
                   <div className="fc-load">
                     <div className="fc-load-head">
-                      <span>LIVE LOAD</span>
+                      <span>{t('fac.card.load')}</span>
                       <b className={loads[f.id] >= 85 ? 'hot' : ''}>{loads[f.id]}%</b>
                     </div>
                     <div className="fc-load-bar">
@@ -725,12 +762,11 @@ const FacilitiesShowcase = () => {
                     ))}
                   </div>
 
-                  {/* next-slot countdown */}
                   <div className="fc-next">
                     {I.clock}
                     {f.nextSlot === 'NOW'
-                      ? <span>OPEN NOW · <b>WALK-IN INSTANT</b></span>
-                      : <span>NEXT SLOT {f.nextSlot} · IN <b>{slotCountdown(f.nextSlot)}</b></span>}
+                      ? <span>{t('fac.card.openNow')} <b>{t('fac.card.walkin')}</b></span>
+                      : <span>{t('fac.card.nextPre')} {f.nextSlot} {t('fac.card.nextMid')} <b>{slotCountdown(f.nextSlot)}</b></span>}
                   </div>
 
                   <button
@@ -745,20 +781,16 @@ const FacilitiesShowcase = () => {
         </div>
       </section>
 
-      {/* ============ TELEMETRY DEEP-DIVE ============ */}
+      {/* TELEMETRY */}
       <section id="telemetry" data-section="telemetry" ref={(el) => (sectionRefs.current[2] = el)}
         className={`fac-telemetry ${isVisible.telemetry ? 'is-in' : ''}`}>
         <div className="tel-card">
           <div className="tel-left">
             <div className="tel-ico-lg">{I.hub}</div>
             <div>
-              <div className="tel-label">SMART GYM SENSOR GRID v4.2</div>
-              <h4 className="tel-title">Automated Access &amp; Environmental Telemetry</h4>
-              <p className="tel-desc">
-                All sectors sync with your biometric member passcode key.
-                Locker allocation, air filtration rates, and target training
-                logs sync in real time.
-              </p>
+              <div className="tel-label">{t('fac.tel.label')}</div>
+              <h4 className="tel-title">{t('fac.tel.title')}</h4>
+              <p className="tel-desc">{t('fac.tel.desc')}</p>
             </div>
           </div>
           <div className="tel-right">
@@ -768,12 +800,12 @@ const FacilitiesShowcase = () => {
                 <span className="tel-stat-lab">{s.l}</span>
               </div>
             ))}
-            <Link to="/join" className="btn btn-red tel-cta">GET BIOMETRIC ACCESS</Link>
+            <Link to="/join" className="btn btn-red tel-cta">{t('fac.tel.cta')}</Link>
           </div>
         </div>
       </section>
 
-      {/* ============ FOOTER ============ */}
+      {/* FOOTER */}
       <footer className="foot" id="contact">
         <div className="foot-grid">
           <div className="foot-brand">
@@ -781,30 +813,44 @@ const FacilitiesShowcase = () => {
               <span className="brand-mark">{I.logo(16)}</span>
               <span className="brand-txt">SMART<em>GYM</em></span>
             </Link>
-            <p>Strength &amp; conditioning club with biometric telemetry and elite training infrastructure. Built for people who train.</p>
-            <span className="foot-live"><i className="ok-dot" />TELEMETRY GRID LIVE</span>
+            <p>{t('foot.desc')}</p>
+            <span className="foot-live"><i className="ok-dot" />{t('foot.live')}</span>
           </div>
           <div>
-            <h4>ARCHITECTURE</h4>
-            <ul><li>Heavy Iron Arena</li><li>Sprint Velocity Track</li><li>Cryo &amp; Recovery Pods</li><li>Metabolic Testing Lab</li></ul>
+            <h4>{t('foot.architecture')}</h4>
+            <ul>
+              <li>{t('foot.iron')}</li>
+              <li>{t('foot.sprint')}</li>
+              <li>{t('foot.cryo')}</li>
+              <li>{t('foot.metabolic')}</li>
+            </ul>
           </div>
           <div>
-            <h4>PLATFORM</h4>
-            <ul><li>Coaching Protocol</li><li>Biometric App Sync</li><li>Corporate High Performance</li><li>Member Portal</li></ul>
+            <h4>{t('foot.platform')}</h4>
+            <ul>
+              <li>{t('foot.coaching')}</li>
+              <li>{t('foot.bioapp')}</li>
+              <li>{t('foot.corporate')}</li>
+              <li>{t('foot.portal')}</li>
+            </ul>
           </div>
           <div>
-            <h4>OPERATIONS</h4>
-            <p className="foot-p">04:00 – 24:00 Daily Operations<br />Access via biometric passcode key.</p>
-            <span className="foot-hq">HQ TERMINAL</span>
-            <p className="foot-p">District 01, Performance Plaza</p>
+            <h4>{t('foot.operations')}</h4>
+            <p className="foot-p">{t('foot.hours')}<br />{t('foot.access')}</p>
+            <span className="foot-hq">{t('foot.hq')}</span>
+            <p className="foot-p">{t('foot.address')}</p>
           </div>
         </div>
 
         <div className="foot-ghost" aria-hidden="true">SMARTGYM</div>
 
         <div className="foot-bottom">
-          <p>© 2025 SMART GYM INDUSTRIAL ATHLETICS. ALL RIGHTS RESERVED.</p>
-          <div className="foot-legal"><span>Privacy Architecture</span><span>Terms of Conditioning</span><span>Security Protocols</span></div>
+          <p>{t('foot.rights')}</p>
+          <div className="foot-legal">
+            <span>{t('foot.privacy')}</span>
+            <span>{t('foot.terms')}</span>
+            <span>{t('foot.security')}</span>
+          </div>
           <button className="totop" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label="Back to top">
             <svg width="46" height="46" viewBox="0 0 46 46">
               <circle className="rb" cx="23" cy="23" r="22" />
@@ -816,14 +862,14 @@ const FacilitiesShowcase = () => {
       </footer>
 
       <nav className="tabbar" aria-label="Quick navigation">
-        <Link to="/">{I.home}<span>HOME</span></Link>
-        <Link to="/facilities" className="on">{I.grid}<span>FACILITIES</span></Link>
-        <Link to="/services">{I.bolt}<span>SERVICES</span></Link>
-        <Link to="/join" className="tab-join">{I.flame}<span>JOIN NOW</span></Link>
+        <Link to="/">{I.home}<span>{t('fac.tab.home')}</span></Link>
+        <Link to="/facilities" className="on">{I.grid}<span>{t('fac.tab.facilities')}</span></Link>
+        <Link to="/services">{I.bolt}<span>{t('fac.tab.services')}</span></Link>
+        <Link to="/join" className="tab-join">{I.flame}<span>{t('fac.tab.join')}</span></Link>
       </nav>
 
-      {/* ============ BOOKING DRAWER ============ */}
-      {booking && <BookingDrawer facility={booking} onClose={() => setBooking(null)} />}
+      {/* BOOKING DRAWER */}
+      {booking && <BookingDrawer facility={booking} onClose={() => setBooking(null)} t={t} />}
     </div>
   );
 };

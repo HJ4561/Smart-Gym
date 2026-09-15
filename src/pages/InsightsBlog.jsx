@@ -1,6 +1,8 @@
 // pages/InsightsBlog.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { useLang } from '../i18n/LangContext';
+import LangSwitch from '../i18n/LangSwitch';
 import './InsightsBlog.css';
 
 /* ============================================================
@@ -21,6 +23,7 @@ const MaskWords = ({ text, step = 70 }) => (
 const useDecode = (text, start) => {
   const [out, setOut] = useState(text);
   useEffect(() => {
+    setOut(text);
     if (!start) return;
     const glyphs = '█▓▒░<>/' + String.fromCharCode(92) + '|—';
     let frame = 0;
@@ -103,14 +106,11 @@ const I = {
 };
 
 /* ============================================================
-   CONTENT
+   STATIC IMAGES
 ============================================================ */
-const BELT_ITEMS = ['TRAINING', 'NUTRITION', 'RECOVERY', 'BIOMETRICS', 'CASE STUDIES', 'PROTOCOLS'];
-
 const IMG = {
   heroBg: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1920&q=80',
   featured: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1600&q=80',
-  featuredAuthor: 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&w=200&q=80',
   vo2: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=900&q=80',
   nutrition: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=900&q=80',
   cryo: 'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?auto=format&fit=crop&w=900&q=80',
@@ -118,98 +118,12 @@ const IMG = {
   squat: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80',
 };
 
-const filterCats = [
-  { id: 'all', label: 'ALL ARTICLES', count: 48 },
-  { id: 'training', label: 'TRAINING SCIENCE' },
-  { id: 'nutrition', label: 'NUTRITION & MACROS' },
-  { id: 'recovery', label: 'RECOVERY & CRYO' },
-  { id: 'biometrics', label: 'BIOMETRIC TELEMETRY' },
-  { id: 'case-studies', label: 'ATHLETE CASE STUDIES' },
-];
-
-const trendingMetrics = [
-  { l: 'ACTIVE RESEARCH COHORT', v: '1,420', sub: '+12% THIS WK', icon: I.sensor },
-  { l: 'CNS RECOVERY BASELINE', v: '94.2', sub: 'HRV AVG', icon: I.equalizer },
-  { l: 'WEEKLY INTAKE VOLUME', v: '3.8L', sub: 'ELECTROLYTE OPT.', icon: I.flash },
-  { l: 'FORCE OUTPUT DELTA', v: '+18.4%', sub: 'POST-CRYO', icon: I.bolt },
-];
-
-const articles = [
-  {
-    id: 1, category: 'biometrics',
-    tag: 'BIOMETRICS // ZONES',
-    date: 'OCTOBER 24',
-    title: 'Zone 2 vs. Anaerobic Thresholds: Decoding VO2 Max for Hypertrophy Lifters',
-    desc: 'How low-intensity mitochondrial biogenesis enhances inter-set clearance of metabolic byproducts without blunting the hypertrophic signaling pathways of resistance training.',
-    read: '6 MIN READ',
-    img: IMG.vo2,
-    authorInitials: 'MK',
-    author: 'Dr. M. Kovacs',
-    line: 'METABOLIC LAB',
-  },
-  {
-    id: 2, category: 'nutrition',
-    tag: 'NUTRITION & MACROS',
-    date: 'OCTOBER 21',
-    title: 'Targeted Glycogen Depletion: Nutrition Timing for Twice-Daily Training Sessions',
-    desc: 'Calculating intra-workout high molecular-weight cyclic dextrin dosages to ensure maximal glycogen re-synthesis within a restricted 4-hour window between high-strain blocks.',
-    read: '5 MIN READ',
-    img: IMG.nutrition,
-    authorInitials: 'SL',
-    author: 'Sarah Lin, RD',
-    line: 'BIOCHEMICAL CELL',
-  },
-  {
-    id: 3, category: 'recovery',
-    tag: 'RECOVERY PROTOCOLS',
-    date: 'OCTOBER 18',
-    title: 'Cryo Pods vs. Infrared Contrast Therapy: What the Nervous System Says',
-    desc: 'Examining cutaneous vasoconstriction and sympathetic nervous discharge: which modality truly accelerates systemic autonomic recovery without halting muscular adaptation?',
-    read: '7 MIN READ',
-    img: IMG.cryo,
-    authorInitials: 'JT',
-    author: 'Julian Thorne',
-    line: 'NEURAL REPAIR',
-  },
-  {
-    id: 4, category: 'training',
-    tag: 'TRAINING SCIENCE',
-    date: 'OCTOBER 15',
-    title: 'Neural Fatigue Index: Tracking Grip Dynamometer Readings Before Heavy Deadlifts',
-    desc: 'Why a 5% drop in max isometric grip force predicts instantaneous central motor unit failure and hamstring avulsion risk during maximal axial pulling sessions.',
-    read: '6 MIN READ',
-    img: IMG.grip,
-    authorInitials: 'DR',
-    author: 'D. Rossi, PT',
-    line: 'NEUROMUSCULAR',
-  },
-  {
-    id: 5, category: 'training',
-    tag: 'MOVEMENT // VECTORS',
-    date: 'OCTOBER 11',
-    title: 'The 3D Biomechanics of the Low-Bar Squat: Cable Vector Adjustments',
-    desc: 'Calculating moment arm differentials across varying femur-to-torso ratios to adjust auxiliary hip abduction work and eliminate spinal lumbar flexion shearing.',
-    read: '9 MIN READ',
-    img: IMG.squat,
-    authorInitials: 'EV',
-    author: 'Dr. Elias Vance',
-    line: 'KINEMATICS',
-  },
-];
-
-const taxonomyTags = [
-  '#ELECTROMYOGRAPHY',
-  '#RATE-OF-FORCE-DEVELOPMENT',
-  '#HYPERTROPHY-SIGNALING',
-  '#GLYCOGEN-SUPERCOMPENSATION',
-  '#CRYO-NEUROMUSCULAR',
-  '#VBT-CUTOFFS',
-];
-
 /* ============================================================
    COMPONENT
 ============================================================ */
 const InsightsBlog = () => {
+  const { t } = useLang();
+
   const [bootPct, setBootPct] = useState(0);
   const [boot, setBoot] = useState(false);
   const [bootGone, setBootGone] = useState(false);
@@ -222,8 +136,8 @@ const InsightsBlog = () => {
   const [isVisible, setIsVisible] = useState({});
 
   const sectionRefs = useRef([]);
-  const kickText = useDecode('SMART GYM // KINETIC INSIGHTS', true);
-  const successText = useDecode('FREQUENCY LOCKED. FIRST DOSSIER ARRIVING FRIDAY.', subscribed);
+  const kickText = useDecode(t('ins.kicker'), true);
+  const successText = useDecode(t('ins.news.success'), subscribed);
 
   const hdrRef = useRef(null);
   const progRef = useRef(null);
@@ -233,6 +147,70 @@ const InsightsBlog = () => {
   const cursorTarget = useRef({ x: 0, y: 0 });
   const bootRef = useRef(false);
   const visSeen = useRef({});
+
+  /* ---------- Translated content ---------- */
+  const BELT_ITEMS = [
+    t('ins.belt.training'),
+    t('ins.belt.nutrition'),
+    t('ins.belt.recovery'),
+    t('ins.belt.biometrics'),
+    t('ins.belt.cases'),
+    t('ins.belt.protocols'),
+  ];
+
+  const filterCats = [
+    { id: 'all',         label: t('ins.f.all'),       count: 48 },
+    { id: 'training',    label: t('ins.f.training') },
+    { id: 'nutrition',   label: t('ins.f.nutrition') },
+    { id: 'recovery',    label: t('ins.f.recovery') },
+    { id: 'biometrics',  label: t('ins.f.biometrics') },
+    { id: 'case-studies',label: t('ins.f.cases') },
+  ];
+
+  const trendingMetrics = [
+    { l: t('ins.m1.l'), v: '1,420',  sub: t('ins.m1.s'), icon: I.sensor },
+    { l: t('ins.m2.l'), v: '94.2',   sub: t('ins.m2.s'), icon: I.equalizer },
+    { l: t('ins.m3.l'), v: '3.8L',   sub: t('ins.m3.s'), icon: I.flame },
+    { l: t('ins.m4.l'), v: '+18.4%', sub: t('ins.m4.s'), icon: I.bolt },
+  ];
+
+  const articles = [
+    {
+      id: 1, category: 'biometrics',
+      tag: t('ins.art1.tag'), date: t('ins.art1.date'),
+      title: t('ins.art1.title'), desc: t('ins.art1.desc'), read: t('ins.art1.read'),
+      img: IMG.vo2, authorInitials: 'MK', author: t('ins.art1.author'), line: t('ins.art1.line'),
+    },
+    {
+      id: 2, category: 'nutrition',
+      tag: t('ins.art2.tag'), date: t('ins.art2.date'),
+      title: t('ins.art2.title'), desc: t('ins.art2.desc'), read: t('ins.art2.read'),
+      img: IMG.nutrition, authorInitials: 'SL', author: t('ins.art2.author'), line: t('ins.art2.line'),
+    },
+    {
+      id: 3, category: 'recovery',
+      tag: t('ins.art3.tag'), date: t('ins.art3.date'),
+      title: t('ins.art3.title'), desc: t('ins.art3.desc'), read: t('ins.art3.read'),
+      img: IMG.cryo, authorInitials: 'JT', author: t('ins.art3.author'), line: t('ins.art3.line'),
+    },
+    {
+      id: 4, category: 'training',
+      tag: t('ins.art4.tag'), date: t('ins.art4.date'),
+      title: t('ins.art4.title'), desc: t('ins.art4.desc'), read: t('ins.art4.read'),
+      img: IMG.grip, authorInitials: 'DR', author: t('ins.art4.author'), line: t('ins.art4.line'),
+    },
+    {
+      id: 5, category: 'training',
+      tag: t('ins.art5.tag'), date: t('ins.art5.date'),
+      title: t('ins.art5.title'), desc: t('ins.art5.desc'), read: t('ins.art5.read'),
+      img: IMG.squat, authorInitials: 'EV', author: t('ins.art5.author'), line: t('ins.art5.line'),
+    },
+  ];
+
+  const taxonomyTags = [
+    t('ins.tax.t1'), t('ins.tax.t2'), t('ins.tax.t3'),
+    t('ins.tax.t4'), t('ins.tax.t5'), t('ins.tax.t6'),
+  ];
 
   /* Preloader */
   useEffect(() => {
@@ -252,11 +230,11 @@ const InsightsBlog = () => {
 
   useEffect(() => {
     if (!boot) return;
-    const t = setTimeout(() => {
+    const tid = setTimeout(() => {
       setBootGone(true);
       document.body.style.overflow = '';
     }, 950);
-    return () => clearTimeout(t);
+    return () => clearTimeout(tid);
   }, [boot]);
 
   /* IntersectionObserver */
@@ -402,7 +380,7 @@ const InsightsBlog = () => {
             <span className="boot-mark">SMART<em>GYM</em></span>
             <span className="boot-count">{bootPct}<i>%</i></span>
             <span className="boot-bar"><i style={{ transform: `scaleX(${bootPct / 100})` }} /></span>
-            <span className="boot-label">CALIBRATING TELEMETRY GRID</span>
+            <span className="boot-label">{t('ins.boot')}</span>
           </div>
         </div>
       )}
@@ -416,16 +394,17 @@ const InsightsBlog = () => {
           </Link>
 
           <nav className="hdr-nav">
-            <Link to="/">Home</Link>
-            <Link to="/facilities">Facilities</Link>
-            <Link to="/services">Services</Link>
-            <Link to="/join">Membership</Link>
-            <Link to="/insights" className="on">Insights</Link>
-            <Link to="/contact">Contact</Link>
+            <Link to="/">{t('nav.home')}</Link>
+            <Link to="/facilities">{t('nav.facilities')}</Link>
+            <Link to="/services">{t('nav.services')}</Link>
+            <Link to="/join">{t('nav.membership')}</Link>
+            <Link to="/insights" className="on">{t('nav.insights')}</Link>
+            <Link to="/contact">{t('nav.contact')}</Link>
           </nav>
 
           <div className="hdr-actions">
-            <Link to="/join" className="btn btn-red hdr-join">JOIN NOW</Link>
+            <LangSwitch variant="header" />
+            <Link to="/join" className="btn btn-red hdr-join">{t('nav.joinNow')}</Link>
             <button
               className={`burger ${menuOpen ? 'x' : ''}`}
               onClick={() => setMenuOpen(!menuOpen)}
@@ -438,17 +417,18 @@ const InsightsBlog = () => {
 
       <div className={`mnav ${menuOpen ? 'open' : ''}`} aria-hidden={!menuOpen}>
         <nav>
-          <Link to="/" style={{ '--d': '0.06s' }} onClick={() => setMenuOpen(false)}><span>01</span>Home</Link>
-          <Link to="/facilities" style={{ '--d': '0.11s' }} onClick={() => setMenuOpen(false)}><span>02</span>Facilities</Link>
-          <Link to="/services" style={{ '--d': '0.16s' }} onClick={() => setMenuOpen(false)}><span>03</span>Services</Link>
-          <Link to="/join" style={{ '--d': '0.21s' }} onClick={() => setMenuOpen(false)}><span>04</span>Membership</Link>
-          <Link to="/insights" style={{ '--d': '0.26s' }} onClick={() => setMenuOpen(false)}><span>05</span>Insights</Link>
-          <Link to="/contact" style={{ '--d': '0.31s' }} onClick={() => setMenuOpen(false)}><span>06</span>Contact</Link>
+          <Link to="/" style={{ '--d': '0.06s' }} onClick={() => setMenuOpen(false)}><span>01</span>{t('nav.home')}</Link>
+          <Link to="/facilities" style={{ '--d': '0.11s' }} onClick={() => setMenuOpen(false)}><span>02</span>{t('nav.facilities')}</Link>
+          <Link to="/services" style={{ '--d': '0.16s' }} onClick={() => setMenuOpen(false)}><span>03</span>{t('nav.services')}</Link>
+          <Link to="/join" style={{ '--d': '0.21s' }} onClick={() => setMenuOpen(false)}><span>04</span>{t('nav.membership')}</Link>
+          <Link to="/insights" style={{ '--d': '0.26s' }} onClick={() => setMenuOpen(false)}><span>05</span>{t('nav.insights')}</Link>
+          <Link to="/contact" style={{ '--d': '0.31s' }} onClick={() => setMenuOpen(false)}><span>06</span>{t('nav.contact')}</Link>
         </nav>
+        <LangSwitch variant="mobile" />
         <Link to="/join" className="btn btn-red mnav-join" onClick={() => setMenuOpen(false)}>
-          JOIN NOW {I.arrow(11)}
+          {t('nav.joinNow')} {I.arrow(11)}
         </Link>
-        <span className="mnav-foot">OPEN 24/7 // DISTRICT 01</span>
+        <span className="mnav-foot">{t('nav.foot')}</span>
       </div>
 
       {/* HERO */}
@@ -469,22 +449,18 @@ const InsightsBlog = () => {
           <div className="ins-hero-title-row">
             <h1 className="h1 ins-h1">
               <span className="row">
-                <span className="w" style={{ transitionDelay: '.3s' }}>KINETIC</span>
-                <span className="w red" style={{ transitionDelay: '.42s' }}>INSIGHTS</span>
+                <span className="w" style={{ transitionDelay: '.3s' }}>{t('ins.hero.l1')}</span>
+                <span className="w red" style={{ transitionDelay: '.42s' }}>{t('ins.hero.l2')}</span>
               </span>
             </h1>
             <div className="ins-issue">
-              <span>PEER-REVIEWED ATHLETIC DATA</span>
+              <span>{t('ins.issue.left')}</span>
               <i />
-              <span>ISSUE NO. 142</span>
+              <span>{t('ins.issue.right')}</span>
             </div>
           </div>
 
-          <p className="lede">
-            Biomechanical research, precision fueling protocols, and high-voltage
-            athletic telemetry published weekly by Smart Gym sport scientists and
-            elite conditioning directors.
-          </p>
+          <p className="lede">{t('ins.hero.lede')}</p>
         </div>
 
         <div className="belt" aria-hidden="true">
@@ -492,7 +468,7 @@ const InsightsBlog = () => {
             <div className="belt-track">
               {[0, 1].map((h) => (
                 <div className="belt-half" key={h}>
-                  {[...BELT_ITEMS, ...BELT_ITEMS].map((t, i) => <span key={i}>{t}<em>✦</em></span>)}
+                  {[...BELT_ITEMS, ...BELT_ITEMS].map((tag, i) => <span key={i}>{tag}<em>✦</em></span>)}
                 </div>
               ))}
             </div>
@@ -518,7 +494,7 @@ const InsightsBlog = () => {
           <label className="search ins-search">
             {I.search}
             <input
-              placeholder="Query biometric protocols…"
+              placeholder={t('ins.search.ph')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -531,7 +507,7 @@ const InsightsBlog = () => {
         </div>
       </section>
 
-      {/* FEATURED ARTICLE */}
+      {/* FEATURED */}
       <section data-section="featured" ref={(el) => (sectionRefs.current[2] = el)}
         className={`ins-featured-wrap ${isVisible.featured ? 'is-in' : ''}`}>
         <div className="ins-featured">
@@ -540,10 +516,10 @@ const InsightsBlog = () => {
             <div className="ins-featured-media-shade" />
             <div className="ins-featured-badge">
               <span className="ins-featured-badge-dot" />
-              LAB DISPATCH // VBT-09
+              {t('ins.feat.badge')}
             </div>
             <div className="ins-featured-spark">
-              <span className="ins-featured-spark-lab">BAR SPEED</span>
+              <span className="ins-featured-spark-lab">{t('ins.feat.sparkLab')}</span>
               <span className="ins-featured-spark-val">1.18 m/s</span>
               <svg className="ins-featured-spark-svg" viewBox="0 0 64 16" fill="none" preserveAspectRatio="none">
                 <path d="M1 12L12 8L22 14L34 3L45 9L63 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -553,33 +529,27 @@ const InsightsBlog = () => {
 
           <div className="ins-featured-body">
             <div className="ins-featured-tags">
-              <span className="ins-featured-tag">FEATURED PROTOCOL // TRAINING SCIENCE</span>
-              <span className="ins-featured-lab">LAB CERTIFIED</span>
+              <span className="ins-featured-tag">{t('ins.feat.tag')}</span>
+              <span className="ins-featured-lab">{t('ins.feat.certified')}</span>
             </div>
 
-            <h2 className="ins-featured-title">
-              The Velocity-Based Training (VBT) Protocol: How Real-Time Sensors Eliminate Recovery Plateaus
-            </h2>
+            <h2 className="ins-featured-title">{t('ins.feat.title')}</h2>
 
-            <p className="ins-featured-desc">
-              Transitioning from arbitrary percentage-based one-rep maxes to linear
-              position transducers and real-time velocity loss cutoffs preserves
-              the central nervous system while targeting concentric force curves.
-            </p>
+            <p className="ins-featured-desc">{t('ins.feat.desc')}</p>
 
             <div className="ins-featured-foot">
               <div className="ins-featured-author">
                 <div className="ins-featured-avatar">EV</div>
                 <div>
-                  <div className="ins-featured-author-name">Dr. Elias Vance, PhD, CSCS</div>
-                  <div className="ins-featured-author-meta">Director of Biomechanics • 8 Min Read</div>
+                  <div className="ins-featured-author-name">{t('ins.feat.author')}</div>
+                  <div className="ins-featured-author-meta">{t('ins.feat.authorMeta')}</div>
                 </div>
               </div>
-              <span className="ins-featured-date">Yesterday</span>
+              <span className="ins-featured-date">{t('ins.feat.date')}</span>
             </div>
 
             <a href="#read-protocol" className="ins-featured-cta">
-              <span>READ FULL PROTOCOL</span>
+              <span>{t('ins.feat.cta')}</span>
               {I.arrow()}
             </a>
           </div>
@@ -608,12 +578,12 @@ const InsightsBlog = () => {
         className={`ins-archive ${isVisible.archive ? 'is-in' : ''}`}>
         <div className="ins-archive-head">
           <div>
-            <span className="ins-archive-eyebrow">SYSTEM DISPATCH ARCHIVE</span>
-            <h3 className="ins-archive-title"><MaskWords text="EXPLORE CLINICAL PROTOCOLS" /></h3>
+            <span className="ins-archive-eyebrow">{t('ins.arch.eyebrow')}</span>
+            <h3 className="ins-archive-title"><MaskWords text={t('ins.arch.title')} /></h3>
           </div>
           <div className="ins-archive-tools">
-            <button className="ins-tool on" aria-label="Grid view">{I.grid}</button>
-            <button className="ins-tool" aria-label="List view">{I.spark}</button>
+            <button className="ins-tool on" aria-label={t('ins.arch.toolGrid')}>{I.grid}</button>
+            <button className="ins-tool" aria-label={t('ins.arch.toolList')}>{I.spark}</button>
           </div>
         </div>
 
@@ -640,25 +610,20 @@ const InsightsBlog = () => {
                   <span>{a.author}</span>
                 </div>
                 <a href={`#read-${a.id}`} className="ins-card-readmore">
-                  READ ENTRY {I.chevron}
+                  {t('ins.card.read')} {I.chevron}
                 </a>
               </div>
             </article>
           ))}
 
-          {/* Newsletter card slots into the grid */}
           <article className="ins-card ins-card-newsletter" style={{ '--i': filtered.length }}>
             <span className="ins-news-topline" />
             <div className="ins-news-head">
               <span className="ins-news-ico">{I.mail}</span>
-              <span className="ins-news-label">DIRECT LAB ACCESS</span>
+              <span className="ins-news-label">{t('ins.news.label')}</span>
             </div>
-            <h4 className="ins-news-title">TELEMETRY DISPATCH</h4>
-            <p className="ins-news-desc">
-              Receive clinical strength diagnostics, meal periodization sheets,
-              and unreleased case studies directly to your terminal every Sunday
-              at 06:00 EST.
-            </p>
+            <h4 className="ins-news-title">{t('ins.news.title')}</h4>
+            <p className="ins-news-desc">{t('ins.news.desc')}</p>
 
             {subscribed ? (
               <div className="ins-news-success">
@@ -670,23 +635,23 @@ const InsightsBlog = () => {
                 <input
                   type="email"
                   required
-                  placeholder="ATHLETE@DOMAIN.COM"
+                  placeholder={t('ins.news.ph')}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
                 <label className="ins-news-check">
                   <input type="checkbox" defaultChecked />
-                  <span>INCLUDE RAW DATA SETS (CSV)</span>
+                  <span>{t('ins.news.checkbox')}</span>
                 </label>
                 <button type="submit" className="ins-news-cta">
-                  SUBSCRIBE TO DISPATCH {I.bolt}
+                  {t('ins.news.cta')} {I.bolt}
                 </button>
               </form>
             )}
 
             <div className="ins-news-foot">
-              <span>NO SPAM. ZERO NONSENSE.</span>
-              <span>28,400+ ATHLETES</span>
+              <span>{t('ins.news.footLeft')}</span>
+              <span>{t('ins.news.footRight')}</span>
             </div>
           </article>
         </div>
@@ -694,12 +659,12 @@ const InsightsBlog = () => {
         {filtered.length === 0 && (
           <div className="ins-empty">
             <div className="ins-empty-ico">{I.search}</div>
-            <h3>NO PROTOCOLS FOUND</h3>
-            <p>No articles match your search criteria. Try filtering by Training or Biometrics.</p>
+            <h3>{t('ins.empty.title')}</h3>
+            <p>{t('ins.empty.desc')}</p>
             <button
               className="btn btn-ghost btn-sm"
               onClick={() => { setSearchQuery(''); setActiveFilter('all'); }}
-            >RESET ALL FILTERS</button>
+            >{t('ins.empty.reset')}</button>
           </div>
         )}
       </section>
@@ -709,11 +674,13 @@ const InsightsBlog = () => {
         className={`ins-pagination ${isVisible.pagination ? 'is-in' : ''}`}>
         <div className="ins-pag-inner">
           <div className="ins-pag-left">
-            <span className="ins-pag-label">SHOWING {String(Math.min(filtered.length, 6)).padStart(2, '0')} OF 48 RESEARCH PROTOCOLS</span>
+            <span className="ins-pag-label">
+              {t('ins.pag.showing')} {String(Math.min(filtered.length, 6)).padStart(2, '0')} {t('ins.pag.of')} 48 {t('ins.pag.total')}
+            </span>
             <div className="ins-pag-bar"><i style={{ width: '12.5%' }} /></div>
           </div>
           <div className="ins-pag-right">
-            <button className="ins-pag-btn">PREV ENTRIES</button>
+            <button className="ins-pag-btn">{t('ins.pag.prev')}</button>
             <div className="ins-pag-nums">
               <span className="on">1</span>
               <span>2</span>
@@ -721,21 +688,21 @@ const InsightsBlog = () => {
               <span className="dots">…</span>
               <span>8</span>
             </div>
-            <button className="ins-pag-btn primary">NEXT ENTRIES</button>
+            <button className="ins-pag-btn primary">{t('ins.pag.next')}</button>
           </div>
         </div>
       </section>
 
-      {/* TAXONOMY TAGS */}
+      {/* TAXONOMY */}
       <section data-section="tags" ref={(el) => (sectionRefs.current[6] = el)}
         className={`ins-taxonomy ${isVisible.tags ? 'is-in' : ''}`}>
         <div className="ins-tax-left">
-          <span className="ins-tax-label">LAB INDEX SEARCH TAGS</span>
-          <h5 className="ins-tax-title">INDEXED TELEMETRY VECTORS</h5>
+          <span className="ins-tax-label">{t('ins.tax.label')}</span>
+          <h5 className="ins-tax-title">{t('ins.tax.title')}</h5>
         </div>
         <div className="ins-tax-tags">
-          {taxonomyTags.map((t) => (
-            <button key={t} className="ins-tax-tag">{t}</button>
+          {taxonomyTags.map((tag, i) => (
+            <button key={tag} className="ins-tax-tag" style={{ '--i': i }}>{tag}</button>
           ))}
         </div>
       </section>
@@ -745,11 +712,10 @@ const InsightsBlog = () => {
         className={`cta ${isVisible.cta ? 'is-in' : ''}`}>
         <span className="cta-ghost" aria-hidden="true">INSIGHTS</span>
         <div className="cta-in">
-          <span className="cta-eyebrow"><i />READY TO DEPLOY YOUR OWN PROTOCOL?</span>
-          <h2>START WITH A<br /><em>BIOMETRIC BASELINE.</em></h2>
-          <p>Free 30-minute consultation and metabolic snapshot. If our protocols
-            aren't right for you, you walk away owing nothing.</p>
-          <button className="btn btn-red btn-lg cta-btn">BOOK FREE CONSULT {I.arrow()}</button>
+          <span className="cta-eyebrow"><i />{t('ins.cta.eyebrow')}</span>
+          <h2>{t('ins.cta.h2a')}<br /><em>{t('ins.cta.h2b')}</em></h2>
+          <p>{t('ins.cta.desc')}</p>
+          <button className="btn btn-red btn-lg cta-btn">{t('ins.cta.btn')} {I.arrow()}</button>
         </div>
       </section>
 
@@ -761,30 +727,44 @@ const InsightsBlog = () => {
               <span className="brand-mark">{I.logo(16)}</span>
               <span className="brand-txt">SMART<em>GYM</em></span>
             </Link>
-            <p>Strength &amp; conditioning club with biometric telemetry and elite training infrastructure. Built for people who train.</p>
-            <span className="foot-live"><i className="ok-dot" />TELEMETRY GRID LIVE</span>
+            <p>{t('foot.desc')}</p>
+            <span className="foot-live"><i className="ok-dot" />{t('foot.live')}</span>
           </div>
           <div>
-            <h4>ARCHITECTURE</h4>
-            <ul><li>Heavy Iron Arena</li><li>Sprint Velocity Track</li><li>Cryo &amp; Recovery Pods</li><li>Metabolic Testing Lab</li></ul>
+            <h4>{t('foot.architecture')}</h4>
+            <ul>
+              <li>{t('foot.iron')}</li>
+              <li>{t('foot.sprint')}</li>
+              <li>{t('foot.cryo')}</li>
+              <li>{t('foot.metabolic')}</li>
+            </ul>
           </div>
           <div>
-            <h4>PLATFORM</h4>
-            <ul><li>Coaching Protocol</li><li>Biometric App Sync</li><li>Corporate High Performance</li><li>Member Portal</li></ul>
+            <h4>{t('foot.platform')}</h4>
+            <ul>
+              <li>{t('foot.coaching')}</li>
+              <li>{t('foot.bioapp')}</li>
+              <li>{t('foot.corporate')}</li>
+              <li>{t('foot.portal')}</li>
+            </ul>
           </div>
           <div>
-            <h4>OPERATIONS</h4>
-            <p className="foot-p">04:00 – 24:00 Daily Operations<br />Access via biometric passcode key.</p>
-            <span className="foot-hq">HQ TERMINAL</span>
-            <p className="foot-p">District 01, Performance Plaza</p>
+            <h4>{t('foot.operations')}</h4>
+            <p className="foot-p">{t('foot.hours')}<br />{t('foot.access')}</p>
+            <span className="foot-hq">{t('foot.hq')}</span>
+            <p className="foot-p">{t('foot.address')}</p>
           </div>
         </div>
 
         <div className="foot-ghost" aria-hidden="true">SMARTGYM</div>
 
         <div className="foot-bottom">
-          <p>© 2025 SMART GYM INDUSTRIAL ATHLETICS. ALL RIGHTS RESERVED.</p>
-          <div className="foot-legal"><span>Privacy Architecture</span><span>Terms of Conditioning</span><span>Security Protocols</span></div>
+          <p>{t('foot.rights')}</p>
+          <div className="foot-legal">
+            <span>{t('foot.privacy')}</span>
+            <span>{t('foot.terms')}</span>
+            <span>{t('foot.security')}</span>
+          </div>
           <button className="totop" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label="Back to top">
             <svg width="46" height="46" viewBox="0 0 46 46">
               <circle className="rb" cx="23" cy="23" r="22" />
@@ -796,10 +776,10 @@ const InsightsBlog = () => {
       </footer>
 
       <nav className="tabbar" aria-label="Quick navigation">
-        <Link to="/">{I.home}<span>HOME</span></Link>
-        <Link to="/facilities">{I.grid}<span>FACILITIES</span></Link>
-        <Link to="/services">{I.bolt}<span>SERVICES</span></Link>
-        <a href="#join" className="tab-join">{I.flame}<span>JOIN NOW</span></a>
+        <Link to="/">{I.home}<span>{t('ins.tab.home')}</span></Link>
+        <Link to="/facilities">{I.grid}<span>{t('ins.tab.facilities')}</span></Link>
+        <Link to="/services">{I.bolt}<span>{t('ins.tab.services')}</span></Link>
+        <a href="#join" className="tab-join">{I.flame}<span>{t('ins.tab.join')}</span></a>
       </nav>
     </div>
   );

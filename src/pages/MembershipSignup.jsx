@@ -1,6 +1,8 @@
 // pages/MembershipSignup.jsx
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { useLang } from '../i18n/LangContext';
+import LangSwitch from '../i18n/LangSwitch';
 import './MembershipSignup.css';
 
 /* ============================================================
@@ -9,6 +11,7 @@ import './MembershipSignup.css';
 const useDecode = (text, start) => {
   const [out, setOut] = useState(text);
   useEffect(() => {
+    setOut(text);
     if (!start) return;
     const glyphs = '█▓▒░<>/' + String.fromCharCode(92) + '|—';
     let frame = 0;
@@ -145,73 +148,8 @@ const I = {
 };
 
 /* ============================================================
-   CONTENT — icon fields hold FUNCTIONS; call at render: t.icon(16)
+   STATIC IMAGE PATHS
 ============================================================ */
-const NODES = [
-  'Tokyo Monolith HQ — District 01',
-  'Neo-Kyoto Velocity Annex — District 02',
-  'Osaka Iron Yard — District 04',
-  'Shibuya Cryo Lab — District 07',
-];
-
-const VECTORS = [
-  { id: 'hyp', label: 'HYPERTROPHY', sub: 'Heavy Iron Vol.', icon: I.dumbbell },
-  { id: 'shred', label: 'FAT SHRED', sub: 'Metabolic Cut', icon: I.flame },
-  { id: 'endu', label: 'ENDURANCE', sub: 'Engine Building', icon: I.speed },
-  { id: 'combat', label: 'COMBAT / MMA', sub: 'Striking & Power', icon: I.mma },
-  { id: 'biomech', label: 'BIOMECHANICS', sub: 'VBT Velocity', icon: I.timer },
-  { id: 'recovery', label: 'RECOVERY', sub: 'Cryo & Sauna', icon: I.cryo },
-];
-
-const PLANS = [
-  {
-    id: 'base', short: 'BASE', name: 'SMART BASE TIER', price: 49,
-    desc: 'Core Industrial Access · Standard Machine Telemetry',
-    perks: [
-      '24/7 Keyless Turnstile Entry (Apple / Google Pass)',
-      'QR Machine Telemetry Sync & Progress Ledger',
-      'Strength Floor, Cardio Deck & Velocity Track',
-      'Infrared Sauna — 2 Sessions / Week',
-      'Member App, Class Booking & Biometric ID',
-    ],
-  },
-  {
-    id: 'pro', short: 'PRO', name: 'SMART PRO TIER', price: 79, rec: true,
-    desc: 'Full Industrial Access · Unlimited Biometric Telemetry',
-    perks: [
-      '24/7 Biometric Turnstile & Keyless Apple/Google Pass Entry',
-      'Smart QR Machine Telemetry Sync & Barbell Velocity Sensors',
-      'Full Olympic Pool, Velocity Track & Combat Pit Access',
-      'Unlimited Hydro-Massage, Infrared Sauna & Cryo Pod Access',
-      '2 Guest Biometric Access Day Passes / Month',
-    ],
-  },
-  {
-    id: 'elite', short: 'ELITE', name: 'ELITE APEX TIER', price: 119,
-    desc: 'Apex Access · Coaching Credits & Priority Recovery',
-    perks: [
-      'Everything in Smart Pro Tier',
-      '2× 45-min Elite Coaching Screens / Month',
-      'Priority Cryo Pod & Hydro-Massage Reservations',
-      'Combat Pit Open Mat + 4 Guest Passes / Month',
-      'Quarterly DEXA Scan & Movement Audit',
-    ],
-  },
-];
-
-const SUM_TRUST = [
-  { icon: I.shield, t: '256-BIT BIOMETRIC ENCLAVE', d: 'Hardware security level data storage' },
-  { icon: I.target, t: '14-DAY PEAK GUARANTEE', d: "100% full refund if training expectations aren't exceeded" },
-  { icon: I.bolt, t: 'INSTANT WALLET PASS', d: 'One-tap pass save to Apple Wallet or Google Wallet' },
-];
-
-const TRUST_STRIP = [
-  { icon: I.nfc, t: 'ZERO KEY CARDS', d: 'Enter seamlessly with encrypted facial scan or phone NFC turnstile access.' },
-  { icon: I.cloud, t: 'CLOUD METRIC BACKUP', d: 'All barbell load, power output, and velocity data stored automatically.' },
-  { icon: I.calx, t: 'FLEXIBLE CANCELLATION', d: 'No 12-month commitments. Pause or terminate your contract directly in-app.' },
-  { icon: I.coach, t: 'ELITE COACHING ON CALL', d: 'Complimentary monthly 45-minute biomechanical movement screen included.' },
-];
-
 const IMG = {
   facility: 'https://images.unsplash.com/photo-1540497077202-7c8a3999166f?auto=format&fit=crop&w=1200&q=80',
   avatar: 'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=120&q=80',
@@ -233,26 +171,23 @@ const brandOf = (v) => {
 };
 
 /* ============================================================
-   CARD PREVIEW — live 3D card, flips on CVC focus
+   CARD PREVIEW
 ============================================================ */
-const CardPreview = ({ digits, name, exp, brand, flipped }) => {
+const CardPreview = ({ digits, name, exp, brand, flipped, t }) => {
   const groups = useMemo(() => {
     const out = [];
-    for (let i = 0; i < 16; i++) {
-      out.push(digits[i] || '•');
-    }
+    for (let i = 0; i < 16; i++) out.push(digits[i] || '•');
     return [out.slice(0, 4), out.slice(4, 8), out.slice(8, 12), out.slice(12, 16)];
   }, [digits]);
 
   return (
     <div className="en-cardprev">
       <div className={`en-cp-inner ${flipped ? 'flip' : ''} ${brand ? 'b-' + brand.toLowerCase() : ''}`}>
-        {/* FRONT */}
         <div className="en-cp-face en-cp-front">
           <span className="en-cp-shine" aria-hidden="true" />
           <div className="en-cp-top">
             <span className="en-cp-chip" aria-hidden="true" />
-            <span className="en-cp-brand">{brand || 'SMART PAY'}</span>
+            <span className="en-cp-brand">{brand || t('en.cp.brand')}</span>
           </div>
           <div className="en-cp-num">
             {groups.map((g, gi) => (
@@ -260,19 +195,18 @@ const CardPreview = ({ digits, name, exp, brand, flipped }) => {
             ))}
           </div>
           <div className="en-cp-bottom">
-            <div><span>CARD HOLDER</span><b>{(name || 'ATHLETE NAME').toUpperCase()}</b></div>
-            <div><span>EXPIRES</span><b>{exp || 'MM/YY'}</b></div>
+            <div><span>{t('en.cp.holder')}</span><b>{(name || t('en.cp.namePh')).toUpperCase()}</b></div>
+            <div><span>{t('en.cp.expires')}</span><b>{exp || t('en.cp.expPh')}</b></div>
             <span className="en-cp-nfc">{I.nfc(14)}</span>
           </div>
         </div>
-        {/* BACK */}
         <div className="en-cp-face en-cp-back">
           <span className="en-cp-stripe" aria-hidden="true" />
           <div className="en-cp-cvcrow">
             <span className="en-cp-sig" />
             <span className="en-cp-cvc">•••</span>
           </div>
-          <span className="en-cp-backnote">CVC — 3-DIGIT ENCRYPTION TOKEN</span>
+          <span className="en-cp-backnote">{t('en.cp.cvcNote')}</span>
         </div>
       </div>
     </div>
@@ -283,6 +217,8 @@ const CardPreview = ({ digits, name, exp, brand, flipped }) => {
    COMPONENT
 ============================================================ */
 const MembershipSignup = () => {
+  const { t } = useLang();
+
   const [bootPct, setBootPct] = useState(0);
   const [boot, setBoot] = useState(false);
   const [bootGone, setBootGone] = useState(false);
@@ -292,7 +228,7 @@ const MembershipSignup = () => {
   const [planId, setPlanId] = useState('pro');
   const [vectors, setVectors] = useState([]);
   const [payMethod, setPayMethod] = useState('card');
-  const [form, setForm] = useState({ name: '', email: '', phone: '', node: NODES[0] });
+  const [form, setForm] = useState({ name: '', email: '', phone: '', node: 'n1' });
   const [card, setCard] = useState({ num: '', exp: '', cvc: '', zip: '' });
   const [autoRenew, setAutoRenew] = useState(true);
   const [agree, setAgree] = useState(false);
@@ -305,12 +241,60 @@ const MembershipSignup = () => {
   const [scan, setScan] = useState(false);
   const [cvcFocus, setCvcFocus] = useState(false);
 
-  const plan = PLANS.find((p) => p.id === planId);
+  /* ---------- Translated content arrays ---------- */
+  const NODES = [
+    { id: 'n1', label: t('en.node.1') },
+    { id: 'n2', label: t('en.node.2') },
+    { id: 'n3', label: t('en.node.3') },
+    { id: 'n4', label: t('en.node.4') },
+  ];
+
+  const VECTORS = [
+    { id: 'hyp',      label: t('en.vec.hyp.t'),      sub: t('en.vec.hyp.s'),      icon: I.dumbbell },
+    { id: 'shred',    label: t('en.vec.shred.t'),    sub: t('en.vec.shred.s'),    icon: I.flame },
+    { id: 'endu',     label: t('en.vec.endu.t'),     sub: t('en.vec.endu.s'),     icon: I.speed },
+    { id: 'combat',   label: t('en.vec.combat.t'),   sub: t('en.vec.combat.s'),   icon: I.mma },
+    { id: 'biomech',  label: t('en.vec.biomech.t'),  sub: t('en.vec.biomech.s'),  icon: I.timer },
+    { id: 'recovery', label: t('en.vec.recovery.t'), sub: t('en.vec.recovery.s'), icon: I.cryo },
+  ];
+
+  const PLANS = [
+    {
+      id: 'base', short: t('en.plan.base.short'), name: t('en.plan.base.name'), price: 49,
+      desc: t('en.plan.base.desc'),
+      perks: [t('en.plan.base.p1'), t('en.plan.base.p2'), t('en.plan.base.p3'), t('en.plan.base.p4'), t('en.plan.base.p5')],
+    },
+    {
+      id: 'pro', short: t('en.plan.pro.short'), name: t('en.plan.pro.name'), price: 79, rec: true,
+      desc: t('en.plan.pro.desc'),
+      perks: [t('en.plan.pro.p1'), t('en.plan.pro.p2'), t('en.plan.pro.p3'), t('en.plan.pro.p4'), t('en.plan.pro.p5')],
+    },
+    {
+      id: 'elite', short: t('en.plan.elite.short'), name: t('en.plan.elite.name'), price: 119,
+      desc: t('en.plan.elite.desc'),
+      perks: [t('en.plan.elite.p1'), t('en.plan.elite.p2'), t('en.plan.elite.p3'), t('en.plan.elite.p4'), t('en.plan.elite.p5')],
+    },
+  ];
+
+  const SUM_TRUST = [
+    { icon: I.shield, t: t('en.sum.trust1t'), d: t('en.sum.trust1d') },
+    { icon: I.target, t: t('en.sum.trust2t'), d: t('en.sum.trust2d') },
+    { icon: I.bolt,   t: t('en.sum.trust3t'), d: t('en.sum.trust3d') },
+  ];
+
+  const TRUST_STRIP = [
+    { icon: I.nfc,   t: t('en.trust.1.t'), d: t('en.trust.1.d') },
+    { icon: I.cloud, t: t('en.trust.2.t'), d: t('en.trust.2.d') },
+    { icon: I.calx,  t: t('en.trust.3.t'), d: t('en.trust.3.d') },
+    { icon: I.coach, t: t('en.trust.4.t'), d: t('en.trust.4.d') },
+  ];
+
+  const plan = PLANS.find((p) => p.id === planId) || PLANS[1];
   const price = plan.price;
   const tweenPrice = useTween(price, 700);
 
   const passText = useDecode('PASS #8841-TK', boot);
-  const doneText = useDecode('SMART KEY ACTIVATED — SHOW PASS AT ANY TURNSTILE', done);
+  const doneText = useDecode(t('en.ok.pass'), done);
 
   const hdrRef = useRef(null);
   const progRef = useRef(null);
@@ -322,7 +306,6 @@ const MembershipSignup = () => {
   const cursorTarget = useRef({ x: 0, y: 0 });
   const bootRef = useRef(false);
 
-  /* field refs — focus-first-invalid */
   const nameRef = useRef(null);
   const emailRef = useRef(null);
   const phoneRef = useRef(null);
@@ -349,17 +332,16 @@ const MembershipSignup = () => {
   const brand = brandOf(card.num);
   const cardDigits = card.num.replace(/\s/g, '');
 
-  /* missing step-1 items — drives the requirements banner */
   const missing = useMemo(() => {
     const m = [];
-    if (!nameOk) m.push({ label: 'FULL NAME', ref: nameRef });
-    if (!emailOk) m.push({ label: 'EMAIL', ref: emailRef });
-    if (!phoneOk) m.push({ label: 'PHONE', ref: phoneRef });
-    if (!vectorsOk) m.push({ label: 'VECTOR', ref: vecRef });
+    if (!nameOk) m.push({ label: t('en.err.chipName'), ref: nameRef });
+    if (!emailOk) m.push({ label: t('en.err.chipEmail'), ref: emailRef });
+    if (!phoneOk) m.push({ label: t('en.err.chipPhone'), ref: phoneRef });
+    if (!vectorsOk) m.push({ label: t('en.err.chipVector'), ref: vecRef });
     return m;
-  }, [nameOk, emailOk, phoneOk, vectorsOk]);
+  }, [nameOk, emailOk, phoneOk, vectorsOk, t]);
 
-  /* ---- draft persistence (never stores card data) ---- */
+  /* Draft persistence */
   useEffect(() => {
     try {
       const d = JSON.parse(localStorage.getItem('sg-enroll-draft') || 'null');
@@ -378,7 +360,7 @@ const MembershipSignup = () => {
     } catch { /* ignore */ }
   }, [form, vectors, planId, done]);
 
-  /* ---- boot ---- */
+  /* Boot */
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     let raf, t0;
@@ -396,14 +378,14 @@ const MembershipSignup = () => {
 
   useEffect(() => {
     if (!boot) return;
-    const t = setTimeout(() => {
+    const tid = setTimeout(() => {
       setBootGone(true);
       document.body.style.overflow = '';
     }, 900);
-    return () => clearTimeout(t);
+    return () => clearTimeout(tid);
   }, [boot]);
 
-  /* ---- reveal on scroll ---- */
+  /* Reveal on scroll */
   useEffect(() => {
     if (!boot) return;
     const els = document.querySelectorAll('[data-rv]');
@@ -414,7 +396,7 @@ const MembershipSignup = () => {
     return () => io.disconnect();
   }, [boot]);
 
-  /* ---- live occupancy ticker ---- */
+  /* Live occupancy ticker */
   useEffect(() => {
     const id = setInterval(() => {
       setOcc((o) => Math.max(28, Math.min(64, o + (Math.random() < 0.5 ? -1 : 1) * (1 + Math.floor(Math.random() * 3)))));
@@ -422,7 +404,7 @@ const MembershipSignup = () => {
     return () => clearInterval(id);
   }, []);
 
-  /* ---- master rAF: header, progress, ghost parallax ---- */
+  /* Master rAF */
   useEffect(() => {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const onMove = (e) => { cursorTarget.current = { x: e.clientX, y: e.clientY }; };
@@ -460,7 +442,7 @@ const MembershipSignup = () => {
     };
   }, []);
 
-  /* ---- custom cursor ---- */
+  /* Custom cursor */
   useEffect(() => {
     if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -486,7 +468,7 @@ const MembershipSignup = () => {
     return () => { cancelAnimationFrame(raf); window.removeEventListener('mouseover', over); };
   }, []);
 
-  /* ---- magnetic buttons ---- */
+  /* Magnetic buttons */
   useEffect(() => {
     if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -514,13 +496,11 @@ const MembershipSignup = () => {
     return () => document.body.classList.remove('no-scroll');
   }, [menuOpen]);
 
-  /* ---- actions ---- */
   const flashErr = () => {
     setFlash(true);
     setTimeout(() => setFlash(false), 600);
   };
 
-  /* focus a field ref: scroll + focus the inner input */
   const focusField = (ref, delay = 0) => {
     setTimeout(() => {
       ref.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -530,7 +510,6 @@ const MembershipSignup = () => {
     }, delay);
   };
 
-  /* freely navigable steps — always works */
   const goStep = (n) => {
     setStep(n);
     requestAnimationFrame(() => {
@@ -543,9 +522,8 @@ const MembershipSignup = () => {
   const submit = () => {
     if (processing || done) return;
     if (!step2Ok) {
-      setTouched((t) => ({ ...t, name: 1, email: 1, phone: 1, vectors: 1, num: 1, exp: 1, cvc: 1, zip: 1, agree: 1 }));
+      setTouched((x) => ({ ...x, name: 1, email: 1, phone: 1, vectors: 1, num: 1, exp: 1, cvc: 1, zip: 1, agree: 1 }));
       flashErr();
-      /* jump to whichever step holds the first problem */
       if (!step1Ok) {
         goStep(1);
         const first = missing[0];
@@ -567,9 +545,7 @@ const MembershipSignup = () => {
 
   const primary = () => (done ? null : step === 1 ? proceed() : submit());
   const paybarOff = done || processing;
-
   const hudPct = done ? 100 : step2Ok ? 92 : step1Ok ? 58 : step === 2 ? 40 : 12;
-
   const err = (k, bad, msg) => (touched[k] && bad ? msg : null);
 
   return (
@@ -584,12 +560,12 @@ const MembershipSignup = () => {
             <span className="boot-mark">SMART<em>GYM</em></span>
             <span className="boot-count">{bootPct}<i>%</i></span>
             <span className="boot-bar"><i style={{ transform: `scaleX(${bootPct / 100})` }} /></span>
-            <span className="boot-label">OPENING BIOMETRIC ENCLAVE</span>
+            <span className="boot-label">{t('en.boot')}</span>
           </div>
         </div>
       )}
 
-      {/* ENROLLMENT HUD — fixed left rail (desktop) */}
+      {/* HUD */}
       {!done && (
         <aside className="en-hud" aria-label="Enrollment progress">
           <button type="button" className={`en-hud-node ${step === 1 ? 'on' : 'done'}`}
@@ -598,7 +574,7 @@ const MembershipSignup = () => {
           <button type="button"
             className={`en-hud-node ${step === 2 ? 'on' : ''}`}
             onClick={() => step !== 2 && goStep(2)} aria-label="Go to step 2">02</button>
-          <span className="en-hud-pct"><b>{hudPct}</b>%<i>ENROLLED</i></span>
+          <span className="en-hud-pct"><b>{hudPct}</b>%<i>{t('en.hud.pct')}</i></span>
         </aside>
       )}
 
@@ -610,13 +586,15 @@ const MembershipSignup = () => {
             <span className="brand-txt">SMART<em>GYM</em></span>
           </Link>
           <nav className="hdr-nav">
-            <Link to="/facilities">Facilities</Link>
-            <Link to="/services">Services</Link>
-            <Link to="/join" className="on">Membership</Link>
-            <Link to="/insights">Insights</Link>
-            <Link to="/contact">Contact</Link>
+            <Link to="/">{t('nav.home')}</Link>
+            <Link to="/facilities">{t('nav.facilities')}</Link>
+            <Link to="/services">{t('nav.services')}</Link>
+            <Link to="/join" className="on">{t('nav.membership')}</Link>
+            <Link to="/insights">{t('nav.insights')}</Link>
+            <Link to="/contact">{t('nav.contact')}</Link>
           </nav>
           <div className="hdr-actions">
+            <LangSwitch variant="header" />
             <span className="hdr-avatar" aria-hidden="true"><img src={IMG.avatar} alt="" /></span>
             <button
               className={`burger ${menuOpen ? 'x' : ''}`}
@@ -630,47 +608,49 @@ const MembershipSignup = () => {
 
       <div className={`mnav ${menuOpen ? 'open' : ''}`} aria-hidden={!menuOpen}>
         <nav>
-          <Link to="/" style={{ '--d': '0.06s' }} onClick={() => setMenuOpen(false)}><span>01</span>Home</Link>
-          <Link to="/facilities" style={{ '--d': '0.11s' }} onClick={() => setMenuOpen(false)}><span>02</span>Facilities</Link>
-          <Link to="/services" style={{ '--d': '0.16s' }} onClick={() => setMenuOpen(false)}><span>03</span>Services</Link>
-          <Link to="/join" style={{ '--d': '0.21s' }} onClick={() => setMenuOpen(false)}><span>04</span>Membership</Link>
-          <Link to="/insights" style={{ '--d': '0.26s' }} onClick={() => setMenuOpen(false)}><span>05</span>Insights</Link>
-          <Link to="/contact" style={{ '--d': '0.31s' }} onClick={() => setMenuOpen(false)}><span>06</span>Contact</Link>
+          <Link to="/" style={{ '--d': '0.06s' }} onClick={() => setMenuOpen(false)}><span>01</span>{t('nav.home')}</Link>
+          <Link to="/facilities" style={{ '--d': '0.11s' }} onClick={() => setMenuOpen(false)}><span>02</span>{t('nav.facilities')}</Link>
+          <Link to="/services" style={{ '--d': '0.16s' }} onClick={() => setMenuOpen(false)}><span>03</span>{t('nav.services')}</Link>
+          <Link to="/join" style={{ '--d': '0.21s' }} onClick={() => setMenuOpen(false)}><span>04</span>{t('nav.membership')}</Link>
+          <Link to="/insights" style={{ '--d': '0.26s' }} onClick={() => setMenuOpen(false)}><span>05</span>{t('nav.insights')}</Link>
+          <Link to="/contact" style={{ '--d': '0.31s' }} onClick={() => setMenuOpen(false)}><span>06</span>{t('nav.contact')}</Link>
         </nav>
-        <span className="mnav-foot">OPEN 24/7 // DISTRICT 01</span>
+        <LangSwitch variant="mobile" />
+        <Link to="/join" className="btn btn-red mnav-join" onClick={() => setMenuOpen(false)}>
+          {t('nav.joinNow')} {I.arrow(11)}
+        </Link>
+        <span className="mnav-foot">{t('nav.foot')}</span>
       </div>
 
       <main className="en-main">
 
-        {/* HERO STRIP */}
+        {/* HERO */}
         <section className="en-hero">
           <div className="grain" aria-hidden="true" />
-          <span className="en-ghost" ref={ghostRef} aria-hidden="true">ENROLL</span>
+          <span className="en-ghost" ref={ghostRef} aria-hidden="true">{t('en.ghost')}</span>
 
           <div className="en-hero-in">
             <div className="en-hero-left" data-rv>
-              <div className="kicker"><i /><span>BIOMETRIC ENCLAVE REGISTRATION — DISTRICT 01 GATEWAY</span></div>
-              <h1 className="en-title">ATHLETE <em>ENROLLMENT</em> PROTOCOL</h1>
-              <p className="en-lede">
-                Secure digital provisioning for uninterrupted 24/7 terminal access,
-                biometric barbell telemetry, and recovery infrastructure.
-              </p>
+              <div className="kicker"><i /><span>{t('en.kicker')}</span></div>
+              <h1 className="en-title">
+                {t('en.title')} <em>{t('en.title.em')}</em> {t('en.title.tail')}
+              </h1>
+              <p className="en-lede">{t('en.lede')}</p>
             </div>
 
             <div className="en-secbadges" data-rv style={{ '--d': '120ms' }}>
               <div className="en-sec">
                 <span className="en-sec-ico">{I.shield(15)}</span>
-                <div><span>SESSION SECURITY</span><b>TLS 1.3 / EAL6+</b></div>
+                <div><span>{t('en.sec1.label')}</span><b>{t('en.sec1.value')}</b></div>
                 <span className="en-sec-scan" aria-hidden="true" />
               </div>
               <div className="en-sec">
                 <span className="en-sec-ico">{I.key(15)}</span>
-                <div><span>ALLOCATION</span><b>{passText}</b></div>
+                <div><span>{t('en.sec2.label')}</span><b>{passText}</b></div>
               </div>
             </div>
           </div>
 
-          {/* STEP RAIL (desktop) — both always clickable */}
           <div className="en-steps" data-rv style={{ '--d': '180ms' }}>
             <span className="en-steps-line" aria-hidden="true">
               <i style={{ width: `${done ? 100 : step === 2 ? 100 : step1Ok ? 50 : 0}%` }} />
@@ -682,12 +662,10 @@ const MembershipSignup = () => {
               onClick={() => step !== 1 && goStep(1)}>
               <span className="en-step-n">01</span>
               <span className="en-step-txt">
-                <b>STEP 01 — ATHLETE PROFILE &amp; PROTOCOL</b>
-                <span>Identity, home terminal location, and training vector</span>
+                <b>{t('en.step1.b')}</b>
+                <span>{t('en.step1.s')}</span>
               </span>
-              <span className="en-step-st">
-                {step1Ok ? I.check(14) : I.target(14)}
-              </span>
+              <span className="en-step-st">{step1Ok ? I.check(14) : I.target(14)}</span>
             </button>
 
             <button type="button"
@@ -695,8 +673,8 @@ const MembershipSignup = () => {
               onClick={() => step !== 2 && goStep(2)}>
               <span className="en-step-n">02</span>
               <span className="en-step-txt">
-                <b>STEP 02 — BIOMETRICS &amp; INSTANT CHECKOUT</b>
-                <span>{step1Ok ? 'Express mobile wallet, biometric encryption token' : 'Open to review — complete step 01 fields to pay'}</span>
+                <b>{t('en.step2.b')}</b>
+                <span>{step1Ok ? t('en.step2.s.ready') : t('en.step2.s.locked')}</span>
               </span>
               <span className="en-step-st">
                 {step === 2 ? I.target(14) : step1Ok ? I.check(14) : I.lock(14)}
@@ -704,32 +682,30 @@ const MembershipSignup = () => {
             </button>
           </div>
 
-          {/* PROGRESS (mobile) */}
           <div className="en-progress">
             <div className="en-progress-head">
-              <i />{step === 1 ? 'STEP 1 OF 2: ATHLETE DOSSIER' : 'STEP 2 OF 2: SECURE CHECKOUT'}
-              <b>{step === 1 ? '50' : '100'}% COMPLETE</b>
+              <i />{step === 1 ? t('en.progress.step1') : t('en.progress.step2')}
+              <b>{step === 1 ? '50' : '100'}{t('en.progress.pct')}</b>
             </div>
             <div className="en-progress-bar"><i style={{ width: step === 1 ? '50%' : '100%' }} /></div>
           </div>
         </section>
 
-        {/* CHECKOUT GRID */}
+        {/* GRID */}
         <section className="en-grid" ref={formsRef}>
 
-          {/* ======== LEFT: FORMS (free accordion) ======== */}
           <div className={`en-forms ${flash ? 'en-shake' : ''}`}>
 
             {!done ? (
               <>
-                {/* ---- PANEL 1: CREDENTIALS ---- */}
+                {/* PANEL 1 */}
                 <section ref={panel1Ref}
                   className={`en-panel ${step === 1 ? 'open' : ''}`} data-rv>
                   <button type="button" className="en-panel-head"
                     onClick={() => setStep(1)} aria-expanded={step === 1}>
                     <span className="en-panel-bar" />
-                    <span className="en-panel-title">ATHLETE CREDENTIALS &amp; VECTOR</span>
-                    <span className="en-panel-proto">FIELD PROTOCOL · 01/02</span>
+                    <span className="en-panel-title">{t('en.p1.title')}</span>
+                    <span className="en-panel-proto">{t('en.p1.proto')}</span>
                     <span className={`en-panel-state ${step1Ok ? 'ok' : ''}`}>
                       {step1Ok ? I.check(11) : I.target(12)}
                     </span>
@@ -748,42 +724,42 @@ const MembershipSignup = () => {
                     <div className="en-panel-in">
 
                       <div className="en-fieldgrid">
-                        <label ref={nameRef} className={`en-field ${err('name', !nameOk, 'MIN 2 CHARACTERS') ? 'bad' : ''}`}>
-                          <span className="en-flabel">FULL LEGAL NAME</span>
+                        <label ref={nameRef} className={`en-field ${err('name', !nameOk, t('en.err.name')) ? 'bad' : ''}`}>
+                          <span className="en-flabel">{t('en.p1.name')}</span>
                           <div className="en-input">
-                            <input type="text" placeholder="e.g. MARCUS VANCE" value={form.name}
+                            <input type="text" placeholder={t('en.p1.namePh')} value={form.name}
                               onChange={(e) => setForm({ ...form, name: e.target.value })}
-                              onBlur={() => setTouched((t) => ({ ...t, name: 1 }))} />
+                              onBlur={() => setTouched((x) => ({ ...x, name: 1 }))} />
                             <span className="en-in-ico">{I.user(14)}</span>
                           </div>
                         </label>
 
-                        <label ref={emailRef} className={`en-field ${err('email', !emailOk, 'INVALID EMAIL') ? 'bad' : ''}`}>
-                          <span className="en-flabel">ENCRYPTED EMAIL ADDRESS</span>
+                        <label ref={emailRef} className={`en-field ${err('email', !emailOk, t('en.err.email')) ? 'bad' : ''}`}>
+                          <span className="en-flabel">{t('en.p1.email')}</span>
                           <div className="en-input">
-                            <input type="email" placeholder="vance.athletics@domain.io" value={form.email}
+                            <input type="email" placeholder={t('en.p1.emailPh')} value={form.email}
                               onChange={(e) => setForm({ ...form, email: e.target.value })}
-                              onBlur={() => setTouched((t) => ({ ...t, email: 1 }))} />
+                              onBlur={() => setTouched((x) => ({ ...x, email: 1 }))} />
                             <span className="en-in-ico">{I.mail(14)}</span>
                           </div>
                         </label>
 
-                        <label ref={phoneRef} className={`en-field ${err('phone', !phoneOk, 'ENTER VALID NUMBER') ? 'bad' : ''}`}>
-                          <span className="en-flabel">MOBILE SECURITY LINE</span>
+                        <label ref={phoneRef} className={`en-field ${err('phone', !phoneOk, t('en.err.phone')) ? 'bad' : ''}`}>
+                          <span className="en-flabel">{t('en.p1.phone')}</span>
                           <div className="en-input">
-                            <input type="tel" placeholder="+1 (555) 890-4412" value={form.phone}
+                            <input type="tel" placeholder={t('en.p1.phonePh')} value={form.phone}
                               onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                              onBlur={() => setTouched((t) => ({ ...t, phone: 1 }))} />
+                              onBlur={() => setTouched((x) => ({ ...x, phone: 1 }))} />
                             <span className="en-in-ico">{I.phone(14)}</span>
                           </div>
                         </label>
 
                         <label className="en-field">
-                          <span className="en-flabel">HOME PERFORMANCE TERMINAL</span>
+                          <span className="en-flabel">{t('en.p1.node')}</span>
                           <div className="en-input en-select">
                             <select value={form.node}
                               onChange={(e) => setForm({ ...form, node: e.target.value })}>
-                              {NODES.map((n) => <option key={n} value={n}>{n}</option>)}
+                              {NODES.map((n) => <option key={n.id} value={n.id}>{n.label}</option>)}
                             </select>
                             <span className="en-in-ico">{I.node(14)}</span>
                             <span className="en-sel-arrow">{I.chev(11)}</span>
@@ -791,10 +767,10 @@ const MembershipSignup = () => {
                         </label>
                       </div>
 
-                      <div ref={vecRef} className={`en-vecwrap ${err('vectors', !vectorsOk, 'SELECT AT LEAST ONE VECTOR') ? 'bad' : ''}`}>
+                      <div ref={vecRef} className={`en-vecwrap ${err('vectors', !vectorsOk, t('en.err.vec')) ? 'bad' : ''}`}>
                         <div className="en-vec-head">
-                          <span className="en-flabel">PRIMARY ATHLETIC VECTOR (TELEMETRY CALIBRATION)</span>
-                          <span className="en-vec-multi">SELECT MULTIPLE</span>
+                          <span className="en-flabel">{t('en.p1.vecHead')}</span>
+                          <span className="en-vec-multi">{t('en.p1.vecMulti')}</span>
                         </div>
                         <div className="en-chips">
                           {VECTORS.map((v, vi) => {
@@ -803,7 +779,7 @@ const MembershipSignup = () => {
                               <button type="button" key={v.id}
                                 className={`en-chip ${on ? 'on' : ''}`}
                                 style={{ '--i': vi }}
-                                onClick={() => { setVectors((s) => s.includes(v.id) ? s.filter((x) => x !== v.id) : [...s, v.id]); setTouched((t) => ({ ...t, vectors: 1 })); }}
+                                onClick={() => { setVectors((s) => s.includes(v.id) ? s.filter((x) => x !== v.id) : [...s, v.id]); setTouched((x) => ({ ...x, vectors: 1 })); }}
                                 aria-pressed={on}>
                                 <span className="en-chip-ico">{v.icon(15)}</span>
                                 <span className="en-chip-txt"><b>{v.label}</b><i>{v.sub}</i></span>
@@ -816,30 +792,29 @@ const MembershipSignup = () => {
                       </div>
 
                       <button type="button" className="btn btn-red btn-lg en-cta" onClick={proceed}>
-                        PROCEED TO CHECKOUT {I.arrow()}
+                        {t('en.p1.cta')} {I.arrow()}
                       </button>
                     </div>
                   </div>
                 </section>
 
-                {/* ---- PANEL 2: PAYMENT (always openable) ---- */}
+                {/* PANEL 2 */}
                 <section ref={panel2Ref}
                   className={`en-panel ${step === 2 ? 'open' : ''}`} data-rv>
                   <button type="button" className="en-panel-head"
                     onClick={() => setStep(2)} aria-expanded={step === 2}>
                     <span className="en-panel-bar red" />
-                    <span className="en-panel-title">PAYMENT &amp; BIOMETRIC ENCRYPTION</span>
-                    <span className="en-panel-proto">FIELD PROTOCOL · 02/02</span>
+                    <span className="en-panel-title">{t('en.p2.title')}</span>
+                    <span className="en-panel-proto">{t('en.p2.proto')}</span>
                     <span className={`en-panel-state ${step2Ok ? 'ok' : step === 2 ? 'live' : ''}`}>
                       {step2Ok ? I.check(11) : step === 2 ? I.target(12) : I.lock(11)}
                     </span>
                     <span className={`en-panel-chev ${step === 2 ? 'up' : ''}`}>{I.chev(13)}</span>
                   </button>
 
-                  {/* requirements banner — replaces hard lock */}
                   {!step1Ok && (
                     <div className="en-req">
-                      <span className="en-req-label">{I.shield(12)} STEP 01 REQUIRED FIRST</span>
+                      <span className="en-req-label">{I.shield(12)} {t('en.p2.reqLabel')}</span>
                       <div className="en-req-chips">
                         {missing.map((m) => (
                           <button key={m.label} type="button"
@@ -854,40 +829,40 @@ const MembershipSignup = () => {
                   <div className="en-panel-body">
                     <div className="en-panel-in">
 
-                      {/* Live 3D card preview */}
                       <CardPreview
                         digits={cardDigits}
                         name={form.name}
                         exp={card.exp}
                         brand={brand}
                         flipped={cvcFocus}
+                        t={t}
                       />
 
-                      <span className="en-flabel">INSTANT EXPRESS CHECKOUT</span>
+                      <span className="en-flabel">{t('en.p2.expressLabel')}</span>
                       <div className="en-express">
                         <button type="button"
                           className={`en-express-btn ${payMethod === 'apple' ? 'on' : ''}`}
                           onClick={() => setPayMethod('apple')}>
-                          {I.apple(18)} PAY WITH APPLE
+                          {I.apple(18)} {t('en.p2.apple')}
                         </button>
                         <button type="button"
                           className={`en-express-btn ${payMethod === 'google' ? 'on' : ''}`}
                           onClick={() => setPayMethod('google')}>
-                          {I.google(16)} GOOGLE PAY
+                          {I.google(16)} {t('en.p2.google')}
                         </button>
                       </div>
 
-                      <div className="en-divider"><i />OR VAULT ENCRYPTED CREDIT CARD<i /></div>
+                      <div className="en-divider"><i />{t('en.p2.divider')}<i /></div>
 
                       <div className={`en-cardfields ${payMethod === 'card' ? 'open' : ''}`}>
                         <div className="en-cardfields-in">
-                          <label ref={numRef} className={`en-field ${err('num', !cardOk, '16 DIGITS REQUIRED') ? 'bad' : ''}`}>
-                            <span className="en-flabel">CARD NUMBER</span>
+                          <label ref={numRef} className={`en-field ${err('num', !cardOk, t('en.err.num')) ? 'bad' : ''}`}>
+                            <span className="en-flabel">{t('en.p2.num')}</span>
                             <div className="en-input">
                               <input className="mono" inputMode="numeric" placeholder="4242 4242 4242 4242"
                                 value={card.num}
                                 onChange={(e) => setCard({ ...card, num: fmtCard(e.target.value) })}
-                                onBlur={() => setTouched((t) => ({ ...t, num: 1 }))} />
+                                onBlur={() => setTouched((x) => ({ ...x, num: 1 }))} />
                               <span className="en-brands">
                                 {['VISA', 'MC', 'AMEX'].map((b) => (
                                   <span key={b} className={brand === b ? 'on' : ''}>{b}</span>
@@ -897,32 +872,32 @@ const MembershipSignup = () => {
                           </label>
 
                           <div className="en-fieldrow">
-                            <label ref={expRef} className={`en-field ${err('exp', !expOk, 'MM/YY') ? 'bad' : ''}`}>
-                              <span className="en-flabel">EXPIRY</span>
+                            <label ref={expRef} className={`en-field ${err('exp', !expOk, t('en.err.exp')) ? 'bad' : ''}`}>
+                              <span className="en-flabel">{t('en.p2.exp')}</span>
                               <div className="en-input">
                                 <input className="mono" inputMode="numeric" placeholder="MM / YY"
                                   value={card.exp}
                                   onChange={(e) => setCard({ ...card, exp: fmtExp(e.target.value) })}
-                                  onBlur={() => setTouched((t) => ({ ...t, exp: 1 }))} />
+                                  onBlur={() => setTouched((x) => ({ ...x, exp: 1 }))} />
                               </div>
                             </label>
-                            <label ref={cvcRef} className={`en-field ${err('cvc', !cvcOk, '3–4 DIGITS') ? 'bad' : ''}`}>
-                              <span className="en-flabel">CVC / CVV</span>
+                            <label ref={cvcRef} className={`en-field ${err('cvc', !cvcOk, t('en.err.cvc')) ? 'bad' : ''}`}>
+                              <span className="en-flabel">{t('en.p2.cvc')}</span>
                               <div className="en-input">
                                 <input className="mono" inputMode="numeric" placeholder="•••" type="password"
                                   value={card.cvc}
                                   onFocus={() => setCvcFocus(true)}
-                                  onBlur={() => { setCvcFocus(false); setTouched((t) => ({ ...t, cvc: 1 })); }}
+                                  onBlur={() => { setCvcFocus(false); setTouched((x) => ({ ...x, cvc: 1 })); }}
                                   onChange={(e) => setCard({ ...card, cvc: e.target.value.replace(/\D/g, '').slice(0, 4) })} />
                               </div>
                             </label>
-                            <label ref={zipRef} className={`en-field ${err('zip', !zipOk, 'REQUIRED') ? 'bad' : ''}`}>
-                              <span className="en-flabel">POSTAL / ZIP</span>
+                            <label ref={zipRef} className={`en-field ${err('zip', !zipOk, t('en.err.zip')) ? 'bad' : ''}`}>
+                              <span className="en-flabel">{t('en.p2.zip')}</span>
                               <div className="en-input">
                                 <input className="mono" inputMode="numeric" placeholder="10001"
                                   value={card.zip}
                                   onChange={(e) => setCard({ ...card, zip: e.target.value.replace(/\D/g, '').slice(0, 5) })}
-                                  onBlur={() => setTouched((t) => ({ ...t, zip: 1 }))} />
+                                  onBlur={() => setTouched((x) => ({ ...x, zip: 1 }))} />
                               </div>
                             </label>
                           </div>
@@ -935,55 +910,54 @@ const MembershipSignup = () => {
                             onChange={(e) => setAutoRenew(e.target.checked)} />
                           <span className="en-box">{I.check(11)}</span>
                           <span className="en-check-txt">
-                            <b>Auto-Renew Protocol Enabled</b>
-                            <i>Maintain seamless terminal access without interruption. Billed {`$${price}.00`} on the 1st of each calendar month. Cancel anytime with tap.</i>
+                            <b>{t('en.p2.autoB')}</b>
+                            <i>{t('en.p2.autoI.pre')}{`$${price}.00`}{t('en.p2.autoI.post')}</i>
                           </span>
                         </label>
 
-                        <label ref={agreeRef} className={`en-check ${err('agree', !agree, 'REQUIRED TO ACTIVATE PASS') ? 'bad' : ''}`}>
+                        <label ref={agreeRef} className={`en-check ${err('agree', !agree, t('en.err.agree')) ? 'bad' : ''}`}>
                           <input type="checkbox" checked={agree}
-                            onChange={(e) => { setAgree(e.target.checked); setTouched((t) => ({ ...t, agree: 1 })); }} />
+                            onChange={(e) => { setAgree(e.target.checked); setTouched((x) => ({ ...x, agree: 1 })); }} />
                           <span className="en-box">{I.check(11)}</span>
                           <span className="en-check-txt">
-                            <b>Conditioning Protocol Agreement &amp; Biometric Enclave Waiver</b>
-                            <i>I agree to the Terms of Conditioning, biometric data sync, encrypted bar speed sensor calibration, and privacy-first on-device encrypted telemetry sync.</i>
+                            <b>{t('en.p2.agreeB')}</b>
+                            <i>{t('en.p2.agreeI')}</i>
                           </span>
                         </label>
                       </div>
 
-                      {/* encrypted payload flow line */}
                       <div className="en-flowl" aria-hidden="true">
-                        <span>{I.lock(10)} AES-256 TOKENIZATION</span>
+                        <span>{I.lock(10)} {t('en.p2.tokenAes')}</span>
                         <svg viewBox="0 0 220 8" preserveAspectRatio="none">
                           <line className="en-flowl-track" x1="0" y1="4" x2="220" y2="4" />
                           <line className="en-flowl-run" x1="0" y1="4" x2="220" y2="4" />
                         </svg>
-                        <span>SECURE VAULT</span>
+                        <span>{t('en.p2.tokenVault')}</span>
                       </div>
 
                       <button type="button"
                         className={`btn btn-red btn-lg en-cta ${processing ? 'busy' : ''}`}
                         onClick={submit} disabled={processing}>
                         {processing ? (
-                          <>PROVISIONING PASS<span className="en-dots"><i /><i /><i /></span></>
+                          <>{t('en.p2.processing')}<span className="en-dots"><i /><i /><i /></span></>
                         ) : payMethod === 'apple' ? (
-                          <>{I.apple(15)} ACTIVATE VIA APPLE PAY {I.arrow()}</>
+                          <>{I.apple(15)} {t('en.p2.submitApple')} {I.arrow()}</>
                         ) : payMethod === 'google' ? (
-                          <>{I.google(14)} ACTIVATE VIA GOOGLE PAY {I.arrow()}</>
+                          <>{I.google(14)} {t('en.p2.submitGoogle')} {I.arrow()}</>
                         ) : (
-                          <>{I.bolt(14)} COMPLETE ENROLLMENT &amp; ACTIVATE PASS {I.arrow()}</>
+                          <>{I.bolt(14)} {t('en.p2.submit')} {I.arrow()}</>
                         )}
                       </button>
 
                       <p className="en-secure-note">
-                        {I.lock(11)} ENCRYPTED VIA 256-BIT AES TOKENIZATION · INSTANT PASS DELIVERY TO PHONE
+                        {I.lock(11)} {t('en.p2.secure')}
                       </p>
                     </div>
                   </div>
                 </section>
               </>
             ) : (
-              /* ---- SUCCESS ---- */
+              /* SUCCESS */
               <section className="en-success">
                 <span className="en-success-halo" aria-hidden="true" />
                 <div className="en-success-head">
@@ -991,67 +965,67 @@ const MembershipSignup = () => {
                     <circle cx="32" cy="32" r="28" pathLength="1" />
                     <path d="M20 33.5 28.5 42 45 24" pathLength="1" />
                   </svg>
-                  <h2>ENROLLMENT COMPLETE</h2>
+                  <h2>{t('en.ok.title')}</h2>
                   <p className="en-success-sub">{doneText}</p>
                 </div>
 
                 <div className={`en-pass ${scan ? 'scan' : ''}`}>
                   <div className="en-pass-top">
                     <span className="en-pass-brand">{I.logo(13)} SMART<em>GYM</em></span>
-                    <span className="en-pass-tier">{plan.short} TIER</span>
+                    <span className="en-pass-tier">{plan.short} {t('en.ok.tier')}</span>
                   </div>
-                  <div className="en-pass-name">{form.name || 'ATHLETE'}</div>
+                  <div className="en-pass-name">{form.name || t('en.ok.athlete')}</div>
                   <div className="en-pass-row">
-                    <div><span>MEMBER ID</span><b>SG-8841-TK</b></div>
-                    <div><span>HOME NODE</span><b>{form.node.split('—')[0].trim()}</b></div>
-                    <div><span>STATUS</span><b className="ok">ACTIVE</b></div>
+                    <div><span>{t('en.ok.memberId')}</span><b>SG-8841-TK</b></div>
+                    <div><span>{t('en.ok.homeNode')}</span><b>{NODES.find(n => n.id === form.node)?.label.split('—')[0].trim() || 'HQ'}</b></div>
+                    <div><span>{t('en.ok.status')}</span><b className="ok">{t('en.ok.active')}</b></div>
                   </div>
                   <div className="en-pass-barcode" aria-hidden="true" />
                   <span className="en-pass-shine" aria-hidden="true" />
                   <span className="en-nfc-rings" aria-hidden="true"><i /><i /><i /></span>
-                  <span className="en-pass-nfc">{I.nfc(13)} HOLD NEAR TURNSTILE</span>
+                  <span className="en-pass-nfc">{I.nfc(13)} {t('en.ok.nfc')}</span>
                 </div>
 
                 <div className="en-success-actions">
                   <button className="btn btn-red" onClick={() => { setScan(true); setTimeout(() => setScan(false), 1200); }}>
-                    {I.apple(14)} ADD TO APPLE WALLET
+                    {I.apple(14)} {t('en.ok.appleWallet')}
                   </button>
                   <button className="btn en-ghostbtn" onClick={() => { setScan(true); setTimeout(() => setScan(false), 1200); }}>
-                    {I.nfc(14)} SIMULATE TURNSTILE
+                    {I.nfc(14)} {t('en.ok.simTurn')}
                   </button>
                 </div>
 
                 <p className="en-success-note">
-                  Confirmation payload sent to <b>{form.email}</b>. Your pass activates instantly at any terminal — no key cards, no check-in desks.
+                  {t('en.ok.notePre')}<b>{form.email}</b>{t('en.ok.notePost')}
                 </p>
               </section>
             )}
           </div>
 
-          {/* ======== RIGHT: LIVE ORDER SUMMARY ======== */}
+          {/* ORDER SUMMARY */}
           <aside className={`en-summary ${sumOpen ? 'open' : ''}`} data-rv>
             <span className="en-sum-topline" aria-hidden="true" />
 
             <button type="button" className="en-sum-toggle" onClick={() => setSumOpen(!sumOpen)} aria-expanded={sumOpen}>
-              <span>{I.card(15)} ORDER SUMMARY</span>
+              <span>{I.card(15)} {t('en.sum.order')}</span>
               <b>${price.toFixed(2)} {I.chev(12)}</b>
             </button>
 
             <div className="en-sum-body">
               <div className="en-sum-body-in">
 
-                <span className="en-sum-eyebrow">{I.bolt(11)} RECOMMENDED PERFORMANCE STANDARD</span>
+                <span className="en-sum-eyebrow">{I.bolt(11)} {t('en.sum.eyebrow')}</span>
 
                 <div className="en-sum-title">
                   <h2 key={planId}>{plan.name}</h2>
                   <div className="en-sum-price" key={`p${planId}`}>
-                    <b>${Math.round(tweenPrice)}</b><span>/ MONTH</span>
+                    <b>${Math.round(tweenPrice)}</b><span>{t('en.sum.perMonth')}</span>
                   </div>
                 </div>
                 <p className="en-sum-desc">{plan.desc}</p>
 
                 <div className="en-plan-switch">
-                  <span>SWITCH PLAN</span>
+                  <span>{t('en.sum.switch')}</span>
                   <div>
                     {PLANS.map((p) => (
                       <button type="button" key={p.id}
@@ -1064,21 +1038,21 @@ const MembershipSignup = () => {
                 </div>
 
                 <div className="en-sum-terms">
-                  <span>MONTH-TO-MONTH</span><i />
-                  <span>NO LOCK-IN DURATION</span><i />
-                  <span>CANCEL ANYTIME</span>
+                  <span>{t('en.sum.terms1')}</span><i />
+                  <span>{t('en.sum.terms2')}</span><i />
+                  <span>{t('en.sum.terms3')}</span>
                 </div>
 
                 <figure className="en-sum-media">
                   <img src={IMG.facility} alt="Smart Gym facility floor" loading="lazy" />
                   <figcaption>
-                    <span className="en-occ"><i />TERMINAL 01 LIVE OCCUPANCY: {occ}%</span>
+                    <span className="en-occ"><i />{t('en.sum.occ')}{occ}%</span>
                   </figcaption>
                 </figure>
-                <div className="en-sum-media-cap">{I.shield(12)} DIRECT HIGH-VELOCITY FACILITY ACCESS</div>
+                <div className="en-sum-media-cap">{I.shield(12)} {t('en.sum.mediaCap')}</div>
 
                 <div className="en-perks">
-                  <span className="en-perks-head">INCLUDED PERFORMANCE EQUIPMENT &amp; INFRASTRUCTURE</span>
+                  <span className="en-perks-head">{t('en.sum.perksHead')}</span>
                   <ul>
                     {plan.perks.map((p, i) => (
                       <li key={p} style={{ '--i': i }}>
@@ -1089,28 +1063,28 @@ const MembershipSignup = () => {
                 </div>
 
                 <div className="en-lines">
-                  <div className="en-line"><span>{plan.short} Membership (First Month)</span><b>${price.toFixed(2)}</b></div>
+                  <div className="en-line"><span>{plan.short}{t('en.sum.line1')}</span><b>${price.toFixed(2)}</b></div>
                   <div className="en-line">
-                    <span>Biometric Smart Key Setup <em className="en-promo">PROMO</em></span>
+                    <span>{t('en.sum.line2')} <em className="en-promo">{t('en.sum.promo')}</em></span>
                     <b><s>$45.99</s> $0.00</b>
                   </div>
-                  <div className="en-line"><span>Digital Telemetry Integration</span><b>$0.00 <em>WAIVED</em></b></div>
-                  <div className="en-line"><span>Facility State Surcharge &amp; Tax</span><b>$0.00</b></div>
+                  <div className="en-line"><span>{t('en.sum.line3')}</span><b>$0.00 <em>{t('en.sum.waived')}</em></b></div>
+                  <div className="en-line"><span>{t('en.sum.line4')}</span><b>$0.00</b></div>
                 </div>
 
                 <div className="en-total" key={`t${planId}`}>
                   <div>
-                    <span>TOTAL DUE TODAY</span>
-                    <em>IMMEDIATE PASS PROVISIONING</em>
+                    <span>{t('en.sum.total')}</span>
+                    <em>{t('en.sum.totalSub')}</em>
                   </div>
-                  <b>${tweenPrice.toFixed(2)} <i>USD</i></b>
+                  <b>${tweenPrice.toFixed(2)} <i>{t('en.sum.usd')}</i></b>
                 </div>
 
                 <div className="en-sum-trust">
-                  {SUM_TRUST.map((t) => (
-                    <div className="en-strust" key={t.t}>
-                      <span>{t.icon(14)}</span>
-                      <div><b>{t.t}</b><i>{t.d}</i></div>
+                  {SUM_TRUST.map((tr) => (
+                    <div className="en-strust" key={tr.t}>
+                      <span>{tr.icon(14)}</span>
+                      <div><b>{tr.t}</b><i>{tr.d}</i></div>
                     </div>
                   ))}
                 </div>
@@ -1118,10 +1092,10 @@ const MembershipSignup = () => {
                 <div className="en-corporate">
                   <span>{I.node(15)}</span>
                   <div>
-                    <b>Team or Corporate Account?</b>
-                    <i>Group billing &amp; exclusive telemetry slots</i>
+                    <b>{t('en.sum.corpB')}</b>
+                    <i>{t('en.sum.corpI')}</i>
                   </div>
-                  <Link to="/contact" className="en-corp-link">INQUIRE {I.arrow(10)}</Link>
+                  <Link to="/contact" className="en-corp-link">{t('en.sum.corpLink')} {I.arrow(10)}</Link>
                 </div>
 
               </div>
@@ -1131,11 +1105,11 @@ const MembershipSignup = () => {
 
         {/* TRUST STRIP */}
         <section className="en-trust">
-          {TRUST_STRIP.map((t, i) => (
-            <div className="en-trust-item" key={t.t} data-rv style={{ '--d': `${i * 90}ms` }}>
-              <span className="en-trust-ico">{t.icon(16)}</span>
-              <h3>{t.t}</h3>
-              <p>{t.d}</p>
+          {TRUST_STRIP.map((tr, i) => (
+            <div className="en-trust-item" key={tr.t} data-rv style={{ '--d': `${i * 90}ms` }}>
+              <span className="en-trust-ico">{tr.icon(16)}</span>
+              <h3>{tr.t}</h3>
+              <p>{tr.d}</p>
             </div>
           ))}
         </section>
@@ -1149,30 +1123,44 @@ const MembershipSignup = () => {
               <span className="brand-mark">{I.logo(16)}</span>
               <span className="brand-txt">SMART<em>GYM</em></span>
             </Link>
-            <p>Strength &amp; conditioning club with biometric telemetry and elite training infrastructure. Built for people who train.</p>
-            <span className="foot-live"><i className="ok-dot" />TELEMETRY GRID LIVE</span>
+            <p>{t('foot.desc')}</p>
+            <span className="foot-live"><i className="ok-dot" />{t('foot.live')}</span>
           </div>
           <div>
-            <h4>ARCHITECTURE</h4>
-            <ul><li>Heavy Iron Arena</li><li>Sprint Velocity Track</li><li>Cryo &amp; Recovery Pods</li><li>Metabolic Testing Lab</li></ul>
+            <h4>{t('foot.architecture')}</h4>
+            <ul>
+              <li>{t('foot.iron')}</li>
+              <li>{t('foot.sprint')}</li>
+              <li>{t('foot.cryo')}</li>
+              <li>{t('foot.metabolic')}</li>
+            </ul>
           </div>
           <div>
-            <h4>PLATFORM</h4>
-            <ul><li>Coaching Protocol</li><li>Biometric App Sync</li><li>Corporate High Performance</li><li>Member Portal</li></ul>
+            <h4>{t('foot.platform')}</h4>
+            <ul>
+              <li>{t('foot.coaching')}</li>
+              <li>{t('foot.bioapp')}</li>
+              <li>{t('foot.corporate')}</li>
+              <li>{t('foot.portal')}</li>
+            </ul>
           </div>
           <div>
-            <h4>OPERATIONS</h4>
-            <p className="foot-p">04:00 – 24:00 Daily Operations<br />Access via biometric passcode key.</p>
-            <span className="foot-hq">HQ TERMINAL</span>
-            <p className="foot-p">District 01, Performance Plaza</p>
+            <h4>{t('foot.operations')}</h4>
+            <p className="foot-p">{t('foot.hours')}<br />{t('foot.access')}</p>
+            <span className="foot-hq">{t('foot.hq')}</span>
+            <p className="foot-p">{t('foot.address')}</p>
           </div>
         </div>
 
         <div className="foot-ghost" aria-hidden="true">SMARTGYM</div>
 
         <div className="foot-bottom">
-          <p>© 2025 SMART GYM INDUSTRIAL ATHLETICS. ALL RIGHTS RESERVED.</p>
-          <div className="foot-legal"><span>Privacy Architecture</span><span>Terms of Conditioning</span><span>Security Protocols</span></div>
+          <p>{t('foot.rights')}</p>
+          <div className="foot-legal">
+            <span>{t('foot.privacy')}</span>
+            <span>{t('foot.terms')}</span>
+            <span>{t('foot.security')}</span>
+          </div>
           <button className="totop" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label="Back to top">
             <svg width="46" height="46" viewBox="0 0 46 46">
               <circle className="rb" cx="23" cy="23" r="22" />
@@ -1184,20 +1172,20 @@ const MembershipSignup = () => {
       </footer>
 
       <nav className="tabbar" aria-label="Quick navigation">
-        <Link to="/">{I.home}<span>HOME</span></Link>
-        <Link to="/facilities">{I.grid}<span>FACILITIES</span></Link>
-        <Link to="/services">{I.bolt(18)}<span>SERVICES</span></Link>
-        <Link to="/join" className="on tab-join">{I.flame(18)}<span>JOIN NOW</span></Link>
+        <Link to="/">{I.home}<span>{t('en.tab.home')}</span></Link>
+        <Link to="/facilities">{I.grid}<span>{t('en.tab.facilities')}</span></Link>
+        <Link to="/services">{I.bolt(18)}<span>{t('en.tab.services')}</span></Link>
+        <Link to="/join" className="on tab-join">{I.flame(18)}<span>{t('en.tab.join')}</span></Link>
       </nav>
 
-      {/* MOBILE FIXED PAYBAR */}
+      {/* MOBILE PAYBAR */}
       {!done && (
         <div className="en-paybar">
           <button className="en-paybar-btn" disabled={paybarOff} onClick={primary}>
-            {I.bolt(14)} {step === 1 ? 'PROCEED TO CHECKOUT' : 'COMPLETE ENROLLMENT'}
+            {I.bolt(14)} {step === 1 ? t('en.paybar.step1') : t('en.paybar.step2')}
             <b>${price.toFixed(2)}</b>
           </button>
-          <span className="en-paybar-sec">{I.lock(10)} 256-BIT SSL MILITARY GRADE ENCRYPTION</span>
+          <span className="en-paybar-sec">{I.lock(10)} {t('en.paybar.sec')}</span>
         </div>
       )}
     </div>

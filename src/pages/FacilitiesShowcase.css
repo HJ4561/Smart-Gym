@@ -836,3 +836,48 @@
   .bkm-foot { flex-direction: column; align-items: stretch; }
   .bkm-price { flex-direction: row; align-items: baseline; gap: 10px; }
 }
+/* ============================================================
+   RTL FIXES — Facilities page
+   Arabic headlines carry descenders that clip under tight
+   line-heights, and the taller Arabic hero shifts the belt
+   off the true bottom edge. Both are corrected here.
+============================================================ */
+
+/* ---------- Hero headline: prevent Arabic descender clipping ---------- */
+[dir="rtl"] .fac-h1 {
+  line-height: 1.1;
+  padding-bottom: 0.08em;
+}
+[dir="rtl"] .fac-h1 .row {
+  padding: 0.12em 0 0.18em;
+  overflow: hidden;
+  min-height: 1.15em;
+}
+[dir="rtl"] .fac-h1 .w {
+  transform: translateY(130%) rotate(2.5deg);
+}
+[dir="rtl"] .fac-hero.is-in .fac-h1 .w {
+  transform: translateY(0) rotate(0);
+}
+[dir="rtl"] .fac-hero-body {
+  padding-bottom: 108px;
+}
+
+/* ---------- Belt: flush with hero bottom edge in RTL ---------- */
+[dir="rtl"] .fac-hero .belt {
+  bottom: 0;
+}
+
+@media (max-width: 1024px) {
+  [dir="rtl"] .fac-hero-body {
+    padding-bottom: 96px;
+  }
+}
+@media (max-width: 640px) {
+  [dir="rtl"] .fac-hero-body {
+    padding-bottom: 92px;
+  }
+  [dir="rtl"] .fac-hero .belt {
+    bottom: 0;
+  }
+}

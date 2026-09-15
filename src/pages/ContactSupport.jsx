@@ -1,6 +1,8 @@
 // pages/ContactSupport.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { useLang } from '../i18n/LangContext';
+import LangSwitch from '../i18n/LangSwitch';
 import './ContactSupport.css';
 
 /* ============================================================
@@ -9,6 +11,7 @@ import './ContactSupport.css';
 const useDecode = (text, start) => {
   const [out, setOut] = useState(text);
   useEffect(() => {
+    setOut(text);
     if (!start) return;
     const glyphs = '█▓▒░<>/' + String.fromCharCode(92) + '|—';
     let frame = 0;
@@ -85,19 +88,8 @@ const I = {
 };
 
 /* ============================================================
-   CONTENT
+   STATIC IMAGES
 ============================================================ */
-const BELT_ITEMS = ['HQ OPEN 24/7', 'DIRECT DISPATCH', '14 MIN RESPONSE', 'DISTRICT 01', 'BIOMETRIC DESK', 'SUPPORT'];
-
-const DOTS = [
-  { id: 'hero', label: 'UPLINK' },
-  { id: 'grid', label: 'DISPATCH' },
-  { id: 'quick', label: 'ACTIONS' },
-  { id: 'hubs', label: 'HUBS' },
-  { id: 'faq', label: 'FAQ' },
-  { id: 'cta', label: 'PASS' },
-];
-
 const IMG = {
   heroBg: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1920&q=80',
   map: 'https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=1400&q=80',
@@ -106,57 +98,19 @@ const IMG = {
   hub3: 'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?auto=format&fit=crop&w=900&q=80',
 };
 
-const categories = [
-  { id: 'membership', label: 'MEMBERSHIP' },
-  { id: 'biometrics', label: 'BIOMETRICS' },
-  { id: 'coach', label: 'PRIVATE COACH' },
-  { id: 'billing', label: 'BILLING & OPS' },
-];
-
-const SUBTOPICS = {
-  membership: ['Tiers & Upgrades', 'Freezes & Travel Holds', 'Guest Passes', 'Corporate Fleet Licensing'],
-  biometrics: ['Sensor Pairing', 'Pass / Iris Issues', 'Telemetry Data Export', 'Hardware Serials'],
-  coach: ['Private Coaching Match', 'Program Audit', 'Small Group Sessions'],
-  billing: ['Invoice Query', 'Payment Methods', 'Refund Status', 'Arena Slot Billing'],
-};
-
-const quickActions = [
-  { label: 'DIRECT CALL', sub: 'Desk Available', meta: 'PRIORITY', icon: I.phone, href: 'tel:+18005559090' },
-  { label: 'WHATSAPP', sub: 'Instant Response', meta: 'LIVE', metaCls: 'live', icon: I.chat, href: 'https://wa.me/18005559090' },
-  { label: 'GPS ROUTE', sub: 'Monolith HQ', meta: 'DISTRICT 01', icon: I.pin, href: '#map' },
-  { label: 'HQ INQUIRY', sub: 'Digital Dispatch', meta: '< 1 HR', icon: I.mail, href: '#enquiry' },
-];
-
-const faqs = [
-  {
-    q: 'WHAT ARE THE 24/7 BIOMETRIC ENTRY HOURS?',
-    a: 'Black Tier members possess 24/7 keyless biometric iris and app-based entry into the Monolith Campus. Standard members have floor privileges between 04:00 and 24:00 daily including holidays.',
-  },
-  {
-    q: 'HOW DO I BOOK A PRIVATE RECOVERY LAB SUITE?',
-    a: 'Cryo-chambers, infrared recovery pods, and cold plunge baths can be scheduled with 15-minute lead times via the app\'s Services section or directly with the Front Desk Concierge upon entry.',
-  },
-  {
-    q: 'CAN GUESTS ACCESS THE STRENGTH SANCTUARY?',
-    a: 'Each active athlete receives 2 VIP Guest Day-Passes per month. All guests must complete telemetry and digital waiver processing at the concierge kiosk before equipment access is authorized.',
-  },
-  {
-    q: 'HOW DO BILLING PAUSES & TRAVEL FREEZES WORK?',
-    a: 'Members can pause their active billing cycles for up to 60 calendar days per year through the Athlete Portal or by submitting a ticket under the \'Billing & Ops\' category above.',
-  },
-];
-
 /* ============================================================
    COMPONENT
 ============================================================ */
 const ContactSupport = () => {
+  const { t } = useLang();
+
   const [bootPct, setBootPct] = useState(0);
   const [boot, setBoot] = useState(false);
   const [bootGone, setBootGone] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isVisible, setIsVisible] = useState({});
   const [category, setCategory] = useState('membership');
-  const [subTopic, setSubTopic] = useState(SUBTOPICS.membership[0]);
+  const [subTopicKey, setSubTopicKey] = useState('ct.sub.m1');
   const [urgent, setUrgent] = useState(false);
   const [openFaq, setOpenFaq] = useState(-1);
   const [sent, setSent] = useState(false);
@@ -166,8 +120,8 @@ const ContactSupport = () => {
   const [activeSection, setActiveSection] = useState('hero');
 
   const sectionRefs = useRef([]);
-  const kickText = useDecode('TERMINAL 06 // COMM UPLINK', true);
-  const sentText = useDecode('INQUIRY DISPATCHED • HQ TICKET #8942 OPENED', sent);
+  const kickText = useDecode(t('ct.kicker'), true);
+  const sentText = useDecode(t('ct.f.sentLog'), sent);
 
   const hdrRef = useRef(null);
   const progRef = useRef(null);
@@ -179,6 +133,59 @@ const ContactSupport = () => {
   const bootRef = useRef(false);
   const visSeen = useRef({});
   const activeRef = useRef('hero');
+
+  /* ---------- Translated content ---------- */
+  const DOTS = [
+    { id: 'hero',  label: t('ct.dot.hero') },
+    { id: 'grid',  label: t('ct.dot.grid') },
+    { id: 'quick', label: t('ct.dot.quick') },
+    { id: 'hubs',  label: t('ct.dot.hubs') },
+    { id: 'faq',   label: t('ct.dot.faq') },
+    { id: 'cta',   label: t('ct.dot.cta') },
+  ];
+
+  const BELT_ITEMS = [
+    t('ct.belt.1'),
+    t('ct.belt.2'),
+    t('ct.belt.3'),
+    t('ct.belt.4'),
+    t('ct.belt.5'),
+    t('ct.belt.6'),
+  ];
+
+  const categories = [
+    { id: 'membership', label: t('ct.cat.membership') },
+    { id: 'biometrics', label: t('ct.cat.biometrics') },
+    { id: 'coach',      label: t('ct.cat.coach') },
+    { id: 'billing',    label: t('ct.cat.billing') },
+  ];
+
+  const SUBTOPICS = {
+    membership: ['ct.sub.m1', 'ct.sub.m2', 'ct.sub.m3', 'ct.sub.m4'],
+    biometrics: ['ct.sub.b1', 'ct.sub.b2', 'ct.sub.b3', 'ct.sub.b4'],
+    coach:      ['ct.sub.c1', 'ct.sub.c2', 'ct.sub.c3'],
+    billing:    ['ct.sub.o1', 'ct.sub.o2', 'ct.sub.o3', 'ct.sub.o4'],
+  };
+
+  const quickActions = [
+    { label: t('ct.qa.call'),    sub: t('ct.qa.callSub'),  meta: t('ct.qa.callMeta'), icon: I.phone, href: 'tel:+18005559090' },
+    { label: t('ct.qa.wa'),      sub: t('ct.qa.waSub'),    meta: t('ct.qa.waMeta'), metaCls: 'live', icon: I.chat, href: 'https://wa.me/18005559090' },
+    { label: t('ct.qa.gps'),     sub: t('ct.qa.gpsSub'),   meta: t('ct.qa.gpsMeta'), icon: I.pin, href: '#map' },
+    { label: t('ct.qa.mail'),    sub: t('ct.qa.mailSub'),  meta: t('ct.qa.mailMeta'), icon: I.mail, href: '#enquiry' },
+  ];
+
+  const faqs = [
+    { q: t('ct.faq.1.q'), a: t('ct.faq.1.a') },
+    { q: t('ct.faq.2.q'), a: t('ct.faq.2.a') },
+    { q: t('ct.faq.3.q'), a: t('ct.faq.3.a') },
+    { q: t('ct.faq.4.q'), a: t('ct.faq.4.a') },
+  ];
+
+  const hubs = [
+    { n: t('ct.hub.1.n'), title: t('ct.hub.1.t'), desc: t('ct.hub.1.d'), img: IMG.hub1 },
+    { n: t('ct.hub.2.n'), title: t('ct.hub.2.t'), desc: t('ct.hub.2.d'), img: IMG.hub2 },
+    { n: t('ct.hub.3.n'), title: t('ct.hub.3.t'), desc: t('ct.hub.3.d'), img: IMG.hub3 },
+  ];
 
   /* Preloader */
   useEffect(() => {
@@ -198,11 +205,11 @@ const ContactSupport = () => {
 
   useEffect(() => {
     if (!boot) return;
-    const t = setTimeout(() => {
+    const tid = setTimeout(() => {
       setBootGone(true);
       document.body.style.overflow = '';
     }, 950);
-    return () => clearTimeout(t);
+    return () => clearTimeout(tid);
   }, [boot]);
 
   /* IntersectionObserver */
@@ -222,7 +229,7 @@ const ContactSupport = () => {
     return () => obs.disconnect();
   }, [boot]);
 
-  /* Live floor occupancy ticker */
+  /* Live occupancy */
   useEffect(() => {
     const id = setInterval(() => {
       setOcc((o) => Math.max(40, Math.min(92, o + (Math.random() < 0.5 ? -1 : 1) * (1 + Math.floor(Math.random() * 3)))));
@@ -260,7 +267,6 @@ const ContactSupport = () => {
         });
       }
 
-      /* Active section for dots */
       let cur = 'hero';
       sectionRefs.current.forEach((el) => {
         if (!el) return;
@@ -275,7 +281,6 @@ const ContactSupport = () => {
           const sk = Math.max(-6, Math.min(6, vel * 0.25));
           beltRef.current.style.transform = `translate3d(${-y * 0.3}px, 0, 0) skewX(${sk}deg)`;
         }
-        /* CTA ghost drift */
         if (ghostRef.current && sectionRefs.current[6]) {
           const r = sectionRefs.current[6].getBoundingClientRect();
           if (r.bottom > -200 && r.top < vh + 200) {
@@ -368,7 +373,7 @@ const ContactSupport = () => {
 
   const pickCategory = (id) => {
     setCategory(id);
-    setSubTopic(SUBTOPICS[id][0]);
+    setSubTopicKey(SUBTOPICS[id][0]);
   };
 
   const faqKey = (e, i) => {
@@ -395,7 +400,7 @@ const ContactSupport = () => {
             <span className="boot-mark">SMART<em>GYM</em></span>
             <span className="boot-count">{bootPct}<i>%</i></span>
             <span className="boot-bar"><i style={{ transform: `scaleX(${bootPct / 100})` }} /></span>
-            <span className="boot-label">CALIBRATING TELEMETRY GRID</span>
+            <span className="boot-label">{t('ct.boot')}</span>
           </div>
         </div>
       )}
@@ -419,16 +424,17 @@ const ContactSupport = () => {
           </Link>
 
           <nav className="hdr-nav">
-            <Link to="/">Home</Link>
-            <Link to="/facilities">Facilities</Link>
-            <Link to="/services">Services</Link>
-            <Link to="/join">Membership</Link>
-            <Link to="/insights">Insights</Link>
-            <Link to="/contact" className="on">Contact</Link>
+            <Link to="/">{t('nav.home')}</Link>
+            <Link to="/facilities">{t('nav.facilities')}</Link>
+            <Link to="/services">{t('nav.services')}</Link>
+            <Link to="/join">{t('nav.membership')}</Link>
+            <Link to="/insights">{t('nav.insights')}</Link>
+            <Link to="/contact" className="on">{t('nav.contact')}</Link>
           </nav>
 
           <div className="hdr-actions">
-            <Link to="/join" className="btn btn-red hdr-join">JOIN NOW</Link>
+            <LangSwitch variant="header" />
+            <Link to="/join" className="btn btn-red hdr-join">{t('nav.joinNow')}</Link>
             <button
               className={`burger ${menuOpen ? 'x' : ''}`}
               onClick={() => setMenuOpen(!menuOpen)}
@@ -441,17 +447,18 @@ const ContactSupport = () => {
 
       <div className={`mnav ${menuOpen ? 'open' : ''}`} aria-hidden={!menuOpen}>
         <nav>
-          <Link to="/" style={{ '--d': '0.06s' }} onClick={() => setMenuOpen(false)}><span>01</span>Home</Link>
-          <Link to="/facilities" style={{ '--d': '0.11s' }} onClick={() => setMenuOpen(false)}><span>02</span>Facilities</Link>
-          <Link to="/services" style={{ '--d': '0.16s' }} onClick={() => setMenuOpen(false)}><span>03</span>Services</Link>
-          <Link to="/join" style={{ '--d': '0.21s' }} onClick={() => setMenuOpen(false)}><span>04</span>Membership</Link>
-          <Link to="/insights" style={{ '--d': '0.26s' }} onClick={() => setMenuOpen(false)}><span>05</span>Insights</Link>
-          <Link to="/contact" style={{ '--d': '0.31s' }} onClick={() => setMenuOpen(false)}><span>06</span>Contact</Link>
+          <Link to="/" style={{ '--d': '0.06s' }} onClick={() => setMenuOpen(false)}><span>01</span>{t('nav.home')}</Link>
+          <Link to="/facilities" style={{ '--d': '0.11s' }} onClick={() => setMenuOpen(false)}><span>02</span>{t('nav.facilities')}</Link>
+          <Link to="/services" style={{ '--d': '0.16s' }} onClick={() => setMenuOpen(false)}><span>03</span>{t('nav.services')}</Link>
+          <Link to="/join" style={{ '--d': '0.21s' }} onClick={() => setMenuOpen(false)}><span>04</span>{t('nav.membership')}</Link>
+          <Link to="/insights" style={{ '--d': '0.26s' }} onClick={() => setMenuOpen(false)}><span>05</span>{t('nav.insights')}</Link>
+          <Link to="/contact" style={{ '--d': '0.31s' }} onClick={() => setMenuOpen(false)}><span>06</span>{t('nav.contact')}</Link>
         </nav>
+        <LangSwitch variant="mobile" />
         <Link to="/join" className="btn btn-red mnav-join" onClick={() => setMenuOpen(false)}>
-          JOIN NOW {I.arrow(11)}
+          {t('nav.joinNow')} {I.arrow(11)}
         </Link>
-        <span className="mnav-foot">OPEN 24/7 // DISTRICT 01</span>
+        <span className="mnav-foot">{t('nav.foot')}</span>
       </div>
 
       {/* HERO */}
@@ -466,10 +473,9 @@ const ContactSupport = () => {
         <div className="hero-glow" aria-hidden="true" />
         <div className="grain" aria-hidden="true" />
 
-        {/* Vertical scroll cue */}
         <div className="ct-cue" aria-hidden="true">
           <span className="ct-cue-line" />
-          <span className="ct-cue-label">SCROLL</span>
+          <span className="ct-cue-label">{t('ct.hero.scroll')}</span>
         </div>
 
         <div className="ct-hero-body">
@@ -478,37 +484,33 @@ const ContactSupport = () => {
 
             <h1 className="h1 ct-h1">
               <span className="row">
-                <span className="w" style={{ transitionDelay: '.3s' }}>COMMAND</span>
+                <span className="w" style={{ transitionDelay: '.3s' }}>{t('ct.hero.l1')}</span>
               </span>
               <span className="row">
-                <span className="w" style={{ transitionDelay: '.42s' }}>FACILITY &</span>
+                <span className="w" style={{ transitionDelay: '.42s' }}>{t('ct.hero.l2')}</span>
               </span>
               <span className="row">
-                <span className="w red" style={{ transitionDelay: '.55s' }}>ATHLETE SUPPORT</span>
+                <span className="w red" style={{ transitionDelay: '.55s' }}>{t('ct.hero.l3')}</span>
               </span>
             </h1>
 
-            <p className="lede">
-              Have questions about biometric passes, corporate allocations, or
-              Olympic arena schedules? Connect directly with our operations team.
-            </p>
+            <p className="lede">{t('ct.hero.lede')}</p>
           </div>
 
-          {/* Telemetry pill */}
           <div className="ct-hero-pill">
             <div className="ct-hero-pill-cell">
               <div className="ct-hero-pill-ico">{I.bolt}</div>
               <div>
-                <div className="ct-hero-pill-lab">SYSTEM STATUS</div>
-                <div className="ct-hero-pill-val">TELEMETRY ACTIVE</div>
+                <div className="ct-hero-pill-lab">{t('ct.hero.pill1.lab')}</div>
+                <div className="ct-hero-pill-val">{t('ct.hero.pill1.val')}</div>
               </div>
             </div>
             <i className="ct-hero-pill-div" />
             <div className="ct-hero-pill-cell">
               <div className="ct-hero-pill-ico">{I.timer}</div>
               <div>
-                <div className="ct-hero-pill-lab">MEDIAN REPLY</div>
-                <div className="ct-hero-pill-val">{urgent ? 'FAST TRACK' : '14 MINUTES'}</div>
+                <div className="ct-hero-pill-lab">{t('ct.hero.pill2.lab')}</div>
+                <div className="ct-hero-pill-val">{urgent ? t('ct.hero.pill2.v2') : t('ct.hero.pill2.v1')}</div>
               </div>
             </div>
           </div>
@@ -519,7 +521,7 @@ const ContactSupport = () => {
             <div className="belt-track">
               {[0, 1].map((h) => (
                 <div className="belt-half" key={h}>
-                  {[...BELT_ITEMS, ...BELT_ITEMS].map((t, i) => <span key={i}>{t}<em>✦</em></span>)}
+                  {[...BELT_ITEMS, ...BELT_ITEMS].map((tag, i) => <span key={i}>{tag}<em>✦</em></span>)}
                 </div>
               ))}
             </div>
@@ -527,7 +529,7 @@ const ContactSupport = () => {
         </div>
       </section>
 
-      {/* MAIN GRID — form + rail */}
+      {/* MAIN GRID */}
       <section data-section="grid" ref={(el) => (sectionRefs.current[1] = el)}
         className={`ct-grid-sec ${isVisible.grid ? 'is-in' : ''}`}>
         <div className="ct-grid">
@@ -536,17 +538,16 @@ const ContactSupport = () => {
           <div className="ct-form-wrap" id="enquiry">
             <div className="ct-form-head">
               <div>
-                <span className="ct-form-eyebrow">TRANSMIT REQUEST</span>
-                <h2 className="ct-form-title">DIRECT OPERATIONS INQUIRY</h2>
+                <span className="ct-form-eyebrow">{t('ct.form.eyebrow')}</span>
+                <h2 className="ct-form-title">{t('ct.form.title')}</h2>
               </div>
-              <span className="ct-form-tag">PROTOCOL SEC-256</span>
+              <span className="ct-form-tag">{t('ct.form.tag')}</span>
             </div>
 
             <form className="ct-form" onSubmit={handleSubmit}>
-              {/* Category chips — functional domain picker */}
               <div className="ct-field">
-                <label>INQUIRY DOMAIN / DEPARTMENT <em>*</em></label>
-                <div className="ct-cats" role="radiogroup" aria-label="Inquiry domain">
+                <label>{t('ct.f.domain')} <em>*</em></label>
+                <div className="ct-cats" role="radiogroup" aria-label={t('ct.f.domain')}>
                   {categories.map((c) => (
                     <button type="button" key={c.id}
                       className={`ct-cat ${category === c.id ? 'on' : ''}`}
@@ -559,11 +560,11 @@ const ContactSupport = () => {
               </div>
 
               <div className="ct-field">
-                <label>SUB-TOPIC</label>
+                <label>{t('ct.f.subtopic')}</label>
                 <div className="ct-select">
-                  <select value={subTopic}
-                    onChange={(e) => setSubTopic(e.target.value)}>
-                    {SUBTOPICS[category].map((s) => <option key={s} value={s}>{s}</option>)}
+                  <select value={subTopicKey}
+                    onChange={(e) => setSubTopicKey(e.target.value)}>
+                    {SUBTOPICS[category].map((s) => <option key={s} value={s}>{t(s)}</option>)}
                   </select>
                   <span className="ct-select-arrow">▾</span>
                 </div>
@@ -571,23 +572,23 @@ const ContactSupport = () => {
 
               <div className="ct-row-2">
                 <div className="ct-field">
-                  <label>ATHLETE NAME <em>*</em></label>
-                  <input type="text" required placeholder="e.g. Marcus Vance" />
+                  <label>{t('ct.f.name')} <em>*</em></label>
+                  <input type="text" required placeholder={t('ct.f.namePh')} />
                 </div>
                 <div className="ct-field">
-                  <label>ATHLETE PHONE <span>(Optional)</span></label>
-                  <input type="tel" placeholder="+1 (555) 019-2831" />
+                  <label>{t('ct.f.phone')} <span>{t('ct.f.optional')}</span></label>
+                  <input type="tel" placeholder={t('ct.f.phonePh')} />
                 </div>
               </div>
 
               <div className="ct-field">
-                <label>BIOMETRIC / SYNC EMAIL <em>*</em></label>
-                <input type="email" required placeholder="athlete.access@smartgym.internal" />
+                <label>{t('ct.f.email')} <em>*</em></label>
+                <input type="email" required placeholder={t('ct.f.emailPh')} />
               </div>
 
               <div className="ct-field">
                 <div className="ct-field-top">
-                  <label>TELEMETRY LOG / DETAILED INQUIRY <em>*</em></label>
+                  <label>{t('ct.f.msg')} <em>*</em></label>
                   <span className={`ct-field-count ${msg.length >= 950 ? 'warn' : ''}`}>
                     {msg.length} / 1000
                   </span>
@@ -598,7 +599,7 @@ const ContactSupport = () => {
                   maxLength={1000}
                   value={msg}
                   onChange={(e) => setMsg(e.target.value)}
-                  placeholder="Detail hardware serials, desired arena slots, or corporate biometric requirements..."
+                  placeholder={t('ct.f.msgPh')}
                 />
               </div>
 
@@ -606,18 +607,18 @@ const ContactSupport = () => {
                 <div className="ct-attach-info">
                   <span className="ct-attach-ico">{file ? I.check : I.plus}</span>
                   <div>
-                    <div className="ct-attach-title">{file || 'Attach Diagnostics or Roster CSV'}</div>
-                    <div className="ct-attach-sub">PDF, PNG, LOG, CSV (Up to 25MB)</div>
+                    <div className="ct-attach-title">{file || t('ct.f.attachTitle')}</div>
+                    <div className="ct-attach-sub">{t('ct.f.attachSub')}</div>
                   </div>
                 </div>
                 {file ? (
                   <button type="button" className="ct-attach-btn ct-attach-clear"
                     onClick={() => setFile(null)}>
-                    {I.x} REMOVE
+                    {I.x} {t('ct.f.remove')}
                   </button>
                 ) : (
                   <label className="ct-attach-btn">
-                    BROWSE FILES
+                    {t('ct.f.browse')}
                     <input type="file" hidden accept=".pdf,.png,.log,.csv"
                       onChange={(e) => setFile(e.target.files?.[0]?.name || null)} />
                   </label>
@@ -626,17 +627,17 @@ const ContactSupport = () => {
 
               <div className="ct-cta-row">
                 <span className="ct-sla">
-                  <i /> {urgent ? 'EXPRESS RESPONSE: < 30 MIN' : 'GUARANTEED RESPONSE: < 2 HOURS'}
+                  <i /> {urgent ? t('ct.f.slaUrgent') : t('ct.f.slaDefault')}
                 </span>
                 <button type="button"
                   className={`ct-urgent ${urgent ? 'on' : ''}`}
                   role="switch" aria-checked={urgent}
                   onClick={() => setUrgent(!urgent)}>
                   <span className="ct-urgent-track"><i /></span>
-                  PRIORITY DISPATCH
+                  {t('ct.f.priority')}
                 </button>
                 <button type="submit" className={`btn btn-red btn-lg ct-submit ${urgent ? 'priority' : ''}`} disabled={sent}>
-                  {sent ? <>{I.check} DISPATCHED</> : <>DISPATCH INQUIRY {I.arrow()}</>}
+                  {sent ? <>{I.check} {t('ct.f.sent')}</> : <>{t('ct.f.submit')} {I.arrow()}</>}
                 </button>
               </div>
 
@@ -647,59 +648,54 @@ const ContactSupport = () => {
           {/* RIGHT — RAIL */}
           <aside className="ct-rail">
 
-            {/* HQ card */}
             <div className="ct-side ct-side-hq">
               <div className="ct-side-glow" aria-hidden="true" />
               <div className="ct-side-head">
-                <span className="ct-side-label">FACILITY NODE // 01</span>
-                <span className="ct-side-live"><i />OPEN NOW (04:00 - 24:00)</span>
+                <span className="ct-side-label">{t('ct.rail.node')}</span>
+                <span className="ct-side-live"><i />{t('ct.rail.open')}</span>
               </div>
-              <h3 className="ct-side-title">GLOBAL ATHLETICS COMMAND</h3>
-              <p className="ct-side-desc">
-                Smart Gym HQ // Monolith District 01, Precision Boulevard,
-                Olympic Corridor, Sector Alpha
-              </p>
+              <h3 className="ct-side-title">{t('ct.rail.title')}</h3>
+              <p className="ct-side-desc">{t('ct.rail.addr')}</p>
 
               <div className="ct-quick">
                 <a className="ct-qa" href="tel:+18005557627">
                   <span className="ct-qa-ico">{I.phone}</span>
-                  <span className="ct-qa-label">ATHLETE DESK</span>
+                  <span className="ct-qa-label">{t('ct.rail.desk')}</span>
                 </a>
                 <a className="ct-qa" href="https://wa.me/18005557627" target="_blank" rel="noopener noreferrer">
                   <span className="ct-qa-ico emerald">{I.chat}</span>
-                  <span className="ct-qa-label">WHATSAPP</span>
+                  <span className="ct-qa-label">{t('ct.rail.wa')}</span>
                 </a>
                 <a className="ct-qa" href="#map">
                   <span className="ct-qa-ico">{I.nav}</span>
-                  <span className="ct-qa-label">GET GPS</span>
+                  <span className="ct-qa-label">{t('ct.rail.gps')}</span>
                 </a>
               </div>
 
               <div className="ct-telemetry">
                 <div className="ct-tel-row">
-                  <span>CURRENT FLOOR CAPACITY</span>
+                  <span>{t('ct.rail.cap')}</span>
                   <b>{occ}%</b>
                 </div>
                 <div className="ct-tel-bar"><i style={{ '--w': `${occ}%` }} /></div>
                 <div className="ct-tel-grid">
                   <div>
-                    <span>DESK QUEUE</span>
-                    <b>{occ > 85 ? '6 Mins' : '0 Mins'}</b>
+                    <span>{t('ct.rail.queue')}</span>
+                    <b>{occ > 85 ? t('ct.rail.queue6') : t('ct.rail.queue0')}</b>
                   </div>
                   <div>
-                    <span>AVG RESPONSE</span>
-                    <b className="hot">14 Mins</b>
+                    <span>{t('ct.rail.avg')}</span>
+                    <b className="hot">{t('ct.rail.avgV')}</b>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Map card */}
             <div className="ct-side ct-side-map" id="map">
               <div className="ct-map-head">
                 <span className="ct-map-label">
                   <i className="ct-map-pin">{I.pin}</i>
-                  TACTICAL CAMPUS GRID
+                  {t('ct.map.label')}
                 </span>
                 <span className="ct-map-coords">35.6762° N, 139.6503° E</span>
               </div>
@@ -707,17 +703,17 @@ const ContactSupport = () => {
               <div className="ct-map">
                 <img src={IMG.map} alt="Campus map" />
                 <div className="ct-map-overlay" />
-                <span className="ct-map-tag top-left">GATE 01 BIOMETRIC TURNSTILES</span>
-                <span className="ct-map-tag top-right">SUBWAY TERMINAL EXT 4</span>
+                <span className="ct-map-tag top-left">{t('ct.map.tag1')}</span>
+                <span className="ct-map-tag top-right">{t('ct.map.tag2')}</span>
                 <span className="ct-map-portal">
                   <i />
-                  <b>ARENA HQ PORTAL</b>
+                  <b>{t('ct.map.portal')}</b>
                 </span>
               </div>
 
               <div className="ct-map-foot">
-                <span>BIOMETRIC PARKING DECK ACTIVE // LEVEL P1 - P4</span>
-                <a href="#map">EXPAND VIEW {I.arrow(10)}</a>
+                <span>{t('ct.map.foot')}</span>
+                <a href="#map">{t('ct.map.expand')} {I.arrow(10)}</a>
               </div>
             </div>
 
@@ -749,21 +745,14 @@ const ContactSupport = () => {
         className={`ct-hubs ${isVisible.hubs ? 'is-in' : ''}`}>
         <div className="ct-hubs-head">
           <div>
-            <span className="ct-hubs-eyebrow">PHYSICAL MONOLITHS</span>
-            <h2 className="ct-hubs-title">CAMPUS OPERATIONS &amp; ARENA SUPPORT HUBS</h2>
+            <span className="ct-hubs-eyebrow">{t('ct.hubs.eyebrow')}</span>
+            <h2 className="ct-hubs-title">{t('ct.hubs.title')}</h2>
           </div>
-          <p className="ct-hubs-desc">
-            Explore direct physical intake centers engineered for rapid access,
-            telemetry calibration, and dedicated athlete concierge services.
-          </p>
+          <p className="ct-hubs-desc">{t('ct.hubs.desc')}</p>
         </div>
 
         <div className="ct-hubs-grid">
-          {[
-            { n: 'DESK 01', title: 'Biometric Intake Desk', desc: 'Instant NFC band sync, vascular vein mapping registration, and digital key provisioning.', img: IMG.hub1 },
-            { n: 'LAB 02', title: 'Diagnostic Calibration Lab', desc: 'Direct VO2 max analysis, force-plate assessments, and barbell velocity sensor calibration.', img: IMG.hub2 },
-            { n: 'ZONE 03', title: 'Concierge Recovery Quarter', desc: 'Rapid check-in for hyperbaric hyper-oxygenation chambers, cold plunge tubs, and private physiotherapists.', img: IMG.hub3 },
-          ].map((h, i) => (
+          {hubs.map((h, i) => (
             <article className="ct-hub" key={h.title} style={{ '--i': i }}>
               <div className="ct-hub-media">
                 <img src={h.img} alt={h.title} loading="lazy" />
@@ -782,12 +771,9 @@ const ContactSupport = () => {
       <section data-section="faq" ref={(el) => (sectionRefs.current[4] = el)}
         className={`ct-faq ${isVisible.faq ? 'is-in' : ''}`}>
         <div className="ct-faq-head">
-          <span className="ct-faq-eyebrow">{I.shield} SYSTEM INTELLIGENCE BASE</span>
-          <h2 className="ct-faq-title">FREQUENTLY DISPATCHED PROTOCOLS</h2>
-          <p className="ct-faq-desc">
-            Essential guidelines covering biometric identification keys, Olympic
-            equipment telemetry, and trial access rules.
-          </p>
+          <span className="ct-faq-eyebrow">{I.shield} {t('ct.faq.eyebrow')}</span>
+          <h2 className="ct-faq-title">{t('ct.faq.title')}</h2>
+          <p className="ct-faq-desc">{t('ct.faq.desc')}</p>
         </div>
 
         <div className="ct-faq-grid">
@@ -811,31 +797,30 @@ const ContactSupport = () => {
         </div>
       </section>
 
-      {/* STAFF SAFETY */}
+      {/* SAFETY */}
       <section data-section="safety" ref={(el) => (sectionRefs.current[5] = el)}
         className={`ct-safety ${isVisible.safety ? 'is-in' : ''}`}>
         <div className="ct-safety-card">
           <div className="ct-safety-left">
             <span className="ct-safety-ico">{I.badge}</span>
             <div>
-              <div className="ct-safety-title">STAFF SAFETY DESK</div>
-              <div className="ct-safety-sub">Dedicated on-site first responders</div>
+              <div className="ct-safety-title">{t('ct.safety.title')}</div>
+              <div className="ct-safety-sub">{t('ct.safety.sub')}</div>
             </div>
           </div>
-          <a href="tel:911" className="ct-safety-btn">URGENT</a>
+          <a href="tel:911" className="ct-safety-btn">{t('ct.safety.cta')}</a>
         </div>
       </section>
 
       {/* CTA */}
       <section id="join" data-section="cta" ref={(el) => (sectionRefs.current[6] = el)}
         className={`cta ${isVisible.cta ? 'is-in' : ''}`}>
-        <span className="cta-ghost" ref={ghostRef} aria-hidden="true">CONTACT</span>
+        <span className="cta-ghost" ref={ghostRef} aria-hidden="true">{t('ct.cta.ghost')}</span>
         <div className="cta-in">
-          <span className="cta-eyebrow"><i />READY TO ENTER THE ARENA?</span>
-          <h2>BOOK YOUR<br /><em>7-DAY ACCESS PASS.</em></h2>
-          <p>Free biometric baseline, full floor access and one coached session.
-            If we're not your gym, you walk away owing nothing.</p>
-          <Link to="/join" className="btn btn-red btn-lg cta-btn">START FREE WEEK {I.arrow()}</Link>
+          <span className="cta-eyebrow"><i />{t('ct.cta.eyebrow')}</span>
+          <h2>{t('ct.cta.h2a')}<br /><em>{t('ct.cta.h2b')}</em></h2>
+          <p>{t('ct.cta.desc')}</p>
+          <Link to="/join" className="btn btn-red btn-lg cta-btn">{t('ct.cta.btn')} {I.arrow()}</Link>
         </div>
       </section>
 
@@ -847,30 +832,44 @@ const ContactSupport = () => {
               <span className="brand-mark">{I.logo(16)}</span>
               <span className="brand-txt">SMART<em>GYM</em></span>
             </Link>
-            <p>Strength &amp; conditioning club with biometric telemetry and elite training infrastructure. Built for people who train.</p>
-            <span className="foot-live"><i className="ok-dot" />TELEMETRY GRID LIVE</span>
+            <p>{t('foot.desc')}</p>
+            <span className="foot-live"><i className="ok-dot" />{t('foot.live')}</span>
           </div>
           <div>
-            <h4>ARCHITECTURE</h4>
-            <ul><li>Heavy Iron Arena</li><li>Sprint Velocity Track</li><li>Cryo &amp; Recovery Pods</li><li>Metabolic Testing Lab</li></ul>
+            <h4>{t('foot.architecture')}</h4>
+            <ul>
+              <li>{t('foot.iron')}</li>
+              <li>{t('foot.sprint')}</li>
+              <li>{t('foot.cryo')}</li>
+              <li>{t('foot.metabolic')}</li>
+            </ul>
           </div>
           <div>
-            <h4>PLATFORM</h4>
-            <ul><li>Coaching Protocol</li><li>Biometric App Sync</li><li>Corporate High Performance</li><li>Member Portal</li></ul>
+            <h4>{t('foot.platform')}</h4>
+            <ul>
+              <li>{t('foot.coaching')}</li>
+              <li>{t('foot.bioapp')}</li>
+              <li>{t('foot.corporate')}</li>
+              <li>{t('foot.portal')}</li>
+            </ul>
           </div>
           <div>
-            <h4>OPERATIONS</h4>
-            <p className="foot-p">04:00 – 24:00 Daily Operations<br />Access via biometric passcode key.</p>
-            <span className="foot-hq">HQ TERMINAL</span>
-            <p className="foot-p">District 01, Performance Plaza</p>
+            <h4>{t('foot.operations')}</h4>
+            <p className="foot-p">{t('foot.hours')}<br />{t('foot.access')}</p>
+            <span className="foot-hq">{t('foot.hq')}</span>
+            <p className="foot-p">{t('foot.address')}</p>
           </div>
         </div>
 
         <div className="foot-ghost" aria-hidden="true">SMARTGYM</div>
 
         <div className="foot-bottom">
-          <p>© 2025 SMART GYM INDUSTRIAL ATHLETICS. ALL RIGHTS RESERVED.</p>
-          <div className="foot-legal"><span>Privacy Architecture</span><span>Terms of Conditioning</span><span>Security Protocols</span></div>
+          <p>{t('foot.rights')}</p>
+          <div className="foot-legal">
+            <span>{t('foot.privacy')}</span>
+            <span>{t('foot.terms')}</span>
+            <span>{t('foot.security')}</span>
+          </div>
           <button className="totop" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label="Back to top">
             <svg width="46" height="46" viewBox="0 0 46 46">
               <circle className="rb" cx="23" cy="23" r="22" />
@@ -882,10 +881,10 @@ const ContactSupport = () => {
       </footer>
 
       <nav className="tabbar" aria-label="Quick navigation">
-        <Link to="/">{I.home}<span>HOME</span></Link>
-        <Link to="/facilities">{I.grid}<span>FACILITIES</span></Link>
-        <Link to="/services">{I.bolt}<span>SERVICES</span></Link>
-        <Link to="/join" className="tab-join">{I.flame}<span>JOIN NOW</span></Link>
+        <Link to="/">{I.home}<span>{t('ct.tab.home')}</span></Link>
+        <Link to="/facilities">{I.grid}<span>{t('ct.tab.facilities')}</span></Link>
+        <Link to="/services">{I.bolt}<span>{t('ct.tab.services')}</span></Link>
+        <Link to="/join" className="tab-join">{I.flame}<span>{t('ct.tab.join')}</span></Link>
       </nav>
     </div>
   );

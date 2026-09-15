@@ -2,6 +2,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import './ServicesCatalog.css';
+import { useLang } from '../i18n/LangContext';
+import LangSwitch from '../i18n/LangSwitch';
 
 /* ============================================================
    MOTION HELPERS
@@ -9,6 +11,7 @@ import './ServicesCatalog.css';
 const useDecode = (text, start) => {
   const [out, setOut] = useState(text);
   useEffect(() => {
+    setOut(text);
     if (!start) return;
     const glyphs = '█▓▒░<>/' + String.fromCharCode(92) + '|—';
     let frame = 0;
@@ -27,7 +30,6 @@ const useDecode = (text, start) => {
   return out;
 };
 
-/* Count-up on reveal */
 const useCountUp = (target, { decimals = 0, duration = 1500, start = false } = {}) => {
   const [val, setVal] = useState(0);
   useEffect(() => {
@@ -110,123 +112,23 @@ const I = {
 };
 
 /* ============================================================
-   CONTENT
+   STATIC IMAGES
 ============================================================ */
-const BELT_ITEMS = ['BIOMETRICS', 'COACHING', 'NUTRITION', 'COMBAT', 'RECOVERY', 'DIAGNOSTICS', 'OPEN 24/7'];
-
-const DOTS = [
-  { id: 'hero', label: 'APEX' },
-  { id: 'filters', label: 'FILTER' },
-  { id: 'catalog', label: 'PROTOCOLS' },
-  { id: 'method', label: 'METHOD' },
-  { id: 'cta', label: 'DEPLOY' },
-];
-
 const IMG = {
-  heroBg: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1920&q=80',
-  vo2: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=1400&q=80',
-  coaching: 'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=1400&q=80',
+  heroBg:    'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1920&q=80',
+  vo2:       'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=1400&q=80',
+  coaching:  'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=1400&q=80',
   nutrition: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=1400&q=80',
-  combat: 'https://images.unsplash.com/photo-1549476464-37392f717541?auto=format&fit=crop&w=1400&q=80',
-  recovery: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=1400&q=80',
+  combat:    'https://images.unsplash.com/photo-1549476464-37392f717541?auto=format&fit=crop&w=1400&q=80',
+  recovery:  'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=1400&q=80',
 };
-
-/* Numeric values drive the count-up engine */
-const metrics = [
-  { v: 99.4, d: 1, p: '', s: '%', l: 'TELEMETRY ACCURACY', icon: I.heart },
-  { v: 24, d: 0, p: '< ', s: ' HR', l: 'COACH SYNC WINDOW', icon: I.timer },
-  { v: 110, d: 0, p: '−', s: '°C', l: 'CRYO POD FLOOR', icon: I.cryo },
-  { v: 24, d: 0, p: 'LIVE ', s: '/7', l: 'BIOMETRIC FEEDBACK', icon: I.speed },
-];
-
-const filters = [
-  { id: 'all', label: 'ALL SERVICES' },
-  { id: 'diagnostics', label: 'BIOMETRIC DIAGNOSTICS' },
-  { id: 'coaching', label: 'PERSONAL COACHING' },
-  { id: 'nutrition', label: 'NUTRITION ARCHITECTURE' },
-  { id: 'combat', label: 'COMBAT CONDITIONING' },
-  { id: 'recovery', label: 'RECOVERY THERAPY' },
-];
-
-const services = [
-  {
-    id: 1, category: 'diagnostics', labLabel: 'LAB PROTOCOL 01', labName: 'KORTEX-V5', labMeta: 'TELEMETRY',
-    tag: 'BIOMETRIC DIAGNOSTICS', title: 'VO2 Max & Metabolic Testing', price: '$120', per: '/ SESSION',
-    duration: '60 MIN LAB PROFILE', durationIcon: I.timer, ctaIcon: I.calendar, cta: 'BOOK DIAGNOSTIC',
-    desc: 'Determine exact respiratory exchange ratios, lactate turnaround zones, and maximum aerobic output with hospital-grade gas analysis. Includes targeted wattage calibrations and pulse-wave speed profiling.',
-    tags: ['Biometrics', 'Anaerobic Threshold', 'Heart Rate Zones'], img: IMG.vo2,
-  },
-  {
-    id: 2, category: 'coaching', labLabel: 'STRENGTH UNIT 02', labName: 'RPE-9 MATRIX', labMeta: 'FRAMEWORK',
-    tag: 'PERSONAL COACHING', title: '1-on-1 Elite Strength Coaching', price: '$160', per: '/ SESSION',
-    duration: 'CSCS CERTIFIED STAFF', durationIcon: I.dumbbell, ctaIcon: I.arrow, cta: 'MATCH WITH COACH',
-    desc: 'Direct barbell mastery engineered around your anthropometry. Velocity-based training (VBT) with transducer telemetry, neural recovery checks, and periodized microcycles designed for maximal neuromuscular adaptation.',
-    tags: ['Biomechanics', 'Hypertrophy', 'Periodization'], img: IMG.coaching,
-  },
-  {
-    id: 3, category: 'nutrition', labLabel: 'NUTRITION SYNC 03', labName: 'DEXA 360', labMeta: 'ASSESSMENT',
-    tag: 'NUTRITION ARCHITECTURE', title: 'Precision Nutrition & Macro Tracking', price: '$95', per: '/ BI-WEEKLY',
-    duration: 'APP INTEGRATED', durationIcon: I.hub, ctaIcon: I.arrow, cta: 'START NUTRITION PLAN',
-    desc: 'Hyper-calibrated nutrition planning synchronized with your training loads and DEXA lean mass benchmarks. Dynamic carb-cycling protocols, glycogen optimization, and continuous biofeedback audits.',
-    tags: ['Macro Architecture', 'DEXA Sync', 'Weekly Plan'], img: IMG.nutrition,
-  },
-  {
-    id: 4, category: 'combat', labLabel: 'COMBAT DOJO 04', labName: '650 PSI PEAK', labMeta: 'IMPACT RATE',
-    tag: 'COMBAT CONDITIONING', title: 'High-Performance Combat & Striking', price: '$140', per: '/ SESSION',
-    duration: 'ELEVATED OCTAGON ACCESS', durationIcon: I.mma, ctaIcon: I.mma, cta: 'RESERVE RING SESSION',
-    desc: 'Authentic tactical standup striking, Muay Thai clinch control, and explosive anaerobic burst conditioning. Taught by professional titleholders with custom heart-rate threshold management inside full ring settings.',
-    tags: ['Muay Thai', 'Boxing', 'Pro Sparring'], img: IMG.combat,
-  },
-  {
-    id: 5, category: 'recovery', labLabel: 'THERMAL CELL 05', labName: '4X WASHOUT', labMeta: 'REGEN SPEED',
-    tag: 'RECOVERY THERAPY', title: 'Contrast Hydrotherapy & Cryo', price: '$85', per: '/ SESSION',
-    duration: 'INCLUDES HYDRATION LOUNGE', durationIcon: I.cryo, ctaIcon: I.cryo, cta: 'BOOK RECOVERY',
-    desc: 'Accelerate central nervous system recovery through rapid vasodilation and vasoconstriction. Sub-zero whole-body liquid nitrogen chambers combined with full-spectrum infrared saunas and localized pneumatic compression sleeves.',
-    tags: ['Cryotherapy', 'Infrared Sauna', 'Lymphatic Drainage'], img: IMG.recovery,
-  },
-];
-
-const sideTelemetry = [
-  { l: 'Lactate Clearance Baseline', v: '3.8 mmol/L' },
-  { l: 'Max Oxygen Uptake', v: '58.4 ml/kg' },
-  { l: 'Hydrotherapy Chamber', v: 'READY NOW', hl: true },
-];
-
-/* ============================================================
-   METHOD — the five-stage loop
-============================================================ */
-const METHOD = [
-  {
-    n: '01', icon: I.heart, title: 'TEST', sub: 'BIOMETRIC BASELINE',
-    desc: 'VO2, DEXA, lactate and force-velocity profiling. We map your engine before we touch a single plate.',
-    stat: '12 METRICS CAPTURED',
-  },
-  {
-    n: '02', icon: I.dumbbell, title: 'TRAIN', sub: 'PERIODIZED EXECUTION',
-    desc: 'Velocity-based coaching inside microcycles engineered from your baseline. Every rep measured, every session logged.',
-    stat: 'VBT + LIVE COACHING',
-  },
-  {
-    n: '03', icon: I.hub, title: 'ANALYZE', sub: 'TELEMETRY AUDIT',
-    desc: 'Your biometric feed is audited weekly. Load, recovery and nutrition shift against the data — never guesswork.',
-    stat: '< 24 HR COACH SYNC',
-  },
-  {
-    n: '04', icon: I.cryo, title: 'RECOVER', sub: 'REGEN PROTOCOL',
-    desc: 'Cryo, contrast hydrotherapy and compression stack to compress CNS recovery so the next block hits harder.',
-    stat: '−110°C CHAMBER FLOOR',
-  },
-  {
-    n: '05', icon: I.spark, title: 'REPEAT', sub: 'SUPERCOMPENSATION',
-    desc: 'Retest, compare, escalate. The loop compounds — every cycle raises your ceiling higher than the last.',
-    stat: 'CEILING ↑ EVERY CYCLE',
-  },
-];
 
 /* ============================================================
    COMPONENT
 ============================================================ */
 const ServicesCatalog = () => {
+  const { t } = useLang();
+
   const [bootPct, setBootPct] = useState(0);
   const [boot, setBoot] = useState(false);
   const [bootGone, setBootGone] = useState(false);
@@ -234,15 +136,118 @@ const ServicesCatalog = () => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isVisible, setIsVisible] = useState({});
-  const [wave, setWave] = useState(true);           // re-stagger cards on filter change
+  const [wave, setWave] = useState(true);
   const [activeSection, setActiveSection] = useState('hero');
   const [sent, setSent] = useState(false);
   const [mthStage, setMthStage] = useState(0);
 
   const sectionRefs = useRef([]);
-  const kickText = useDecode('DIAGNOSTIC & CONDITIONING DIVISION // LIVE', true);
-  const sentText = useDecode('REQUEST LOGGED — COACH SYNC WINDOW < 24H', sent);
+  const kickText = useDecode(t('svc.kicker'), true);
+  const sentText = useDecode(t('svc.conc.sentLog'), sent);
 
+  /* ---------- Translated content arrays (inside component so `t` is in scope) ---------- */
+  const BELT_ITEMS = [
+    t('svc.belt.biometrics'),
+    t('svc.belt.coaching'),
+    t('svc.belt.nutrition'),
+    t('svc.belt.combat'),
+    t('svc.belt.recovery'),
+    t('svc.belt.diagnostics'),
+    t('svc.belt.open'),
+  ];
+
+  const filters = [
+    { id: 'all',         label: t('svc.filter.all') },
+    { id: 'diagnostics', label: t('svc.filter.diagnostics') },
+    { id: 'coaching',    label: t('svc.filter.coaching') },
+    { id: 'nutrition',   label: t('svc.filter.nutrition') },
+    { id: 'combat',      label: t('svc.filter.combat') },
+    { id: 'recovery',    label: t('svc.filter.recovery') },
+  ];
+
+  const DOTS = [
+    { id: 'hero',    label: t('svc.dot.hero') },
+    { id: 'filters', label: t('svc.dot.filters') },
+    { id: 'catalog', label: t('svc.dot.catalog') },
+    { id: 'method',  label: t('svc.dot.method') },
+    { id: 'cta',     label: t('svc.dot.cta') },
+  ];
+
+  const metrics = [
+    { v: 99.4, d: 1, p: '',      s: '%',  l: t('svc.metric.accuracy'), icon: I.heart },
+    { v: 24,   d: 0, p: '< ',    s: ' HR', l: t('svc.metric.sync'),    icon: I.timer },
+    { v: 110,  d: 0, p: '−',     s: '°C', l: t('svc.metric.cryo'),     icon: I.cryo },
+    { v: 24,   d: 0, p: 'LIVE ', s: '/7', l: t('svc.metric.feedback'), icon: I.speed },
+  ];
+
+  const services = [
+    {
+      id: 1, category: 'diagnostics',
+      labLabel: t('svc.card1.lab'), labName: 'KORTEX-V5', labMeta: t('svc.card1.meta'),
+      tag: t('svc.card1.tag'), title: t('svc.card1.title'),
+      price: '$120', per: t('svc.card1.per'),
+      duration: t('svc.card1.duration'), durationIcon: I.timer, ctaIcon: I.calendar, cta: t('svc.card1.cta'),
+      desc: t('svc.card1.desc'),
+      tags: [t('svc.card1.tag1'), t('svc.card1.tag2'), t('svc.card1.tag3')],
+      img: IMG.vo2,
+    },
+    {
+      id: 2, category: 'coaching',
+      labLabel: t('svc.card2.lab'), labName: 'RPE-9 MATRIX', labMeta: t('svc.card2.meta'),
+      tag: t('svc.card2.tag'), title: t('svc.card2.title'),
+      price: '$160', per: t('svc.card2.per'),
+      duration: t('svc.card2.duration'), durationIcon: I.dumbbell, ctaIcon: I.arrow, cta: t('svc.card2.cta'),
+      desc: t('svc.card2.desc'),
+      tags: [t('svc.card2.tag1'), t('svc.card2.tag2'), t('svc.card2.tag3')],
+      img: IMG.coaching,
+    },
+    {
+      id: 3, category: 'nutrition',
+      labLabel: t('svc.card3.lab'), labName: 'DEXA 360', labMeta: t('svc.card3.meta'),
+      tag: t('svc.card3.tag'), title: t('svc.card3.title'),
+      price: '$95', per: t('svc.card3.per'),
+      duration: t('svc.card3.duration'), durationIcon: I.hub, ctaIcon: I.arrow, cta: t('svc.card3.cta'),
+      desc: t('svc.card3.desc'),
+      tags: [t('svc.card3.tag1'), t('svc.card3.tag2'), t('svc.card3.tag3')],
+      img: IMG.nutrition,
+    },
+    {
+      id: 4, category: 'combat',
+      labLabel: t('svc.card4.lab'), labName: '650 PSI PEAK', labMeta: t('svc.card4.meta'),
+      tag: t('svc.card4.tag'), title: t('svc.card4.title'),
+      price: '$140', per: t('svc.card4.per'),
+      duration: t('svc.card4.duration'), durationIcon: I.mma, ctaIcon: I.mma, cta: t('svc.card4.cta'),
+      desc: t('svc.card4.desc'),
+      tags: [t('svc.card4.tag1'), t('svc.card4.tag2'), t('svc.card4.tag3')],
+      img: IMG.combat,
+    },
+    {
+      id: 5, category: 'recovery',
+      labLabel: t('svc.card5.lab'), labName: '4X WASHOUT', labMeta: t('svc.card5.meta'),
+      tag: t('svc.card5.tag'), title: t('svc.card5.title'),
+      price: '$85', per: t('svc.card5.per'),
+      duration: t('svc.card5.duration'), durationIcon: I.cryo, ctaIcon: I.cryo, cta: t('svc.card5.cta'),
+      desc: t('svc.card5.desc'),
+      tags: [t('svc.card5.tag1'), t('svc.card5.tag2'), t('svc.card5.tag3')],
+      img: IMG.recovery,
+    },
+  ];
+
+  const sideTelemetry = [
+    { l: t('svc.tel.lactate'), v: '3.8 mmol/L' },
+    { l: t('svc.tel.maxO2'),   v: '58.4 ml/kg' },
+    { l: t('svc.tel.chamber'), v: t('svc.tel.ready'), hl: true },
+  ];
+
+  const METHOD = [
+    { n: '01', icon: I.heart,    title: t('svc.method.step1.t'), sub: t('svc.method.step1.s'), desc: t('svc.method.step1.d'), stat: t('svc.method.step1.stat') },
+    { n: '02', icon: I.dumbbell, title: t('svc.method.step2.t'), sub: t('svc.method.step2.s'), desc: t('svc.method.step2.d'), stat: t('svc.method.step2.stat') },
+    { n: '03', icon: I.hub,      title: t('svc.method.step3.t'), sub: t('svc.method.step3.s'), desc: t('svc.method.step3.d'), stat: t('svc.method.step3.stat') },
+    { n: '04', icon: I.cryo,     title: t('svc.method.step4.t'), sub: t('svc.method.step4.s'), desc: t('svc.method.step4.d'), stat: t('svc.method.step4.stat') },
+    { n: '05', icon: I.spark,    title: t('svc.method.step5.t'), sub: t('svc.method.step5.s'), desc: t('svc.method.step5.d'), stat: t('svc.method.step5.stat') },
+  ];
+
+  /* ---------- Refs ---------- */
   const hdrRef = useRef(null);
   const progRef = useRef(null);
   const heroBgRef = useRef(null);
@@ -254,7 +259,7 @@ const ServicesCatalog = () => {
   const mthRingRef = useRef(null);
   const mthLineRef = useRef(null);
   const mthPctRef = useRef(null);
-   const mthPanelRef = useRef(null);   // ← add
+  const mthPanelRef = useRef(null);
   const mthNodesRef = useRef(null);
   const mthIdx = useRef(0);
   const emberRef = useRef(null);
@@ -281,11 +286,11 @@ const ServicesCatalog = () => {
 
   useEffect(() => {
     if (!boot) return;
-    const t = setTimeout(() => {
+    const t2 = setTimeout(() => {
       setBootGone(true);
       document.body.style.overflow = '';
     }, 950);
-    return () => clearTimeout(t);
+    return () => clearTimeout(t2);
   }, [boot]);
 
   /* IntersectionObserver reveals */
@@ -305,7 +310,7 @@ const ServicesCatalog = () => {
     return () => obs.disconnect();
   }, [boot]);
 
-  /* Re-stagger cards whenever filter/search changes ("reshuffle wave") */
+  /* Re-stagger cards whenever filter/search changes */
   useEffect(() => {
     if (!boot) return;
     setWave(false);
@@ -313,9 +318,7 @@ const ServicesCatalog = () => {
     return () => cancelAnimationFrame(id);
   }, [activeFilter, searchQuery, boot]);
 
-  /* ============================================================
-     MASTER rAF — scroll engine
-  ============================================================ */
+  /* MASTER rAF — scroll engine */
   useEffect(() => {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const onMove = (e) => { cursorTarget.current = { x: e.clientX, y: e.clientY }; };
@@ -346,7 +349,6 @@ const ServicesCatalog = () => {
         });
       }
 
-      /* Active section for dots nav */
       let cur = 'hero';
       sectionRefs.current.forEach((el) => {
         if (!el) return;
@@ -356,21 +358,18 @@ const ServicesCatalog = () => {
       if (activeRef.current !== cur) { activeRef.current = cur; setActiveSection(cur); }
 
       if (!reduced) {
-        /* Hero parallax + velocity-skewed belt */
         if (heroBgRef.current) heroBgRef.current.style.transform = `translate3d(0, ${y * 0.16}px, 0)`;
         if (beltRef.current) {
           const sk = Math.max(-6, Math.min(6, vel * 0.25));
           beltRef.current.style.transform = `translate3d(${-y * 0.3}px, 0, 0) skewX(${sk}deg)`;
         }
 
-        /* Ghost word drifting behind catalog */
         if (ghostRef.current && sectionRefs.current[2]) {
           const r = sectionRefs.current[2].getBoundingClientRect();
           const p = Math.min(1, Math.max(0, (vh - r.top) / (vh + r.height)));
           ghostRef.current.style.transform = `translate3d(${(0.5 - p) * 300}px, ${p * -50}px, 0)`;
         }
 
-        /* Parallax inside card media (reads first, writes second) */
         if (streamRef.current) {
           const reads = [];
           streamRef.current.querySelectorAll('.svc-media').forEach((host) => {
@@ -385,7 +384,6 @@ const ServicesCatalog = () => {
         }
       }
 
-      /* Method section — ring fill, line fill, active stage */
       if (mthSecRef.current) {
         const r = mthSecRef.current.getBoundingClientRect();
         if (r.bottom > -100 && r.top < vh + 100) {
@@ -395,18 +393,16 @@ const ServicesCatalog = () => {
           if (mthRingRef.current) mthRingRef.current.style.strokeDashoffset = String(1 - p);
           if (mthLineRef.current) mthLineRef.current.style.transform = `scaleY(${p.toFixed(4)})`;
           if (mthPctRef.current) {
-            const t = String(Math.round(p * 100)).padStart(3, '0');
-            if (mthPctRef.current.textContent !== t) mthPctRef.current.textContent = t;
+            const txt = String(Math.round(p * 100)).padStart(3, '0');
+            if (mthPctRef.current.textContent !== txt) mthPctRef.current.textContent = txt;
           }
 
           const steps = mthSecRef.current.querySelectorAll('.mth-step');
-                    if (!reduced) {
-            /* node carousel — active stage rotates to 12 o'clock */
+          if (!reduced) {
             if (mthNodesRef.current) {
               mthNodesRef.current.setAttribute(
                 'transform', `rotate(${(-p * 288).toFixed(2)} 160 160)`);
             }
-            /* gentle parallax — dial drifts as the section scrolls */
             if (mthPanelRef.current) {
               mthPanelRef.current.style.transform =
                 `translate3d(0, ${((0.5 - p) * 50).toFixed(1)}px, 0)`;
@@ -434,7 +430,7 @@ const ServicesCatalog = () => {
       requestAnimationFrame(() => { ticking = false; update(); });
     };
 
-        update();
+    update();
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onScroll, { passive: true });
     return () => {
@@ -444,7 +440,7 @@ const ServicesCatalog = () => {
     };
   }, []);
 
-  /* Card tilt + spotlight (delegated, vars-driven) */
+  /* Card tilt + spotlight */
   useEffect(() => {
     const el = streamRef.current;
     if (!el) return;
@@ -499,7 +495,7 @@ const ServicesCatalog = () => {
     return () => cleanups.forEach((c) => c());
   }, [bootGone, activeFilter, searchQuery]);
 
-  /* Ember field behind CTA — sprite-based canvas particles */
+  /* Ember canvas */
   useEffect(() => {
     const cvs = emberRef.current;
     if (!cvs) return;
@@ -509,7 +505,6 @@ const ServicesCatalog = () => {
     let raf = 0, running = false, w = 0, h = 0;
     let lastY = window.scrollY, vel = 0;
 
-    /* pre-rendered glow sprite — one gradient, thousands of cheap draws */
     const sprite = document.createElement('canvas');
     sprite.width = sprite.height = 64;
     const s = sprite.getContext('2d');
@@ -553,7 +548,7 @@ const ServicesCatalog = () => {
 
     const draw = () => {
       ctx.clearRect(0, 0, w, h);
-      vel *= 0.94; /* scroll speed boosts rise rate, then decays */
+      vel *= 0.94;
       const box = cvs.getBoundingClientRect();
       const mx = cursorTarget.current.x - box.left;
       const my = cursorTarget.current.y - box.top;
@@ -564,7 +559,6 @@ const ServicesCatalog = () => {
         p.x += p.vx + Math.sin(p.tw) * 0.16;
         p.tw += p.ts;
 
-        /* gentle repulsion around the cursor */
         const dx = p.x - mx, dy = p.y - my;
         const d2 = dx * dx + dy * dy;
         if (d2 < 12300) {
@@ -584,7 +578,6 @@ const ServicesCatalog = () => {
       raf = requestAnimationFrame(draw);
     };
 
-    /* run only while the CTA is near the viewport */
     const io = new IntersectionObserver(([e]) => {
       if (e.isIntersecting && !running) { running = true; raf = requestAnimationFrame(draw); }
       else if (!e.isIntersecting && running) { running = false; cancelAnimationFrame(raf); }
@@ -637,7 +630,7 @@ const ServicesCatalog = () => {
     const search = q === '' ||
       s.title.toLowerCase().includes(q) ||
       s.desc.toLowerCase().includes(q) ||
-      s.tags.some((t) => t.toLowerCase().includes(q));
+      s.tags.some((tag) => tag.toLowerCase().includes(q));
     return cat && search;
   });
 
@@ -657,7 +650,7 @@ const ServicesCatalog = () => {
             <span className="boot-mark">SMART<em>GYM</em></span>
             <span className="boot-count">{bootPct}<i>%</i></span>
             <span className="boot-bar"><i style={{ transform: `scaleX(${bootPct / 100})` }} /></span>
-            <span className="boot-label">CALIBRATING TELEMETRY GRID</span>
+            <span className="boot-label">{t('boot.label')}</span>
           </div>
         </div>
       )}
@@ -683,16 +676,17 @@ const ServicesCatalog = () => {
           </Link>
 
           <nav className="hdr-nav">
-            <Link to="/">Home</Link>
-            <Link to="/facilities">Facilities</Link>
-            <Link to="/services" className="on">Services</Link>
-            <Link to="/join">Membership</Link>
-            <Link to="/insights">Insights</Link>
-            <Link to="/contact">Contact</Link>
+            <Link to="/">{t('nav.home')}</Link>
+            <Link to="/facilities">{t('nav.facilities')}</Link>
+            <Link to="/services" className="on">{t('nav.services')}</Link>
+            <Link to="/join">{t('nav.membership')}</Link>
+            <Link to="/insights">{t('nav.insights')}</Link>
+            <Link to="/contact">{t('nav.contact')}</Link>
           </nav>
 
           <div className="hdr-actions">
-            <Link to="/join" className="btn btn-red hdr-join">JOIN NOW</Link>
+            <LangSwitch variant="header" />
+            <Link to="/join" className="btn btn-red hdr-join">{t('nav.joinNow')}</Link>
             <button
               className={`burger ${menuOpen ? 'x' : ''}`}
               onClick={() => setMenuOpen(!menuOpen)}
@@ -705,17 +699,18 @@ const ServicesCatalog = () => {
 
       <div className={`mnav ${menuOpen ? 'open' : ''}`} aria-hidden={!menuOpen}>
         <nav>
-          <Link to="/" style={{ '--d': '0.06s' }} onClick={() => setMenuOpen(false)}><span>01</span>Home</Link>
-          <Link to="/facilities" style={{ '--d': '0.11s' }} onClick={() => setMenuOpen(false)}><span>02</span>Facilities</Link>
-          <Link to="/services" style={{ '--d': '0.16s' }} onClick={() => setMenuOpen(false)}><span>03</span>Services</Link>
-          <Link to="/join" style={{ '--d': '0.21s' }} onClick={() => setMenuOpen(false)}><span>04</span>Membership</Link>
-          <Link to="/insights" style={{ '--d': '0.26s' }} onClick={() => setMenuOpen(false)}><span>05</span>Insights</Link>
-          <Link to="/contact" style={{ '--d': '0.31s' }} onClick={() => setMenuOpen(false)}><span>06</span>Contact</Link>
+          <Link to="/" style={{ '--d': '0.06s' }} onClick={() => setMenuOpen(false)}><span>01</span>{t('nav.home')}</Link>
+          <Link to="/facilities" style={{ '--d': '0.11s' }} onClick={() => setMenuOpen(false)}><span>02</span>{t('nav.facilities')}</Link>
+          <Link to="/services" style={{ '--d': '0.16s' }} onClick={() => setMenuOpen(false)}><span>03</span>{t('nav.services')}</Link>
+          <Link to="/join" style={{ '--d': '0.21s' }} onClick={() => setMenuOpen(false)}><span>04</span>{t('nav.membership')}</Link>
+          <Link to="/insights" style={{ '--d': '0.26s' }} onClick={() => setMenuOpen(false)}><span>05</span>{t('nav.insights')}</Link>
+          <Link to="/contact" style={{ '--d': '0.31s' }} onClick={() => setMenuOpen(false)}><span>06</span>{t('nav.contact')}</Link>
         </nav>
+        <LangSwitch variant="mobile" />
         <Link to="/join" className="btn btn-red mnav-join" onClick={() => setMenuOpen(false)}>
-          JOIN NOW {I.arrow(11)}
+          {t('nav.joinNow')} {I.arrow(11)}
         </Link>
-        <span className="mnav-foot">OPEN 24/7 // DISTRICT 01</span>
+        <span className="mnav-foot">{t('nav.foot')}</span>
       </div>
 
       {/* HERO */}
@@ -730,7 +725,6 @@ const ServicesCatalog = () => {
         <div className="hero-glow" aria-hidden="true" />
         <div className="grain" aria-hidden="true" />
 
-        {/* Radar widget */}
         <div className="svc-radar" aria-hidden="true">
           <span className="svc-radar-sweep" />
           <i className="svc-radar-ring" /><i className="svc-radar-ring r2" />
@@ -739,10 +733,9 @@ const ServicesCatalog = () => {
           <span className="svc-radar-blip b3" />
         </div>
 
-        {/* Vertical scroll cue */}
         <div className="svc-scrollcue" aria-hidden="true">
           <span className="svc-scrollcue-line" />
-          <span className="svc-scrollcue-label">SCROLL</span>
+          <span className="svc-scrollcue-label">{t('svc.scroll')}</span>
         </div>
 
         <div className="svc-hero-body">
@@ -751,26 +744,21 @@ const ServicesCatalog = () => {
 
             <h1 className="svc-h1">
               <span className="row">
-                <span className="w" style={{ transitionDelay: '.3s' }}>PRECISION</span>
+                <span className="w" style={{ transitionDelay: '.3s' }}>{t('svc.hero.line1')}</span>
               </span>
               <span className="row">
-                <span className="w" style={{ transitionDelay: '.42s' }}>PERFORMANCE</span>
+                <span className="w" style={{ transitionDelay: '.42s' }}>{t('svc.hero.line2')}</span>
               </span>
               <span className="row">
-                <span className="w red" style={{ transitionDelay: '.55s' }}>PROTOCOLS</span>
-                <span className="w ghost" style={{ transitionDelay: '.65s' }}>& SERVICES</span>
+                <span className="w red" style={{ transitionDelay: '.55s' }}>{t('svc.hero.line3')}</span>
+                <span className="w ghost" style={{ transitionDelay: '.65s' }}>{t('svc.hero.line4')}</span>
               </span>
             </h1>
 
-            <p className="lede">
-              Engineered for elite powerlifters, hybrid athletes, and uncompromising
-              competitors. Deploy advanced metabolic telemetry, periodized force
-              protocols, and cellular-grade recovery modules.
-            </p>
+            <p className="lede">{t('svc.hero.lede')}</p>
           </div>
         </div>
 
-        {/* Metrics — animated counters */}
         <div className="svc-metrics">
           {metrics.map((m, i) => (
             <div className="svc-metric" key={m.l} style={{ '--i': i }}>
@@ -788,7 +776,7 @@ const ServicesCatalog = () => {
             <div className="belt-track">
               {[0, 1].map((h) => (
                 <div className="belt-half" key={h}>
-                  {[...BELT_ITEMS, ...BELT_ITEMS].map((t, i) => <span key={i}>{t}<em>✦</em></span>)}
+                  {[...BELT_ITEMS, ...BELT_ITEMS].map((tag, i) => <span key={i}>{tag}<em>✦</em></span>)}
                 </div>
               ))}
             </div>
@@ -813,13 +801,13 @@ const ServicesCatalog = () => {
           <div className="svc-filterbar-right">
             <span className="svc-count" aria-live="polite">
               <b key={filteredServices.length}>{String(filteredServices.length).padStart(2, '0')}</b>
-              / {String(services.length).padStart(2, '0')} PROTOCOLS ONLINE
+              {t('svc.count.online', { total: String(services.length).padStart(2, '0') })}
             </span>
 
             <label className="search svc-search">
               {I.search}
               <input
-                placeholder="Search protocols…"
+                placeholder={t('svc.search.placeholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -837,14 +825,12 @@ const ServicesCatalog = () => {
       <section data-section="catalog" ref={(el) => (sectionRefs.current[2] = el)}
         className={`svc-catalog ${isVisible.catalog ? 'is-in' : ''}`}>
 
-        {/* Scroll-linked ghost word */}
         <div className="svc-ghostwrap" aria-hidden="true">
-          <span className="svc-ghost" ref={ghostRef}>PROTOCOLS</span>
+          <span className="svc-ghost" ref={ghostRef}>{t('svc.ghost')}</span>
         </div>
 
         <div className="svc-catalog-grid">
 
-          {/* LEFT — cards stream */}
           <div ref={streamRef}
             className={`svc-stream ${isVisible.catalog && wave ? 'is-in' : ''}`}>
             {filteredServices.map((s, i) => (
@@ -875,7 +861,7 @@ const ServicesCatalog = () => {
                     <p className="svc-desc">{s.desc}</p>
 
                     <div className="svc-tags">
-                      {s.tags.map((t) => <span key={t}>{t}</span>)}
+                      {s.tags.map((tag) => <span key={tag}>{tag}</span>)}
                     </div>
 
                     <div className="svc-actions">
@@ -896,58 +882,51 @@ const ServicesCatalog = () => {
             {filteredServices.length === 0 && (
               <div className="svc-empty">
                 <div className="svc-empty-ico">{I.search}</div>
-                <h3>NO PROTOCOLS FOUND</h3>
-                <p>No diagnostics or training services match your search criteria. Try filtering by Biometrics or Coaching.</p>
+                <h3>{t('svc.empty.title')}</h3>
+                <p>{t('svc.empty.desc')}</p>
                 <button
                   className="btn btn-ghost btn-sm"
                   onClick={() => { setSearchQuery(''); setActiveFilter('all'); }}
-                >RESET ALL FILTERS</button>
+                >{t('svc.empty.reset')}</button>
               </div>
             )}
           </div>
 
-          {/* RIGHT — rail */}
           <aside className="svc-rail">
 
-            {/* Emblem card */}
             <div className="svc-side svc-side-emblem">
               <span className="svc-side-glow" aria-hidden="true" />
               <div className="svc-side-head">
                 <span className="svc-side-mark">{I.logo(20)}</span>
                 <div>
-                  <div className="svc-side-label">FACILITY CERTIFIED</div>
-                  <div className="svc-side-title">SMART INDUSTRIAL</div>
+                  <div className="svc-side-label">{t('svc.rail.certified')}</div>
+                  <div className="svc-side-title">{t('svc.rail.industrial')}</div>
                 </div>
               </div>
-              <p className="svc-side-desc">
-                All services operate under strictly supervised medical and sports
-                science safety standards. Biometrics sync instantly to your Smart Gym
-                Mobile ID key.
-              </p>
+              <p className="svc-side-desc">{t('svc.rail.desc')}</p>
               <div className="svc-queue">
                 <div className="svc-queue-head">
-                  <span>ACTIVE INTAKE QUEUE</span>
-                  <b>4 SLOTS OPEN TODAY</b>
+                  <span>{t('svc.rail.queueLabel')}</span>
+                  <b>{t('svc.rail.queueVal')}</b>
                 </div>
                 <div className="svc-queue-bar"><i style={{ '--qw': '85%' }} /></div>
                 <div className="svc-queue-foot">
-                  <span>STATION CAPACITY: 85%</span>
-                  <span>DISTRICT 01 CAMPUS</span>
+                  <span>{t('svc.rail.capacity')}</span>
+                  <span>{t('svc.rail.campus')}</span>
                 </div>
               </div>
             </div>
 
-            {/* Live system telemetry */}
             <div className="svc-side svc-side-telemetry">
               <div className="svc-side-head-row">
-                <span className="svc-side-title-sm">LIVE SYSTEM TELEMETRY</span>
+                <span className="svc-side-title-sm">{t('svc.tel.title')}</span>
                 <span className="svc-side-ico">{I.hub}</span>
               </div>
 
               <div className="svc-chart">
                 <div className="svc-chart-head">
-                  <span>METABOLIC OUTPUT</span>
-                  <span className="svc-chart-hl">184 BPM PEAK</span>
+                  <span>{t('svc.tel.output')}</span>
+                  <span className="svc-chart-hl">{t('svc.tel.peak')}</span>
                 </div>
                 <svg viewBox="0 0 300 80" preserveAspectRatio="none" className="svc-chart-svg">
                   <defs>
@@ -971,13 +950,12 @@ const ServicesCatalog = () => {
                 </div>
               </div>
 
-              {/* Live ECG strip */}
               <div className="svc-ecg" aria-hidden="true">
                 <svg viewBox="0 0 200 40" preserveAspectRatio="none">
                   <path className="svc-ecg-path" pathLength="350"
                     d="M0 20 H30 L38 20 44 6 50 34 56 20 H90 L98 20 104 6 110 34 116 20 H150 L158 20 164 8 170 32 176 20 H200" />
                 </svg>
-                <span className="svc-ecg-tag"><i className="svc-ecg-dot" />LIVE</span>
+                <span className="svc-ecg-tag"><i className="svc-ecg-dot" />{t('svc.tel.live')}</span>
               </div>
 
               <div className="svc-tel-rows">
@@ -990,32 +968,28 @@ const ServicesCatalog = () => {
               </div>
             </div>
 
-            {/* Concierge */}
             <div className="svc-side svc-side-concierge">
-              <h4 className="svc-concierge-title">NEED CUSTOM ARCHITECTURE?</h4>
-              <p className="svc-concierge-desc">
-                Our Head of Human Performance will build an integrated multi-service
-                protocol tailored to your competition schedule.
-              </p>
+              <h4 className="svc-concierge-title">{t('svc.conc.title')}</h4>
+              <p className="svc-concierge-desc">{t('svc.conc.desc')}</p>
               <form className="svc-concierge-form" onSubmit={(e) => { e.preventDefault(); setSent(true); }}>
                 <label>
-                  <span>SELECT PRIMARY GOAL</span>
+                  <span>{t('svc.conc.goal')}</span>
                   <div className="svc-select">
                     <select defaultValue="force" disabled={sent}>
-                      <option value="force">Maximal Force &amp; Hypertrophy</option>
-                      <option value="cardio">Cardiovascular Engine &amp; VO2</option>
-                      <option value="combat">Combat Striking Velocity</option>
-                      <option value="rehab">Injury Rehabilitation &amp; Cryo</option>
+                      <option value="force">{t('svc.conc.goal1')}</option>
+                      <option value="cardio">{t('svc.conc.goal2')}</option>
+                      <option value="combat">{t('svc.conc.goal3')}</option>
+                      <option value="rehab">{t('svc.conc.goal4')}</option>
                     </select>
                     <span className="svc-select-arrow">▾</span>
                   </div>
                 </label>
                 <label>
-                  <span>ATHLETE IDENTIFIER / EMAIL</span>
-                  <input type="email" required placeholder="athlete@domain.com" disabled={sent} />
+                  <span>{t('svc.conc.email')}</span>
+                  <input type="email" required placeholder={t('svc.conc.emailPh')} disabled={sent} />
                 </label>
                 <button type="submit" className="svc-concierge-cta" disabled={sent}>
-                  {sent ? <>{I.check} REQUEST TRANSMITTED</> : 'REQUEST PERFORMANCE AUDIT'}
+                  {sent ? <>{I.check} {t('svc.conc.sent')}</> : t('svc.conc.submit')}
                 </button>
                 {sent && <div className="svc-sent">{sentText}</div>}
               </form>
@@ -1025,53 +999,50 @@ const ServicesCatalog = () => {
         </div>
       </section>
 
-      {/* METHOD — scroll-driven loop dial */}
+      {/* METHOD */}
       <section data-section="method"
-  ref={(el) => { sectionRefs.current[3] = el; mthSecRef.current = el; }}
-  className={`mth ${isVisible.method ? 'is-in' : ''}`}>
+        ref={(el) => { sectionRefs.current[3] = el; mthSecRef.current = el; }}
+        className={`mth ${isVisible.method ? 'is-in' : ''}`}>
         <div className="mth-grid">
 
-          {/* Sticky dial */}
           <div className="mth-panel">
-                      {/* Dial column — scrolls with the page, no pinning */}
-          <div className="mth-dialcol" ref={mthPanelRef}>
-            <div className="kicker"><i /><span>THE SMARTGYM METHOD</span></div>
+            <div className="mth-dialcol" ref={mthPanelRef}>
+              <div className="kicker"><i /><span>{t('svc.method.kicker')}</span></div>
 
-            <div className="mth-dial">
-              <svg viewBox="0 0 320 320" className="mth-svg" aria-hidden="true">
-                <circle className="mth-dial-track" cx="160" cy="160" r="128" />
-                <circle className="mth-dial-spin" cx="160" cy="160" r="146" />
-                <circle className="mth-dial-prog" ref={mthRingRef}
-                  cx="160" cy="160" r="128" pathLength="1"
-                  strokeDasharray="1" strokeDashoffset="1" />
-                <g ref={mthNodesRef}>
-                  {METHOD.map((m, i) => {
-                    const a = ((-90 + i * 72) * Math.PI) / 180;
-                    const cx = 160 + 128 * Math.cos(a);
-                    const cy = 160 + 128 * Math.sin(a);
-                    return (
-                      <g key={m.n} className={`mth-node ${i === mthStage ? 'on' : ''}`}>
-                        <circle className="mth-node-halo" cx={cx} cy={cy} r="14" />
-                        <circle className="mth-node-dot" cx={cx} cy={cy} r="5" />
-                      </g>
-                    );
-                  })}
-                </g>
-              </svg>
-              <div className="mth-dial-center" key={mthStage}>
-                <span className="mth-dial-num">{METHOD[mthStage].n}</span>
-                <span className="mth-dial-name">{METHOD[mthStage].title}</span>
+              <div className="mth-dial">
+                <svg viewBox="0 0 320 320" className="mth-svg" aria-hidden="true">
+                  <circle className="mth-dial-track" cx="160" cy="160" r="128" />
+                  <circle className="mth-dial-spin" cx="160" cy="160" r="146" />
+                  <circle className="mth-dial-prog" ref={mthRingRef}
+                    cx="160" cy="160" r="128" pathLength="1"
+                    strokeDasharray="1" strokeDashoffset="1" />
+                  <g ref={mthNodesRef}>
+                    {METHOD.map((m, i) => {
+                      const a = ((-90 + i * 72) * Math.PI) / 180;
+                      const cx = 160 + 128 * Math.cos(a);
+                      const cy = 160 + 128 * Math.sin(a);
+                      return (
+                        <g key={m.n} className={`mth-node ${i === mthStage ? 'on' : ''}`}>
+                          <circle className="mth-node-halo" cx={cx} cy={cy} r="14" />
+                          <circle className="mth-node-dot" cx={cx} cy={cy} r="5" />
+                        </g>
+                      );
+                    })}
+                  </g>
+                </svg>
+                <div className="mth-dial-center" key={mthStage}>
+                  <span className="mth-dial-num">{METHOD[mthStage].n}</span>
+                  <span className="mth-dial-name">{METHOD[mthStage].title}</span>
+                </div>
+              </div>
+
+              <div className="mth-readout">
+                <span>{t('svc.method.readout')}</span>
+                <b><i ref={mthPctRef}>000</i>%</b>
               </div>
             </div>
-
-            <div className="mth-readout">
-              <span>LOOP COMPLETION</span>
-              <b><i ref={mthPctRef}>000</i>%</b>
-            </div>
-          </div>
           </div>
 
-          {/* Scrolling stages */}
           <div className="mth-steps">
             <span className="mth-line" aria-hidden="true"><i ref={mthLineRef} /></span>
 
@@ -1100,11 +1071,10 @@ const ServicesCatalog = () => {
         <span className="cta-ghost" aria-hidden="true">SMARTGYM</span>
         <canvas className="ember-canvas" ref={emberRef} aria-hidden="true" />
         <div className="cta-in">
-          <span className="cta-eyebrow"><i />READY TO DEPLOY YOUR PROTOCOL?</span>
-          <h2>START WITH A<br /><em>BIOMETRIC BASELINE.</em></h2>
-          <p>Free 30-minute consultation and metabolic snapshot. If our protocols
-            aren't right for you, you walk away owing nothing.</p>
-          <button className="btn btn-red btn-lg cta-btn">BOOK FREE CONSULT {I.arrow()}</button>
+          <span className="cta-eyebrow"><i />{t('svc.cta.eyebrow')}</span>
+          <h2>{t('svc.cta.h2a')}<br /><em>{t('svc.cta.h2b')}</em></h2>
+          <p>{t('svc.cta.desc')}</p>
+          <button className="btn btn-red btn-lg cta-btn">{t('svc.cta.btn')} {I.arrow()}</button>
         </div>
       </section>
 
@@ -1116,30 +1086,44 @@ const ServicesCatalog = () => {
               <span className="brand-mark">{I.logo(16)}</span>
               <span className="brand-txt">SMART<em>GYM</em></span>
             </Link>
-            <p>Strength &amp; conditioning club with biometric telemetry and elite training infrastructure. Built for people who train.</p>
-            <span className="foot-live"><i className="ok-dot" />TELEMETRY GRID LIVE</span>
+            <p>{t('foot.desc')}</p>
+            <span className="foot-live"><i className="ok-dot" />{t('foot.live')}</span>
           </div>
           <div>
-            <h4>ARCHITECTURE</h4>
-            <ul><li>Heavy Iron Arena</li><li>Sprint Velocity Track</li><li>Cryo &amp; Recovery Pods</li><li>Metabolic Testing Lab</li></ul>
+            <h4>{t('foot.architecture')}</h4>
+            <ul>
+              <li>{t('foot.iron')}</li>
+              <li>{t('foot.sprint')}</li>
+              <li>{t('foot.cryo')}</li>
+              <li>{t('foot.metabolic')}</li>
+            </ul>
           </div>
           <div>
-            <h4>PLATFORM</h4>
-            <ul><li>Coaching Protocol</li><li>Biometric App Sync</li><li>Corporate High Performance</li><li>Member Portal</li></ul>
+            <h4>{t('foot.platform')}</h4>
+            <ul>
+              <li>{t('foot.coaching')}</li>
+              <li>{t('foot.bioapp')}</li>
+              <li>{t('foot.corporate')}</li>
+              <li>{t('foot.portal')}</li>
+            </ul>
           </div>
           <div>
-            <h4>OPERATIONS</h4>
-            <p className="foot-p">04:00 – 24:00 Daily Operations<br />Access via biometric passcode key.</p>
-            <span className="foot-hq">HQ TERMINAL</span>
-            <p className="foot-p">District 01, Performance Plaza</p>
+            <h4>{t('foot.operations')}</h4>
+            <p className="foot-p">{t('foot.hours')}<br />{t('foot.access')}</p>
+            <span className="foot-hq">{t('foot.hq')}</span>
+            <p className="foot-p">{t('foot.address')}</p>
           </div>
         </div>
 
         <div className="foot-ghost" aria-hidden="true">SMARTGYM</div>
 
         <div className="foot-bottom">
-          <p>© 2025 SMART GYM INDUSTRIAL ATHLETICS. ALL RIGHTS RESERVED.</p>
-          <div className="foot-legal"><span>Privacy Architecture</span><span>Terms of Conditioning</span><span>Security Protocols</span></div>
+          <p>{t('foot.rights')}</p>
+          <div className="foot-legal">
+            <span>{t('foot.privacy')}</span>
+            <span>{t('foot.terms')}</span>
+            <span>{t('foot.security')}</span>
+          </div>
           <button className="totop" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label="Back to top">
             <svg width="46" height="46" viewBox="0 0 46 46">
               <circle className="rb" cx="23" cy="23" r="22" />
@@ -1151,10 +1135,10 @@ const ServicesCatalog = () => {
       </footer>
 
       <nav className="tabbar" aria-label="Quick navigation">
-        <Link to="/">{I.home}<span>HOME</span></Link>
-        <Link to="/facilities">{I.grid}<span>FACILITIES</span></Link>
-        <Link to="/services" className="on">{I.bolt}<span>SERVICES</span></Link>
-        <a href="#join" className="tab-join">{I.flame}<span>JOIN NOW</span></a>
+        <Link to="/">{I.home}<span>{t('nav.home')}</span></Link>
+        <Link to="/facilities">{I.grid}<span>{t('nav.facilities')}</span></Link>
+        <Link to="/services" className="on">{I.bolt}<span>{t('nav.services')}</span></Link>
+        <Link to="/join" className="tab-join">{I.flame}<span>{t('nav.joinNow')}</span></Link>
       </nav>
     </div>
   );

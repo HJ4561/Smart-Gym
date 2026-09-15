@@ -1,7 +1,9 @@
 // SmartGymHome.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import './SmartGymHome.css';
 import { Link } from 'react-router-dom';
+import { useLang } from '../i18n/LangContext';
+import LangSwitch from '../i18n/LangSwitch';
+import './SmartGymHome.css';
 
 /* ============================================================
    MOTION HELPERS
@@ -58,6 +60,7 @@ const useVelocitySkew = () => {
 const useDecode = (text, start) => {
   const [out, setOut] = useState(text);
   useEffect(() => {
+    setOut(text);
     if (!start) return;
     const glyphs = '█▓▒░<>/' + String.fromCharCode(92) + '|—';
     let frame = 0;
@@ -124,137 +127,35 @@ const I = {
 };
 
 /* ============================================================
-   CONTENT
+   STATIC IMAGES
 ============================================================ */
-
-const heroStats = [
-  { v: '24/7', l: 'ACCESS' },
-  { v: '418', l: 'IN-CLUB NOW' },
-  { v: '840W', l: 'MEAN PEAK' },
-  { v: '94.2%', l: 'RECOVERY OPTIMAL' },
-];
-
-const BELT_ITEMS = ['STRENGTH', 'CONDITIONING', 'OLYMPIC LIFTING', 'COMBAT', 'MOBILITY', 'RECOVERY', 'NUTRITION', 'OPEN 24/7'];
-
-const capabilities = [
-  { k: '24/7', t: 'SMART ACCESS', d: 'Biometric entry, zero staff queue. Your clock, your floor.', icon: I.clock },
-  { k: '100%', t: 'BIOMETRIC TELEMETRY', d: 'Every rack, lane and pod streams live to your profile.', icon: I.pulse },
-  { k: 'CSCS', t: 'ELITE COACHING', d: 'Certified coaches walk the floor — not a call center.', icon: I.coach },
-  { k: '1:01', t: 'MACHINE GUIDANCE', d: 'Rep-by-rep form feedback from sensor-equipped iron.', icon: I.chip },
-];
-
-const floorStats = [
-  { label: 'ATHLETES ON FLOOR', value: 418, unit: 'NOW', badge: 'LIVE', live: true, pct: 72, note: 'Peak window 5–8 PM · all 12 platforms running' },
-  { label: 'VOLUME MOVED TODAY', value: 41320, unit: 'KG', badge: 'TODAY', pct: 64, note: 'Squat · bench · dead · carries · sleds' },
-  { label: 'SESSIONS COACHED', value: 386, unit: 'THIS WEEK', badge: 'BOOKED', pct: 81, note: 'Form-first programming · all sectors' },
-  { label: 'RACK WAIT TIME', value: 0, unit: 'MIN', badge: 'ALWAYS', pct: 100, note: '34 stations · zero-queue guarantee' },
-];
-
-const floorFeed = [
-  { s: 'PLATFORM 01', st: 'IN USE', cls: 'busy' }, { s: 'RACK 04', st: 'OPEN', cls: 'ok' },
-  { s: 'OLY PLATFORM 02', st: 'IN USE', cls: 'busy' }, { s: 'COLD PLUNGE', st: '4°C', cls: 'info' },
-  { s: 'TURF LANE 03', st: 'OPEN', cls: 'ok' }, { s: 'SAUNA', st: '45°C', cls: 'info' },
-  { s: 'COMBAT PIT', st: 'SPARRING 19:15', cls: 'ok' }, { s: 'COURT', st: 'LEAGUE 20:00', cls: 'info' },
-];
-
-const whyRows = [
-  { n: '01', t: '24/7 BIOMETRIC ACCESS', tag: 'THE KEYS', m: 'Included — Basic tier and up',
-    d: 'Your phone is your key. Train at 3AM or 3PM — the floor never closes and neither does your window.',
-    img: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=800&q=80' },
-  { n: '02', t: 'VELOCITY-TRACKED IRON', tag: 'THE DATA', m: 'Every platform · every rep',
-    d: 'Calibrated plates and bar-speed sensors on every platform. Every rep is measured, logged, progressed.',
-    img: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=800&q=80' },
-  { n: '03', t: 'COACHES ON THE FLOOR', tag: 'THE PEOPLE', m: '386 sessions coached this week',
-    d: 'CSCS-certified coaches walk the floor — real-time form fixes, not PDFs. Included, never upsold.',
-    img: 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=800&q=80' },
-  { n: '04', t: 'RECOVERY, BUILT-IN', tag: 'THE RESET', m: 'Plunge · sauna · compression',
-    d: 'Cold plunge, sauna and compression bays in the base plan — adaptation happens between sessions.',
-    img: 'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=800&q=80' },
-];
-
-const whyChips = [['94%', 'renew after year one'], ['4.9/5', 'member score'], ['1,900+', 'active members']];
-
-const sectors = [
-  { title: 'Olympic Swimming Pool', tag: 'HYDRO-PERFORMANCE', badge: 'STATUS: OPEN',
-    desc: 'Precision 8-lane racing reservoir with automated lap telemetry and ozone purification.',
-    meta: [['LANES', '6/8'], ['TEMP', '26°C'], ['PURITY', '99.8%']], cta: 'BOOK A LANE',
-    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA23dg0PwZOBLQHFc5L3CR2koDzZ1qCtI2wt0JljLuzWtCzeGO68fwgDV7qXQgzKxDWKCiti668_e4ByD5btmEGMpGqu_U8lV5ijrvOn5eAuLUNyUUKLpZWINudKPQcwOTezUIpXEXcTuzGumCpH8Q6pWIRGC7Xj-gg95KfkINm3lxdWhmXlqlMDniXSXc_3ozdnLJ0EyKdjn8axgsuhCVcvwMjVDcpnDrNQS2y7b0wzuYrBuDdsAtqYQ' },
-  { title: 'Combat & Boxing Pit', tag: 'FIGHT CONDITIONING', badge: 'SPARRING OPEN',
-    desc: 'Full regulation octagon, force-sensor heavy bags and tatami grappling mats for MMA work.',
-    meta: [['BAGS', '11/16'], ['CAGE', 'ACTIVE'], ['COACH', 'ON-SITE']], cta: 'JOIN CLASS',
-    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDOsUJYZow6PF3XJwRRZJamWbc9ddU024GZW5iYBS5YlX4EO3DDUAI3dHyFQDoMdJvbtf7R38ks3-k6qzgQCZI3O_fh8AlKbR2yz3z-vvjax-8pbzy1dL8MmpX_CBEVnFXLJMN1iYuyI040STPXWEzoFvokbtgqeVqQmgXzQm81YFcKwPRKKxmHZ1rsG5fWLzKw3zV5oN83c3X0ZyTSUA8_9j4e_FdcLtOesXhJpPxFWvFCBOXElsKRMg' },
-  { title: 'Steam & Cryo Recovery', tag: 'BIO-RECOVERY PODS', badge: 'AVAILABLE',
-    desc: 'Eucalyptus vapor thermal suites, −110°C cryo chambers, contrast baths and compression lounges.',
-    meta: [['SAUNA', '45°C'], ['CRYO', '-110°C'], ['PLUNGE', '4°C']], cta: 'BOOK SESSION',
-    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDV3CcgN4obCgXaNL3RUNHyf7x2YtvrhJxgbTM4wNNCyA1usAhn_KDjDwELDf84TfRTpL1XkdyU8ZUtARAGnprs3EKZDEJ51h2jc-2m5hsMpfzYpk2AULO5c1yneYCggtcTjPWXCpT_ps8x8zbPxqZc8l6XR4DVu7nGp631CfhhqejxKIfo186fJTeZMjG5wgJeybWGckIhfiGt5e0LVdjMSYt-kqgWzqX9phNvE5WUmgXR32Thq9fFCA' },
-  { title: 'Heavy Iron Arena', tag: 'STRENGTH FLOOR', badge: 'OPEN ACCESS',
-    desc: '18 competition power racks, Eleiko-calibrated steel, acoustic deadlift zones and velocity sensors.',
-    meta: [['RACKS', '15/18'], ['LOAD', 'CALIB'], ['VELOCITY', 'SYNC']], cta: 'RESERVE PLATFORM',
-    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDk5Oh9gpB5ucwXqc_fWi5ICkJK3Y4l6P_-ng0_hFqqNi3-XJgiH4Kq3JApvU80yRgokkd7VoIugJmYt1j_iBTZno_W5pcu-kFgsrfJ_6im9GXAwYcdyCHwWPSzAuMnBkiSnFqix318GepuMGsqTRVJQL3xIhRP-bD2EjxntBw8xaBjzmlbETZCo0JHIziPUuTM5ejE2NDZyBjeIWmt8AYVEypg5dWvCPAnQBvlkpjaRpsra11V68EPVg' },
-];
-
-const services = [
-  { id: 1, title: 'VO2 Max & Metabolic Scan', category: 'biometrics', price: '$120', per: '/ SESSION', duration: '60 MINS', badge: 'DIAGNOSTIC',
-    tags: ['Lactate Curve', 'InBody 770', 'Zone 2 Analysis'],
-    description: 'Clinical-grade cardiopulmonary telemetry to establish heart-rate zones, lactate threshold and resting burn rate.',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA90ADfv5q015Hdv9wJrN2PR94gE-LFkELeKTwdRgiQX8excZjoGepxEN01fxEOkcmxVAOJokVXvHi6HSkoMoTwipTWaG7D1R8Uqz9elu-sp7XiXEudLEW9IP328m3CWd3HpdZZOwTqjoT7yitwdqfx02m-Jj13qvdqhNxEKWBt1qvanvvDy2zZ2nvN-iDRV5m6X-iksFc08fT4FEPCr88r9WLaK0mfI1VL9atxsaGz4gYqdm_ihVrx4Q' },
-  { id: 2, title: '1-on-1 Elite Coaching', category: 'coaching', price: '$95', per: '/ HR', duration: '75 MINS', badge: 'TIER 1 ELITE',
-    tags: ['VBT Bar Velocity', 'Biomechanic Screen', 'RPE Tracking'],
-    description: 'Master-level strength and conditioning tailored to powerlifting, weightlifting, hypertrophy or speed work.',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBlS-alKP7soJN2iWlTU8Xx_RWinLindW32FbUrPxCs9yAasAE6chTuxhM2gVTBY_qBhU8baKOt-zYpNTgoCca3ucS77oMHMwcjX9O_uQOb63hZgY5AEDY_KrEuh93vzQKMrd0WlmLMYyDw5w14YqedkF8-YBVCU5VZKcWhMWA1cv_JUyZqtOaoaaQZzEmlY33KIM3HKQyjMHpllP7KG_906MZNrJN0MWToCEnmJIf-rvvfP7F1KPNfDw' },
-  { id: 3, title: 'Nutrition & Macro Architecture', category: 'nutrition', price: '$149', per: '/ MO', duration: 'MONTHLY', badge: 'BIO-FUEL',
-    tags: ['Weekly Macro Tuning', 'DEXA Sync', 'Hydration Audit'],
-    description: 'Precision fueling blueprint built around your metabolic burn rate, workout timing and recovery targets.',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCRHsZzWN12JER7VHxDXN-RPFk-D4rsmxLnxmnYbUnZLgB--rhdlx4hNHByEVsF4Vlw_PMROWl278isfWsLDgyaA3dlssuYkhdjCIVEZ1v82sYcCZvlTbGy9Z6nShFxsbg-T43tUFti9JLYLGCwIIqZMUdkR8eioWw5PZanlFnCknEK_He41RjJJbW603phHF_Gk_NKLpNUI1Yi07iSqVhKlEZw-hg3E0LD4GY_cZ1tdj6HOCkW-OBxeQ' },
-  { id: 4, title: 'Combat Conditioning', category: 'combat', price: '$40', per: '/ DROP-IN', duration: '50 MINS', badge: 'HIGH INTENSITY',
-    tags: ['Heavy Bag RTM', 'Core Power', 'Agility Ladders'],
-    description: 'Striking mechanics, explosive footwork circuits and heavy-bag metabolic intervals for anaerobic endurance.',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDADlKHJWbigDsBsIozNsudgjATmwvY8ISSDYQqk40ut9PAkq5z8Vd_E5_Zcp4MPor8cMQTg5PYFciLJB9bcuGhoJWMWY3628cmNFn4SQvV7rOfXg90CiBNspx4iJJWgq1jYiU_bM85FE-1tvXWJE_L2kiQJZcv99l63sX1wbPkPQGkzMoUBRJxO_BFh6PillPtkjs3GKXhQWbPW0mGNqU8gqGXrxQz839Y4_0bZl4HFQUG91W5GmBrKw' },
-  { id: 5, title: 'Contrast Recovery & Cryo', category: 'recovery', price: '$65', per: '/ SESSION', duration: '45 MINS', badge: 'BIO-HACK',
-    tags: ['-110°C Cryo', 'Normatec 3', 'Infrared Sauna'],
-    description: 'Sub-zero nitrogen cryotherapy combined with infrared hyperthermia and pneumatic compression sleeves.',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAJDzC_mzHYHneGW09oV0OIN4YvpHHAyPYMG17Gud5lf6MHEY3Fcld65tSW7HLqX4WJZWV_cQnaI5V-ai521PCFf2cLnEfRHBXUCZxu75_UVNh7q06uxSAXNgx7ECK_DpMD1mHtdQwA8XGowrydf9NvxY16uXvAhySX8ovfo23GQ3GrcAdEYyKuDgfnRRHpl4iWywdd4F6ZXFKcXCLHGV0N4_mB1qezKH8c3rf4fBT_ud5pcOGD1tKDEA' },
-];
-
-const serviceCats = ['all', 'biometrics', 'coaching', 'nutrition', 'combat', 'recovery'];
-
-const tiers = [
-  { label: 'ESSENTIAL ACCESS', name: 'Basic Tier', short: 'Basic', monthly: 39, annual: 31, icon: I.dumbbell, featured: false,
-    desc: 'Full iron arena and cardio floor access during staffed hours.',
-    features: [
-      { t: 'Arena & cardio floor access', ok: true }, { t: 'Biometric keyless entry', ok: true },
-      { t: 'Mobile telemetry app', ok: true }, { t: 'Cryo & infrared recovery pods', ok: false },
-      { t: '1-on-1 performance coaching', ok: false }] },
-  { label: 'FULL CONDITIONING', name: 'Smart Pro', short: 'Pro', monthly: 79, annual: 63, icon: I.bolt, featured: true,
-    desc: 'Unrestricted 24/7 access to every sector, plus machine telemetry.',
-    features: [
-      { t: '24/7 unlimited floor & track', ok: true }, { t: 'Velocity pool & combat pit', ok: true },
-      { t: 'Sauna & steam suite', ok: true }, { t: 'Sensor barbells & force data', ok: true },
-      { t: 'Dedicated sports scientist', ok: false }] },
-  { label: 'PEAK HUMAN PROTOCOL', name: 'Black Tier', short: 'Elite', monthly: 159, annual: 127, icon: I.trophy, featured: false,
-    desc: 'The full protocol — private coaching, screening and every amenity.',
-    features: [
-      { t: 'Everything in Pro Tier', ok: true }, { t: 'Dedicated performance coach', ok: true },
-      { t: 'Unlimited cryotherapy (−110°C)', ok: true }, { t: 'Quarterly DEXA + VO₂ max tests', ok: true },
-      { t: 'Private locker & laundry care', ok: true }] },
-];
-
-const planIncludes = ['24/7 biometric entry', 'App telemetry sync', 'Recovery lounge', 'No joining fee'];
-
-const proofStats = [
-  { n: 99.4, d: 1, suffix: '%', title: 'TARGET RETENTION', desc: 'Members hit baseline conditioning targets within 90 days.' },
-  { n: 1.4, d: 1, suffix: 'M+', title: 'DATA POINTS / MONTH', desc: 'Logged across smart barbells and sprint treadmills.', red: true },
-  { raw: '24/7', title: 'UNINTERRUPTED ACCESS', desc: 'Zero booking queues for racks or plunge bays.' },
-  { n: 0.02, d: 2, suffix: 's', title: 'GATE SYNC', desc: 'Touchless entry via facial verification.', red: true },
-];
-
-const QUOTE = 'Smart Gym removed all guesswork from my pre-season. The bar-velocity feedback alone boosted my clean & jerk by *17.5 kg*.';
+const IMG_SECTORS = {
+  s1: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA23dg0PwZOBLQHFc5L3CR2koDzZ1qCtI2wt0JljLuzWtCzeGO68fwgDV7qXQgzKxDWKCiti668_e4ByD5btmEGMpGqu_U8lV5ijrvOn5eAuLUNyUUKLpZWINudKPQcwOTezUIpXEXcTuzGumCpH8Q6pWIRGC7Xj-gg95KfkINm3lxdWhmXlqlMDniXSXc_3ozdnLJ0EyKdjn8axgsuhCVcvwMjVDcpnDrNQS2y7b0wzuYrBuDdsAtqYQ',
+  s2: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDOsUJYZow6PF3XJwRRZJamWbc9ddU024GZW5iYBS5YlX4EO3DDUAI3dHyFQDoMdJvbtf7R38ks3-k6qzgQCZI3O_fh8AlKbR2yz3z-vvjax-8pbzy1dL8MmpX_CBEVnFXLJMN1iYuyI040STPXWEzoFvokbtgqeVqQmgXzQm81YFcKwPRKKxmHZ1rsG5fWLzKw3zV5oN83c3X0ZyTSUA8_9j4e_FdcLtOesXhJpPxFWvFCBOXElsKRMg',
+  s3: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDV3CcgN4obCgXaNL3RUNHyf7x2YtvrhJxgbTM4wNNCyA1usAhn_KDjDwELDf84TfRTpL1XkdyU8ZUtARAGnprs3EKZDEJ51h2jc-2m5hsMpfzYpk2AULO5c1yneYCggtcTjPWXCpT_ps8x8zbPxqZc8l6XR4DVu7nGp631CfhhqejxKIfo186fJTeZMjG5wgJeybWGckIhfiGt5e0LVdjMSYt-kqgWzqX9phNvE5WUmgXR32Thq9fFCA',
+  s4: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDk5Oh9gpB5ucwXqc_fWi5ICkJK3Y4l6P_-ng0_hFqqNi3-XJgiH4Kq3JApvU80yRgokkd7VoIugJmYt1j_iBTZno_W5pcu-kFgsrfJ_6im9GXAwYcdyCHwWPSzAuMnBkiSnFqix318GepuMGsqTRVJQL3xIhRP-bD2EjxntBw8xaBjzmlbETZCo0JHIziPUuTM5ejE2NDZyBjeIWmt8AYVEypg5dWvCPAnQBvlkpjaRpsra11V68EPVg',
+};
+const IMG_WHY = {
+  r1: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=800&q=80',
+  r2: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=800&q=80',
+  r3: 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=800&q=80',
+  r4: 'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=800&q=80',
+};
+const IMG_SERVICES = {
+  1: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA90ADfv5q015Hdv9wJrN2PR94gE-LFkELeKTwdRgiQX8excZjoGepxEN01fxEOkcmxVAOJokVXvHi6HSkoMoTwipTWaG7D1R8Uqz9elu-sp7XiXEudLEW9IP328m3CWd3HpdZZOwTqjoT7yitwdqfx02m-Jj13qvdqhNxEKWBt1qvanvvDy2zZ2nvN-iDRV5m6X-iksFc08fT4FEPCr88r9WLaK0mfI1VL9atxsaGz4gYqdm_ihVrx4Q',
+  2: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBlS-alKP7soJN2iWlTU8Xx_RWinLindW32FbUrPxCs9yAasAE6chTuxhM2gVTBY_qBhU8baKOt-zYpNTgoCca3ucS77oMHMwcjX9O_uQOb63hZgY5AEDY_KrEuh93vzQKMrd0WlmLMYyDw5w14YqedkF8-YBVCU5VZKcWhMWA1cv_JUyZqtOaoaaQZzEmlY33KIM3HKQyjMHpllP7KG_906MZNrJN0MWToCEnmJIf-rvvfP7F1KPNfDw',
+  3: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCRHsZzWN12JER7VHxDXN-RPFk-D4rsmxLnxmnYbUnZLgB--rhdlx4hNHByEVsF4Vlw_PMROWl278isfWsLDgyaA3dlssuYkhdjCIVEZ1v82sYcCZvlTbGy9Z6nShFxsbg-T43tUFti9JLYLGCwIIqZMUdkR8eioWw5PZanlFnCknEK_He41RjJJbW603phHF_Gk_NKLpNUI1Yi07iSqVhKlEZw-hg3E0LD4GY_cZ1tdj6HOCkW-OBxeQ',
+  4: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDADlKHJWbigDsBsIozNsudgjATmwvY8ISSDYQqk40ut9PAkq5z8Vd_E5_Zcp4MPor8cMQTg5PYFciLJB9bcuGhoJWMWY3628cmNFn4SQvV7rOfXg90CiBNspx4iJJWgq1jYiU_bM85FE-1tvXWJE_L2kiQJZcv99l63sX1wbPkPQGkzMoUBRJxO_BFh6PillPtkjs3GKXhQWbPW0mGNqU8gqGXrxQz839Y4_0bZl4HFQUG91W5GmBrKw',
+  5: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAJDzC_mzHYHneGW09oV0OIN4YvpHHAyPYMG17Gud5lf6MHEY3Fcld65tSW7HLqX4WJZWV_cQnaI5V-ai521PCFf2cLnEfRHBXUCZxu75_UVNh7q06uxSAXNgx7ECK_DpMD1mHtdQwA8XGowrydf9NvxY16uXvAhySX8ovfo23GQ3GrcAdEYyKuDgfnRRHpl4iWywdd4F6ZXFKcXCLHGV0N4_mB1qezKH8c3rf4fBT_ud5pcOGD1tKDEA',
+};
 
 /* ============================================================
    COMPONENT
 ============================================================ */
 
 const SmartGymHome = () => {
+  const { t } = useLang();
+
   const [bootPct, setBootPct] = useState(0);
   const [boot, setBoot] = useState(false);
   const [bootGone, setBootGone] = useState(false);
@@ -268,9 +169,139 @@ const SmartGymHome = () => {
   const sectionRefs = useRef([]);
   const heroVideoRef = useRef(null);
   const skewRef = useVelocitySkew();
-  const kickText = useDecode('BIOMETRIC TELEMETRY // LIVE OPERATIONS GRID', isVisible.hero && boot);
+  const kickText = useDecode(t('home.kicker'), isVisible.hero && boot);
 
-  // refs written to directly by the master rAF loop (no re-renders)
+  /* ---------- Translated content ---------- */
+  const heroStats = [
+    { v: t('home.stat1.v'), l: t('home.stat1.l') },
+    { v: t('home.stat2.v'), l: t('home.stat2.l') },
+    { v: t('home.stat3.v'), l: t('home.stat3.l') },
+    { v: t('home.stat4.v'), l: t('home.stat4.l') },
+  ];
+
+  const BELT_ITEMS = [
+    t('home.belt.strength'),
+    t('home.belt.cond'),
+    t('home.belt.oly'),
+    t('home.belt.combat'),
+    t('home.belt.mobility'),
+    t('home.belt.recovery'),
+    t('home.belt.nutrition'),
+    t('home.belt.open'),
+  ];
+
+  const capabilities = [
+    { k: t('home.caps.1.k'), t: t('home.caps.1.t'), d: t('home.caps.1.d'), icon: I.clock },
+    { k: t('home.caps.2.k'), t: t('home.caps.2.t'), d: t('home.caps.2.d'), icon: I.pulse },
+    { k: t('home.caps.3.k'), t: t('home.caps.3.t'), d: t('home.caps.3.d'), icon: I.coach },
+    { k: t('home.caps.4.k'), t: t('home.caps.4.t'), d: t('home.caps.4.d'), icon: I.chip },
+  ];
+
+  const floorStats = [
+    { label: t('home.floor.tile1.lab'), value: 418,   unit: t('home.floor.tile1.unit'), badge: t('home.floor.tile1.badge'), live: true, pct: 72,  note: t('home.floor.tile1.note') },
+    { label: t('home.floor.tile2.lab'), value: 41320, unit: t('home.floor.tile2.unit'), badge: t('home.floor.tile2.badge'),           pct: 64,  note: t('home.floor.tile2.note') },
+    { label: t('home.floor.tile3.lab'), value: 386,   unit: t('home.floor.tile3.unit'), badge: t('home.floor.tile3.badge'),           pct: 81,  note: t('home.floor.tile3.note') },
+    { label: t('home.floor.tile4.lab'), value: 0,     unit: t('home.floor.tile4.unit'), badge: t('home.floor.tile4.badge'),           pct: 100, note: t('home.floor.tile4.note') },
+  ];
+
+  const floorFeed = [
+    { s: t('home.feed.p1'),     st: t('home.feed.use'),    cls: 'busy' },
+    { s: t('home.feed.r4'),     st: t('home.feed.open'),   cls: 'ok' },
+    { s: t('home.feed.oly'),    st: t('home.feed.use'),    cls: 'busy' },
+    { s: t('home.feed.plunge'), st: '4°C',                 cls: 'info' },
+    { s: t('home.feed.turf'),   st: t('home.feed.open'),   cls: 'ok' },
+    { s: t('home.feed.sauna'),  st: '45°C',                cls: 'info' },
+    { s: t('home.feed.pit'),    st: t('home.feed.spar'),   cls: 'ok' },
+    { s: t('home.feed.court'),  st: t('home.feed.league'), cls: 'info' },
+  ];
+
+  const whyRows = [
+    { n: '01', t: t('home.why.r1.t'), tag: t('home.why.r1.tag'), m: t('home.why.r1.m'), d: t('home.why.r1.d'), img: IMG_WHY.r1 },
+    { n: '02', t: t('home.why.r2.t'), tag: t('home.why.r2.tag'), m: t('home.why.r2.m'), d: t('home.why.r2.d'), img: IMG_WHY.r2 },
+    { n: '03', t: t('home.why.r3.t'), tag: t('home.why.r3.tag'), m: t('home.why.r3.m'), d: t('home.why.r3.d'), img: IMG_WHY.r3 },
+    { n: '04', t: t('home.why.r4.t'), tag: t('home.why.r4.tag'), m: t('home.why.r4.m'), d: t('home.why.r4.d'), img: IMG_WHY.r4 },
+  ];
+
+  const whyChips = [
+    [t('home.why.c1.v'), t('home.why.c1.l')],
+    [t('home.why.c2.v'), t('home.why.c2.l')],
+    [t('home.why.c3.v'), t('home.why.c3.l')],
+  ];
+
+  const sectors = [
+    { title: t('home.fc.s1.t'), tag: t('home.fc.s1.tag'), badge: t('home.fc.s1.b'), desc: t('home.fc.s1.d'),
+      meta: [[t('home.fc.s1.m1k'), '6/8'], [t('home.fc.s1.m2k'), '26°C'], [t('home.fc.s1.m3k'), '99.8%']],
+      cta: t('home.fc.s1.cta'), img: IMG_SECTORS.s1 },
+    { title: t('home.fc.s2.t'), tag: t('home.fc.s2.tag'), badge: t('home.fc.s2.b'), desc: t('home.fc.s2.d'),
+      meta: [[t('home.fc.s2.m1k'), '11/16'], [t('home.fc.s2.m2k'), 'ACTIVE'], [t('home.fc.s2.m3k'), 'ON-SITE']],
+      cta: t('home.fc.s2.cta'), img: IMG_SECTORS.s2 },
+    { title: t('home.fc.s3.t'), tag: t('home.fc.s3.tag'), badge: t('home.fc.s3.b'), desc: t('home.fc.s3.d'),
+      meta: [[t('home.fc.s3.m1k'), '45°C'], [t('home.fc.s3.m2k'), '-110°C'], [t('home.fc.s3.m3k'), '4°C']],
+      cta: t('home.fc.s3.cta'), img: IMG_SECTORS.s3 },
+    { title: t('home.fc.s4.t'), tag: t('home.fc.s4.tag'), badge: t('home.fc.s4.b'), desc: t('home.fc.s4.d'),
+      meta: [[t('home.fc.s4.m1k'), '15/18'], [t('home.fc.s4.m2k'), 'CALIB'], [t('home.fc.s4.m3k'), 'SYNC']],
+      cta: t('home.fc.s4.cta'), img: IMG_SECTORS.s4 },
+  ];
+
+  const services = [
+    { id: 1, category: 'biometrics', title: t('svc.card1.title'), price: '$120', per: t('svc.card1.per'), duration: '60 MINS', badge: 'DIAGNOSTIC',
+      tags: [t('svc.card1.tag1'), t('svc.card1.tag2'), t('svc.card1.tag3')], description: t('svc.card1.desc'), image: IMG_SERVICES[1] },
+    { id: 2, category: 'coaching', title: t('svc.card2.title'), price: '$95', per: '/ HR', duration: '75 MINS', badge: 'TIER 1 ELITE',
+      tags: [t('svc.card2.tag1'), t('svc.card2.tag2'), t('svc.card2.tag3')], description: t('svc.card2.desc'), image: IMG_SERVICES[2] },
+    { id: 3, category: 'nutrition', title: t('svc.card3.title'), price: '$149', per: t('svc.card3.per'), duration: 'MONTHLY', badge: 'BIO-FUEL',
+      tags: [t('svc.card3.tag1'), t('svc.card3.tag2'), t('svc.card3.tag3')], description: t('svc.card3.desc'), image: IMG_SERVICES[3] },
+    { id: 4, category: 'combat', title: t('svc.card4.title'), price: '$40', per: '/ DROP-IN', duration: '50 MINS', badge: 'HIGH INTENSITY',
+      tags: [t('svc.card4.tag1'), t('svc.card4.tag2'), t('svc.card4.tag3')], description: t('svc.card4.desc'), image: IMG_SERVICES[4] },
+    { id: 5, category: 'recovery', title: t('svc.card5.title'), price: '$65', per: t('svc.card5.per'), duration: '45 MINS', badge: 'BIO-HACK',
+      tags: [t('svc.card5.tag1'), t('svc.card5.tag2'), t('svc.card5.tag3')], description: t('svc.card5.desc'), image: IMG_SERVICES[5] },
+  ];
+
+  const serviceCats = [
+    { id: 'all',        label: t('home.svc.all') },
+    { id: 'biometrics', label: t('home.svc.bio') },
+    { id: 'coaching',   label: t('home.svc.coach') },
+    { id: 'nutrition',  label: t('home.svc.nut') },
+    { id: 'combat',     label: t('home.svc.cmb') },
+    { id: 'recovery',   label: t('home.svc.rec') },
+  ];
+
+  const tiers = [
+    { label: t('home.pr.t1.label'), name: t('home.pr.t1.name'), short: t('home.pr.t1.short'),
+      monthly: 39, annual: 31, icon: I.dumbbell, featured: false, desc: t('home.pr.t1.desc'),
+      features: [
+        { t: t('home.pr.t1.f1'), ok: true }, { t: t('home.pr.t1.f2'), ok: true },
+        { t: t('home.pr.t1.f3'), ok: true }, { t: t('home.pr.t1.f4'), ok: false },
+        { t: t('home.pr.t1.f5'), ok: false },
+      ] },
+    { label: t('home.pr.t2.label'), name: t('home.pr.t2.name'), short: t('home.pr.t2.short'),
+      monthly: 79, annual: 63, icon: I.bolt, featured: true, desc: t('home.pr.t2.desc'),
+      features: [
+        { t: t('home.pr.t2.f1'), ok: true }, { t: t('home.pr.t2.f2'), ok: true },
+        { t: t('home.pr.t2.f3'), ok: true }, { t: t('home.pr.t2.f4'), ok: true },
+        { t: t('home.pr.t2.f5'), ok: false },
+      ] },
+    { label: t('home.pr.t3.label'), name: t('home.pr.t3.name'), short: t('home.pr.t3.short'),
+      monthly: 159, annual: 127, icon: I.trophy, featured: false, desc: t('home.pr.t3.desc'),
+      features: [
+        { t: t('home.pr.t3.f1'), ok: true }, { t: t('home.pr.t3.f2'), ok: true },
+        { t: t('home.pr.t3.f3'), ok: true }, { t: t('home.pr.t3.f4'), ok: true },
+        { t: t('home.pr.t3.f5'), ok: true },
+      ] },
+  ];
+
+  const planIncludes = [t('home.pr.inc1'), t('home.pr.inc2'), t('home.pr.inc3'), t('home.pr.inc4')];
+
+  const proofStats = [
+    { n: 99.4, d: 1, suffix: '%',  title: t('home.pf.s1.t'), desc: t('home.pf.s1.d') },
+    { n: 1.4,  d: 1, suffix: 'M+', title: t('home.pf.s2.t'), desc: t('home.pf.s2.d'), red: true },
+    { raw: '24/7',                 title: t('home.pf.s3.t'), desc: t('home.pf.s3.d') },
+    { n: 0.02, d: 2, suffix: 's',  title: t('home.pf.s4.t'), desc: t('home.pf.s4.d'), red: true },
+  ];
+
+  const QUOTE = t('home.pf.quote');
+  const quoteTokens = QUOTE.split(' ');
+
+  /* ---------- Refs ---------- */
   const hdrRef = useRef(null);
   const progRef = useRef(null);
   const heroBgRef = useRef(null);
@@ -284,8 +315,8 @@ const SmartGymHome = () => {
   const rowRefs = useRef([]);
   const railFillRef = useRef(null);
   const activeRow = useRef(0);
-  const fcPinRef = useRef(null);      // the tall pin wrapper (.fc-pin)
-  const fcStickyRef = useRef(null);   // the sticky viewport (.fc-sticky)
+  const fcPinRef = useRef(null);
+  const fcStickyRef = useRef(null);
   const fcTrackRef = useRef(null);
   const fcProgRef = useRef(null);
   const fcMax = useRef(0);
@@ -296,11 +327,10 @@ const SmartGymHome = () => {
   const floatRef = useRef(null);
   const cursorTarget = useRef({ x: 0, y: 0 });
   const mouse = useRef({ x: 0, y: 0, tx: 0, ty: 0 });
-  const bootRef = useRef(false);      // gates the reveal fallback
-  const visSeen = useRef({});         // per-section reveal guard
-  const quoteTokens = QUOTE.split(' ');
+  const bootRef = useRef(false);
+  const visSeen = useRef({});
 
-  /* ---- Preloader ---- */
+  /* Preloader */
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     let raf, t0;
@@ -318,14 +348,14 @@ const SmartGymHome = () => {
 
   useEffect(() => {
     if (!boot) return;
-    const t = setTimeout(() => {
+    const t2 = setTimeout(() => {
       setBootGone(true);
       document.body.style.overflow = '';
     }, 950);
-    return () => clearTimeout(t);
+    return () => clearTimeout(t2);
   }, [boot]);
 
-  /* ---- IntersectionObserver (starts after boot) ---- */
+  /* IntersectionObserver */
   useEffect(() => {
     if (!boot) return;
     const obs = new IntersectionObserver(
@@ -344,7 +374,7 @@ const SmartGymHome = () => {
     return () => obs.disconnect();
   }, [boot]);
 
-  /* ---- Master rAF scroll rig ---- */
+  /* Master rAF scroll rig */
   useEffect(() => {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
@@ -361,7 +391,7 @@ const SmartGymHome = () => {
       }
     };
     measure();
-    const t = setTimeout(measure, 1000);
+    const tMeasure = setTimeout(measure, 1000);
 
     const onMove = (e) => {
       mouse.current.tx = e.clientX / window.innerWidth - 0.5;
@@ -378,7 +408,6 @@ const SmartGymHome = () => {
       hdrRef.current?.classList.toggle('is-scrolled', y > 10);
       if (progRef.current && dh > 0) progRef.current.style.transform = `scaleX(${Math.min(1, y / dh)})`;
 
-      /* reveal fallback — guarantees sections show even if IO misses */
       if (bootRef.current) {
         sectionRefs.current.forEach((el) => {
           if (!el) return;
@@ -412,20 +441,20 @@ const SmartGymHome = () => {
         }
       }
 
-      /* facilities pin — measured against the tall .fc-pin wrapper */
+      /* Facilities pin — direction-aware shift (RTL slides right) */
       if (fcOn.current && fcPinRef.current && fcTrackRef.current && fcStickyRef.current) {
         const r = fcPinRef.current.getBoundingClientRect();
         const total = fcPinRef.current.offsetHeight - fcStickyRef.current.offsetHeight;
         if (total > 0) {
           const p = Math.min(1, Math.max(0, (64 - r.top) / total));
-          const shift = -p * fcMax.current;
+          const dir = document.documentElement.dir === 'rtl' ? 1 : -1;
+          const shift = dir * p * fcMax.current;
           fcTrackRef.current.style.transform = `translate3d(${shift}px, 0, 0)`;
           fcTrackRef.current.style.setProperty('--shift', `${shift}px`);
           if (fcProgRef.current) fcProgRef.current.style.transform = `scaleX(${p})`;
         }
       }
 
-      /* why — active row + rail */
       if (whyRef.current && rowsWrapRef.current) {
         const wr = rowsWrapRef.current.getBoundingClientRect();
         const mid = vh * 0.5;
@@ -447,14 +476,12 @@ const SmartGymHome = () => {
         }
       }
 
-      /* quote scrub */
       if (quoteRef.current) {
         const r = quoteRef.current.getBoundingClientRect();
         const p = Math.min(1, Math.max(0, (vh * 0.8 - r.top) / (r.height + vh * 0.35)));
         quoteRef.current.style.setProperty('--p', p.toFixed(4));
       }
 
-      /* to-top ring */
       if (topRingRef.current && dh > 0) {
         topRingRef.current.style.strokeDashoffset = String(138.23 * (1 - Math.min(1, y / dh)));
       }
@@ -472,14 +499,14 @@ const SmartGymHome = () => {
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onResize);
     return () => {
-      clearTimeout(t);
+      clearTimeout(tMeasure);
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onResize);
       window.removeEventListener('mousemove', onMove);
     };
   }, []);
 
-  /* ---- Custom cursor (fine pointers only) ---- */
+  /* Custom cursor */
   useEffect(() => {
     if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -505,7 +532,7 @@ const SmartGymHome = () => {
     return () => { cancelAnimationFrame(raf); window.removeEventListener('mouseover', over); };
   }, []);
 
-  /* ---- Cursor-follow lerp for why-float ---- */
+  /* Cursor-follow lerp for why-float */
   useEffect(() => {
     if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -521,13 +548,13 @@ const SmartGymHome = () => {
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  /* ---- Menu scroll lock ---- */
+  /* Menu scroll lock */
   useEffect(() => {
     document.body.classList.toggle('no-scroll', menuOpen);
     return () => document.body.classList.remove('no-scroll');
   }, [menuOpen]);
 
-  /* ---- Interactions ---- */
+  /* Interactions */
   const tiltMove = (e) => {
     const el = e.currentTarget, r = el.getBoundingClientRect();
     el.style.setProperty('--ry', `${((e.clientX - r.left) / r.width - 0.5) * 7}deg`);
@@ -554,7 +581,7 @@ const SmartGymHome = () => {
     const q = searchQuery.toLowerCase();
     const search = searchQuery === '' ||
       s.title.toLowerCase().includes(q) || s.description.toLowerCase().includes(q) ||
-      s.tags.some((t) => t.toLowerCase().includes(q));
+      s.tags.some((tag) => tag.toLowerCase().includes(q));
     return cat && search;
   });
 
@@ -572,30 +599,31 @@ const SmartGymHome = () => {
             <span className="boot-mark">SMART<em>GYM</em></span>
             <span className="boot-count">{bootPct}<i>%</i></span>
             <span className="boot-bar"><i style={{ transform: `scaleX(${bootPct / 100})` }} /></span>
-            <span className="boot-label">CALIBRATING TELEMETRY GRID</span>
+            <span className="boot-label">{t('home.boot')}</span>
           </div>
         </div>
       )}
 
-      {/* ============ HEADER ============ */}
+      {/* HEADER */}
       <header className="hdr" ref={hdrRef}>
         <div className="hdr-in">
-          <a className="brand" href="#hero" aria-label="Smart Gym home">
+          <Link className="brand" to="/" aria-label="Smart Gym home">
             <span className="brand-mark">{I.logo(16)}</span>
             <span className="brand-txt">SMART<em>GYM</em></span>
-          </a>
+          </Link>
 
           <nav className="hdr-nav">
-  <Link to="/" className="on">Home</Link>
-  <Link to="/facilities">Facilities</Link>
-  <Link to="/services">Services</Link>
-  <Link to="/join">Membership</Link>
-  <Link to="/insights">Insights</Link>
-  <Link to="/contact">Contact</Link>
-</nav>
+            <Link to="/" className="on">{t('nav.home')}</Link>
+            <Link to="/facilities">{t('nav.facilities')}</Link>
+            <Link to="/services">{t('nav.services')}</Link>
+            <Link to="/join">{t('nav.membership')}</Link>
+            <Link to="/insights">{t('nav.insights')}</Link>
+            <Link to="/contact">{t('nav.contact')}</Link>
+          </nav>
 
           <div className="hdr-actions">
-            <Link to="/join" className="btn btn-red hdr-join">JOIN NOW</Link>
+            <LangSwitch variant="header" />
+            <Link to="/join" className="btn btn-red hdr-join">{t('nav.joinNow')}</Link>
             <button
               className={`burger ${menuOpen ? 'x' : ''}`}
               onClick={() => setMenuOpen(!menuOpen)}
@@ -607,31 +635,22 @@ const SmartGymHome = () => {
       </header>
 
       <div className={`mnav ${menuOpen ? 'open' : ''}`} aria-hidden={!menuOpen}>
-  <nav>
-    <Link to="/" style={{ '--d': '0.06s' }} onClick={() => setMenuOpen(false)}>
-      <span>01</span>Home
-    </Link>
-    <Link to="/facilities" style={{ '--d': '0.11s' }} onClick={() => setMenuOpen(false)}>
-      <span>02</span>Facilities
-    </Link>
-    <Link to="/services" style={{ '--d': '0.16s' }} onClick={() => setMenuOpen(false)}>
-      <span>03</span>Services
-    </Link>
-    <Link to="/join" style={{ '--d': '0.21s' }} onClick={() => setMenuOpen(false)}>
-      <span>04</span>Membership
-    </Link>
-    <Link to="/insights" style={{ '--d': '0.26s' }} onClick={() => setMenuOpen(false)}>
-      <span>05</span>Insights
-    </Link>
-    <Link to="/contact" style={{ '--d': '0.31s' }} onClick={() => setMenuOpen(false)}>
-      <span>06</span>Contact
-    </Link>
-  </nav>
-  <Link to="/join" className="btn btn-red mnav-join" onClick={() => setMenuOpen(false)}>JOIN NOW {I.arrow(11)}</Link>
-  <span className="mnav-foot">OPEN 24/7 // DISTRICT 01</span>
-</div>
+        <nav>
+          <Link to="/" style={{ '--d': '0.06s' }} onClick={() => setMenuOpen(false)}><span>01</span>{t('nav.home')}</Link>
+          <Link to="/facilities" style={{ '--d': '0.11s' }} onClick={() => setMenuOpen(false)}><span>02</span>{t('nav.facilities')}</Link>
+          <Link to="/services" style={{ '--d': '0.16s' }} onClick={() => setMenuOpen(false)}><span>03</span>{t('nav.services')}</Link>
+          <Link to="/join" style={{ '--d': '0.21s' }} onClick={() => setMenuOpen(false)}><span>04</span>{t('nav.membership')}</Link>
+          <Link to="/insights" style={{ '--d': '0.26s' }} onClick={() => setMenuOpen(false)}><span>05</span>{t('nav.insights')}</Link>
+          <Link to="/contact" style={{ '--d': '0.31s' }} onClick={() => setMenuOpen(false)}><span>06</span>{t('nav.contact')}</Link>
+        </nav>
+        <LangSwitch variant="mobile" />
+        <Link to="/join" className="btn btn-red mnav-join" onClick={() => setMenuOpen(false)}>
+          {t('nav.joinNow')} {I.arrow(11)}
+        </Link>
+        <span className="mnav-foot">{t('nav.foot')}</span>
+      </div>
 
-      {/* ============ HERO ============ */}
+      {/* HERO */}
       <section id="hero" data-section="hero" ref={(el) => (sectionRefs.current[0] = el)}
         className={`hero ${isVisible.hero ? 'is-in' : ''}`}>
 
@@ -653,51 +672,41 @@ const SmartGymHome = () => {
             <div className="skew" ref={skewRef}>
               <h1 className="h1">
                 <span className="row">
-                  <span className="w" style={{ transitionDelay: '.3s' }}>THE FUTURE</span>
+                  <span className="w" style={{ transitionDelay: '.3s' }}>{t('home.hero.l1')}</span>
                 </span>
                 <span className="row">
-                  <span className="w ghost" style={{ transitionDelay: '.45s' }}>OF</span>
-                  <span className="w" style={{ transitionDelay: '.52s' }}>FITNESS</span>
+                  <span className="w ghost" style={{ transitionDelay: '.45s' }}>{t('home.hero.l2')}</span>
+                  <span className="w" style={{ transitionDelay: '.52s' }}>{t('home.hero.l3')}</span>
                 </span>
                 <span className="row">
-                  <span className="w" style={{ transitionDelay: '.6s' }}>IS</span>
-                  {/* <span className="chip" aria-hidden="true">
-                    <img
-                      src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=640&q=80"
-                      alt="" loading="eager"
-                    />
-                    <i className="chip-dot" />
-                  </span> */}
-                  <span className="w red" style={{ transitionDelay: '.68s' }}>SMART.</span>
+                  <span className="w" style={{ transitionDelay: '.6s' }}>{t('home.hero.l4')}</span>
+                  <span className="w red" style={{ transitionDelay: '.68s' }}>{t('home.hero.l5')}</span>
                 </span>
               </h1>
             </div>
 
-            <p className="lede">
-              High-precision biometrics. AI-guided training. Data-driven conditioning
-              in a purpose-built arena. No gimmicks. No guesswork. Just the work — measured.
-            </p>
+            <p className="lede">{t('home.hero.lede')}</p>
 
             <div className="cta">
-              <Link to="/join" className="btn btn-red btn-lg">JOIN THE MOVEMENT {I.arrow()}</Link>
-              <Link to="/facilities" className="btn btn-ghost btn-lg"><span className="pl">{I.play}</span>BOOK A TOUR</Link>
+              <Link to="/join" className="btn btn-red btn-lg">{t('home.hero.cta1')} {I.arrow()}</Link>
+              <Link to="/facilities" className="btn btn-ghost btn-lg"><span className="pl">{I.play}</span>{t('home.hero.cta2')}</Link>
             </div>
           </div>
 
           <div className="cluster" ref={heroClusterRef} aria-hidden="true">
             <div className="cl-card">
-              <div className="cl-top"><span>HEART RATE</span><b className="live-dot" />LIVE</div>
-              <div className="cl-num">142<em>BPM</em></div>
+              <div className="cl-top"><span>{t('home.cl.hr')}</span><b className="live-dot" />{t('home.cl.live')}</div>
+              <div className="cl-num">142<em>{t('home.cl.hrUnit')}</em></div>
               <div className="cl-pulse"><span /><span /><span /><span /><span /></div>
             </div>
             <div className="cl-card cl-2">
-              <div className="cl-top"><span>POWER OUTPUT</span><b>ZONE 5</b></div>
-              <div className="cl-num">940<em>WATTS</em></div>
+              <div className="cl-top"><span>{t('home.cl.pwr')}</span><b>{t('home.cl.pwrZone')}</b></div>
+              <div className="cl-num">940<em>{t('home.cl.pwrUnit')}</em></div>
               <div className="cl-bar"><i /></div>
             </div>
             <div className="cl-card cl-3">
-              <div className="cl-top"><span>CAPACITY LOAD</span></div>
-              <div className="cl-row"><span className="cl-pct">82%</span><span className="cl-sub">PRIME HOUR</span></div>
+              <div className="cl-top"><span>{t('home.cl.cap')}</span></div>
+              <div className="cl-row"><span className="cl-pct">82%</span><span className="cl-sub">{t('home.cl.capSub')}</span></div>
               <div className="cl-bar"><i style={{ '--w': '82%' }} /></div>
             </div>
           </div>
@@ -712,15 +721,15 @@ const SmartGymHome = () => {
           ))}
         </div>
 
-        <div className="hero-rail" aria-hidden="true">EST. 2016 — PERFORMANCE CLUB</div>
-        <div className="hero-cue" aria-hidden="true"><span>SCROLL</span><span className="cue-track"><i /></span></div>
+        <div className="hero-rail" aria-hidden="true">{t('home.hero.rail')}</div>
+        <div className="hero-cue" aria-hidden="true"><span>{t('home.hero.cue')}</span><span className="cue-track"><i /></span></div>
 
         <div className="belt" aria-hidden="true">
           <div className="belt-shift" ref={beltRef}>
             <div className="belt-track">
               {[0, 1].map((h) => (
                 <div className="belt-half" key={h}>
-                  {[...BELT_ITEMS, ...BELT_ITEMS].map((t, i) => <span key={i}>{t}<em>✦</em></span>)}
+                  {[...BELT_ITEMS, ...BELT_ITEMS].map((tag, i) => <span key={i}>{tag}<em>✦</em></span>)}
                 </div>
               ))}
             </div>
@@ -728,7 +737,7 @@ const SmartGymHome = () => {
         </div>
       </section>
 
-      {/* ============ CAPABILITIES ============ */}
+      {/* CAPABILITIES */}
       <section data-section="caps" ref={(el) => (sectionRefs.current[1] = el)}
         className={`caps ${isVisible.caps ? 'is-in' : ''}`}>
         {capabilities.map((c, i) => (
@@ -742,18 +751,15 @@ const SmartGymHome = () => {
         ))}
       </section>
 
-      {/* ============ LIVE FLOOR ============ */}
+      {/* LIVE FLOOR */}
       <section data-section="stats" ref={(el) => { sectionRefs.current[2] = el; floorRef.current = el; }}
         className={`floor ${isVisible.stats ? 'is-in' : ''}`}>
-        <div className="floor-word" ref={floorWordRef} aria-hidden="true">CAPACITY</div>
+        <div className="floor-word" ref={floorWordRef} aria-hidden="true">{t('home.floor.word')}</div>
 
         <header className="shead">
-          <div className="stag"><i />01 — LIVE FROM THE FLOOR</div>
-          <h2 className="stitle"><MaskWords text="THE CLUB, RIGHT NOW" /></h2>
-          <p className="ssub">
-            Pulled straight from gate check-ins and platform sensors. No vanity
-            metrics — this is what training here looks like on a Tuesday.
-          </p>
+          <div className="stag"><i />{t('home.floor.stag')}</div>
+          <h2 className="stitle"><MaskWords text={t('home.floor.title')} /></h2>
+          <p className="ssub">{t('home.floor.sub')}</p>
         </header>
 
         <div className="floor-grid">
@@ -783,22 +789,19 @@ const SmartGymHome = () => {
         </div>
       </section>
 
-      {/* ============ WHY ============ */}
+      {/* WHY */}
       <section data-section="why" ref={(el) => { sectionRefs.current[3] = el; whyRef.current = el; }}
         className={`why ${isVisible.why ? 'is-in' : ''}`}
         onMouseMove={(e) => { cursorTarget.current = { x: e.clientX, y: e.clientY }; }}
         onMouseLeave={() => setHoverRow(-1)}>
         <div className="why-wrap">
           <aside className="why-side">
-            <div className="stag"><i />02 — WHY PEOPLE STAY</div>
+            <div className="stag"><i />{t('home.why.stag')}</div>
             <h2 className="stitle why-t">
-              BUILT LIKE A<br />SPORTS LAB.<br />
-              <span className="ghost">PRICED LIKE A GYM.</span>
+              {t('home.why.t1')}<br />{t('home.why.t2')}<br />
+              <span className="ghost">{t('home.why.t3')}</span>
             </h2>
-            <p className="why-lede">
-              Four reasons members renew without thinking about it.
-              Scroll — each one lights up as it matters.
-            </p>
+            <p className="why-lede">{t('home.why.lede')}</p>
             <div className="why-chips">
               {whyChips.map(([v, l]) => (
                 <div className="wchip" key={l}><strong>{v}</strong><span>{l}</span></div>
@@ -824,7 +827,7 @@ const SmartGymHome = () => {
                 </div>
               ))}
             </div>
-            <p className="why-note">ALL FOUR INCLUDED WITH EVERY MEMBERSHIP — NO UPSELLS, NO ASTERISKS.</p>
+            <p className="why-note">{t('home.why.note')}</p>
           </div>
         </div>
 
@@ -838,8 +841,7 @@ const SmartGymHome = () => {
         </div>
       </section>
 
-      {/* ============ FACILITIES — PINNED HORIZONTAL ============ */}
-      {/* data-section + is-in live on the pin wrapper so cards actually reveal */}
+      {/* FACILITIES */}
       <section
         className={`fc-pin ${isVisible.facilities ? 'is-in' : ''}`}
         data-section="facilities"
@@ -847,18 +849,15 @@ const SmartGymHome = () => {
       >
         <div className="fc-sticky" ref={fcStickyRef}>
           <header className="shead fc-head">
-            <div className="stag"><i />03 — THE FLOOR PLAN</div>
-            <h2 className="stitle"><MaskWords text="ELITE ENVIRONMENTS" /></h2>
+            <div className="stag"><i />{t('home.fc.stag')}</div>
+            <h2 className="stitle"><MaskWords text={t('home.fc.title')} /></h2>
           </header>
 
           <div className="fc-track" ref={fcTrackRef}>
             <article className="fc-card fc-intro">
-              <span className="fc-kicker">FOUR SECTORS. ONE SYSTEM.</span>
-              <p className="fc-lede">
-                Every square meter is tuned on purpose — flooring, acoustics,
-                air handling and sensor coverage built for a specific adaptation.
-              </p>
-              <span className="fc-hint">KEEP SCROLLING {I.arrow(11)}</span>
+              <span className="fc-kicker">{t('home.fc.kicker')}</span>
+              <p className="fc-lede">{t('home.fc.lede')}</p>
+              <span className="fc-hint">{t('home.fc.hint')} {I.arrow(11)}</span>
             </article>
 
             {sectors.map((f, i) => (
@@ -887,7 +886,7 @@ const SmartGymHome = () => {
         </div>
       </section>
 
-      {/* ============ TELEMETRY ============ */}
+      {/* TELEMETRY */}
       <section id="telemetry" data-section="telemetry" ref={(el) => (sectionRefs.current[5] = el)}
         className={`telemetry ${isVisible.telemetry ? 'is-in' : ''}`}>
         <div className="tel-panel">
@@ -896,31 +895,27 @@ const SmartGymHome = () => {
             <div className="tel-copy">
               <div className="tel-eyebrow"><span className="tel-ico">
                 <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3v18h18" /><path d="M7 15l4-6 4 3 5-8" /></svg>
-              </span>PROPRIETARY BIOMETRICS</div>
-              <h2>REAL-TIME FORCE &amp; VELOCITY TRACKING</h2>
-              <p>
-                Every barbell, cable stack and treadmill transmits millisecond-level
-                telemetry to your profile. Track bar-speed decline, power drops and
-                recruitment asymmetries — rep by rep.
-              </p>
+              </span>{t('home.tel.eyebrow')}</div>
+              <h2>{t('home.tel.title')}</h2>
+              <p>{t('home.tel.desc')}</p>
               <div className="tel-metrics">
                 <div className="metric">
-                  <div className="m-head"><span>CONCENTRIC BAR ACCELERATION</span><b>1.24 m/s</b></div>
+                  <div className="m-head"><span>{t('home.tel.m1.lab')}</span><b>{t('home.tel.m1.val')}</b></div>
                   <div className="m-bar"><i style={{ '--w': '82%' }} /></div>
-                  <span className="m-status">✓ TARGET MET</span>
+                  <span className="m-status">{t('home.tel.m1.s')}</span>
                 </div>
                 <div className="metric">
-                  <div className="m-head"><span>NEUROMUSCULAR EFFICIENCY</span><b>96.8%</b></div>
+                  <div className="m-head"><span>{t('home.tel.m2.lab')}</span><b>{t('home.tel.m2.val')}</b></div>
                   <div className="m-bar"><i style={{ '--w': '96%' }} /></div>
-                  <span className="m-status">✓ OPTIMAL</span>
+                  <span className="m-status">{t('home.tel.m2.s')}</span>
                 </div>
               </div>
             </div>
 
             <div className="tel-chart">
               <div className="tc-head">
-                <div className="tc-live"><span className="live-dot" />LIVE FORCE CURVE // SQUAT RACK 04</div>
-                <span className="tc-load">185 KG BAR LOAD</span>
+                <div className="tc-live"><span className="live-dot" />{t('home.tel.live')}</div>
+                <span className="tc-load">{t('home.tel.load')}</span>
               </div>
               <div className="tc-box">
                 <span className="tc-scan" aria-hidden="true" />
@@ -957,10 +952,14 @@ const SmartGymHome = () => {
                 </svg>
               </div>
               <div className="tc-stats">
-                {[['PEAK FORCE', '2,840 N', '↑ 12%'], ['TIME TO PEAK', '0.38 SEC', '↑ 5%'], ['REP #', '5 OF 5', '●']].map(([l, v, t]) => (
+                {[
+                  [t('home.tel.peak'),  t('home.tel.peakV'),  '↑ 12%'],
+                  [t('home.tel.tpeak'), t('home.tel.tpeakV'), '↑ 5%'],
+                  [t('home.tel.rep'),   t('home.tel.repV'),   '●'],
+                ].map(([l, v, tg]) => (
                   <div className="tc-stat" key={l}>
                     <div><span>{l}</span><b>{v}</b></div>
-                    <em>{t}</em>
+                    <em>{tg}</em>
                   </div>
                 ))}
               </div>
@@ -969,28 +968,25 @@ const SmartGymHome = () => {
         </div>
       </section>
 
-      {/* ============ SERVICES ============ */}
+      {/* SERVICES */}
       <section id="services" data-section="services" ref={(el) => (sectionRefs.current[6] = el)}
         className={`services ${isVisible.services ? 'is-in' : ''}`}>
         <header className="shead">
-          <div className="stag"><i />04 — PROTOCOLS &amp; COACHING</div>
-          <h2 className="stitle"><MaskWords text="TRAIN WITH INTENT." /></h2>
-          <p className="ssub">
-            Diagnostics, coaching and recovery protocols you can bolt onto any
-            membership. Book by the session or by the month.
-          </p>
+          <div className="stag"><i />{t('home.svc.stag')}</div>
+          <h2 className="stitle"><MaskWords text={t('home.svc.title')} /></h2>
+          <p className="ssub">{t('home.svc.sub')}</p>
         </header>
 
         <div className="svc-controls">
           <div className="chips">
             {serviceCats.map((c) => (
-              <button key={c} className={`fchip ${activeFilter === c ? 'on' : ''}`} onClick={() => setActiveFilter(c)}>
-                {c === 'all' ? 'ALL PROTOCOLS' : c}
+              <button key={c.id} className={`fchip ${activeFilter === c.id ? 'on' : ''}`} onClick={() => setActiveFilter(c.id)}>
+                {c.label}
               </button>
             ))}
           </div>
           <label className="search">{I.search}
-            <input placeholder="Search protocols…" value={searchQuery}
+            <input placeholder={t('home.svc.searchPh')} value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)} />
           </label>
         </div>
@@ -1008,8 +1004,8 @@ const SmartGymHome = () => {
                 <div className="svc-body">
                   <h3>{s.title}</h3>
                   <p>{s.description}</p>
-                  <div className="svc-tags">{s.tags.map((t) => <span key={t}>{t}</span>)}</div>
-                  <button className="btn btn-red btn-sm svc-book">BOOK {I.arrow(10)}</button>
+                  <div className="svc-tags">{s.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
+                  <button className="btn btn-red btn-sm svc-book">{t('home.svc.book')} {I.arrow(10)}</button>
                 </div>
               </div>
             </article>
@@ -1018,26 +1014,23 @@ const SmartGymHome = () => {
 
         {filteredServices.length === 0 && (
           <div className="svc-empty">
-            NO PROTOCOLS MATCH “{searchQuery.toUpperCase()}”
-            <button onClick={() => { setSearchQuery(''); setActiveFilter('all'); }}>RESET FILTERS</button>
+            {t('home.svc.empty1')} “{searchQuery.toUpperCase()}”
+            <button onClick={() => { setSearchQuery(''); setActiveFilter('all'); }}>{t('home.svc.reset')}</button>
           </div>
         )}
       </section>
 
-      {/* ============ PRICING ============ */}
+      {/* PRICING */}
       <section id="pricing" data-section="pricing" ref={(el) => (sectionRefs.current[7] = el)}
         className={`pricing ${isVisible.pricing ? 'is-in' : ''}`}>
         <header className="shead center">
-          <div className="stag"><i />05 — MEMBERSHIP</div>
-          <h2 className="stitle"><MaskWords text="SELECT YOUR FREQUENCY" /></h2>
-          <p className="ssub">
-            Every tier includes round-the-clock biometric entry and telemetry sync.
-            No joining fee. Cancel anytime.
-          </p>
+          <div className="stag"><i />{t('home.pr.stag')}</div>
+          <h2 className="stitle"><MaskWords text={t('home.pr.title')} /></h2>
+          <p className="ssub">{t('home.pr.sub')}</p>
           <div className="toggle">
-            <button className={`t-btn ${!isAnnual ? 'on' : ''}`} onClick={() => setIsAnnual(false)}>MONTHLY</button>
+            <button className={`t-btn ${!isAnnual ? 'on' : ''}`} onClick={() => setIsAnnual(false)}>{t('home.pr.monthly')}</button>
             <button className={`t-btn ${isAnnual ? 'on' : ''}`} onClick={() => setIsAnnual(true)}>
-              ANNUAL <span className="save">–20%</span>
+              {t('home.pr.annual')} <span className="save">{t('home.pr.save')}</span>
             </button>
           </div>
           <div className="inc-row">
@@ -1046,26 +1039,26 @@ const SmartGymHome = () => {
         </header>
 
         <div className="tier-grid">
-          {tiers.map((t, i) => (
-            <div className={`tier ${t.featured ? 'featured' : ''}`} key={t.name} style={{ '--i': i }}>
+          {tiers.map((tr, i) => (
+            <div className={`tier ${tr.featured ? 'featured' : ''}`} key={tr.name} style={{ '--i': i }}>
               <div className="tier-in">
-                {t.featured && <span className="tier-flag">MOST POPULAR</span>}
-                <div className="tier-top"><span>{t.label}</span><i>{t.icon}</i></div>
-                <h3>{t.name}</h3>
-                <p className="tier-desc">{t.desc}</p>
+                {tr.featured && <span className="tier-flag">{t('home.pr.popular')}</span>}
+                <div className="tier-top"><span>{tr.label}</span><i>{tr.icon}</i></div>
+                <h3>{tr.name}</h3>
+                <p className="tier-desc">{tr.desc}</p>
                 <div className="tier-price">
-                  <b key={`${t.short}-${isAnnual}`}>${isAnnual ? t.annual : t.monthly}</b>
-                  <span>AND<br />{isAnnual ? 'billed annually' : 'billed monthly'}</span>
+                  <b key={`${tr.short}-${isAnnual}`}>${isAnnual ? tr.annual : tr.monthly}</b>
+                  <span>{t('home.pr.and')}<br />{isAnnual ? t('home.pr.billedA') : t('home.pr.billedM')}</span>
                 </div>
                 <ul>
-                  {t.features.map((f) => (
+                  {tr.features.map((f) => (
                     <li key={f.t} className={f.ok ? '' : 'off'}>
                       <em>{f.ok ? '✓' : '✗'}</em>{f.t}
                     </li>
                   ))}
                 </ul>
-                <button className={`btn ${t.featured ? 'btn-red' : 'btn-ghost'} tier-btn`}>
-                  {t.featured ? 'CLAIM PRO MEMBERSHIP' : `SELECT ${t.short.toUpperCase()}`}
+                <button className={`btn ${tr.featured ? 'btn-red' : 'btn-ghost'} tier-btn`}>
+                  {tr.featured ? t('home.pr.claim') : `${t('home.pr.select')} ${tr.short.toUpperCase()}`}
                 </button>
               </div>
             </div>
@@ -1073,12 +1066,12 @@ const SmartGymHome = () => {
         </div>
       </section>
 
-      {/* ============ PROOF ============ */}
+      {/* PROOF */}
       <section data-section="proof" ref={(el) => (sectionRefs.current[8] = el)}
         className={`proof ${isVisible.proof ? 'is-in' : ''}`}>
         <header className="shead">
-          <div className="stag"><i />06 — PROOF</div>
-          <h2 className="stitle"><MaskWords text="RESULTS ON RECORD" /></h2>
+          <div className="stag"><i />{t('home.pf.stag')}</div>
+          <h2 className="stitle"><MaskWords text={t('home.pf.title')} /></h2>
         </header>
 
         <div className="proof-grid">
@@ -1092,8 +1085,8 @@ const SmartGymHome = () => {
               ))}
             </p>
             <div className="q-author">
-              <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQQP16lPUzghRqa7_k9646XT_M_wPLA0sTTYPNu3pLBT9QC6YSZ49I_8i4avB-a58JnUv6intdGxdCOAGlazijnJAG3Q2-RQVhW_f189J2PkdlPpYo-27GWTxyjvH3A9x8wsqVXR0U54Qn1qz0NCvFP2ozjD-60CJWZA6myDIJjqkrxR9wJf7xeNhQKYMeGstYKP-KwXFnvTEqmSr3968D_ooxdoRLhofRiqsPU1vaewDyETD7pZ5qpg" alt="Elena Rostova" />
-              <div><h3>ELENA ROSTOVA</h3><p>National Weightlifting Champion · Pro Tier</p></div>
+              <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQQP16lPUzghRqa7_k9646XT_M_wPLA0sTTYPNu3pLBT9QC6YSZ49I_8i4avB-a58JnUv6intdGxdCOAGlazijnJAG3Q2-RQVhW_f189J2PkdlPpYo-27GWTxyjvH3A9x8wsqVXR0U54Qn1qz0NCvFP2ozjD-60CJWZA6myDIJjqkrxR9wJf7xeNhQKYMeGstYKP-KwXFnvTEqmSr3968D_ooxdoRLhofRiqsPU1vaewDyETD7pZ5qpg" alt={t('home.pf.author')} />
+              <div><h3>{t('home.pf.author')}</h3><p>{t('home.pf.authorMeta')}</p></div>
             </div>
           </div>
 
@@ -1113,54 +1106,67 @@ const SmartGymHome = () => {
         </div>
       </section>
 
-      {/* ============ CTA ============ */}
+      {/* CTA */}
       <section id="join" data-section="cta" ref={(el) => (sectionRefs.current[9] = el)}
         className={`cta ${isVisible.cta ? 'is-in' : ''}`}>
         <span className="cta-ghost" aria-hidden="true">SMARTGYM</span>
         <div className="cta-in">
-          <span className="cta-eyebrow"><i />READY TO ENTER THE ARENA?</span>
-          <h2>CLAIM YOUR 7-DAY<br /><em>PERFORMANCE PASS.</em></h2>
-          <p>Free biometric baseline, full floor access and one coached session.
-            If we're not your gym, you walk away owing nothing.</p>
+          <span className="cta-eyebrow"><i />{t('home.cta.eyebrow')}</span>
+          <h2>{t('home.cta.h2a')}<br /><em>{t('home.cta.h2b')}</em></h2>
+          <p>{t('home.cta.desc')}</p>
           <button className="btn btn-red btn-lg cta-btn" ref={ctaBtnRef}
             onMouseMove={magMove} onMouseLeave={magLeave}>
-            START FREE WEEK {I.arrow()}
+            {t('home.cta.btn')} {I.arrow()}
           </button>
         </div>
       </section>
 
-      {/* ============ FOOTER ============ */}
+      {/* FOOTER */}
       <footer className="foot" id="contact">
         <div className="foot-grid">
           <div className="foot-brand">
-            <a className="brand" href="#hero">
+            <Link className="brand" to="/">
               <span className="brand-mark">{I.logo(16)}</span>
               <span className="brand-txt">SMART<em>GYM</em></span>
-            </a>
-            <p>Strength &amp; conditioning club with biometric telemetry and elite training infrastructure. Built for people who train.</p>
-            <span className="foot-live"><i className="ok-dot" />TELEMETRY GRID LIVE</span>
+            </Link>
+            <p>{t('foot.desc')}</p>
+            <span className="foot-live"><i className="ok-dot" />{t('foot.live')}</span>
           </div>
           <div>
-            <h4>ARCHITECTURE</h4>
-            <ul><li>Heavy Iron Arena</li><li>Sprint Velocity Track</li><li>Cryo &amp; Recovery Pods</li><li>Metabolic Testing Lab</li></ul>
+            <h4>{t('foot.architecture')}</h4>
+            <ul>
+              <li>{t('foot.iron')}</li>
+              <li>{t('foot.sprint')}</li>
+              <li>{t('foot.cryo')}</li>
+              <li>{t('foot.metabolic')}</li>
+            </ul>
           </div>
           <div>
-            <h4>PLATFORM</h4>
-            <ul><li>Coaching Protocol</li><li>Biometric App Sync</li><li>Corporate High Performance</li><li>Member Portal</li></ul>
+            <h4>{t('foot.platform')}</h4>
+            <ul>
+              <li>{t('foot.coaching')}</li>
+              <li>{t('foot.bioapp')}</li>
+              <li>{t('foot.corporate')}</li>
+              <li>{t('foot.portal')}</li>
+            </ul>
           </div>
           <div>
-            <h4>OPERATIONS</h4>
-            <p className="foot-p">04:00 – 24:00 Daily Operations<br />Access via biometric passcode key.</p>
-            <span className="foot-hq">HQ TERMINAL</span>
-            <p className="foot-p">District 01, Performance Plaza</p>
+            <h4>{t('foot.operations')}</h4>
+            <p className="foot-p">{t('foot.hours')}<br />{t('foot.access')}</p>
+            <span className="foot-hq">{t('foot.hq')}</span>
+            <p className="foot-p">{t('foot.address')}</p>
           </div>
         </div>
 
         <div className="foot-ghost" aria-hidden="true">SMARTGYM</div>
 
         <div className="foot-bottom">
-          <p>© 2025 SMART GYM INDUSTRIAL ATHLETICS. ALL RIGHTS RESERVED.</p>
-          <div className="foot-legal"><span>Privacy Architecture</span><span>Terms of Conditioning</span><span>Security Protocols</span></div>
+          <p>{t('foot.rights')}</p>
+          <div className="foot-legal">
+            <span>{t('foot.privacy')}</span>
+            <span>{t('foot.terms')}</span>
+            <span>{t('foot.security')}</span>
+          </div>
           <button className="totop" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label="Back to top">
             <svg width="46" height="46" viewBox="0 0 46 46">
               <circle className="rb" cx="23" cy="23" r="22" />
@@ -1172,11 +1178,11 @@ const SmartGymHome = () => {
       </footer>
 
       <nav className="tabbar" aria-label="Quick navigation">
-  <Link to="/" className="on">{I.home}<span>HOME</span></Link>
-  <Link to="/facilities">{I.grid}<span>FACILITIES</span></Link>
-  <Link to="/services">{I.bolt}<span>SERVICES</span></Link>
-  <Link to="/join" className="tab-join">{I.flame}<span>JOIN NOW</span></Link>
-</nav>
+        <Link to="/" className="on">{I.home}<span>{t('tab.home')}</span></Link>
+        <Link to="/facilities">{I.grid}<span>{t('tab.facilities')}</span></Link>
+        <Link to="/services">{I.bolt}<span>{t('tab.services')}</span></Link>
+        <Link to="/join" className="tab-join">{I.flame}<span>{t('tab.join')}</span></Link>
+      </nav>
     </div>
   );
 };

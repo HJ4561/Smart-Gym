@@ -3,9 +3,38 @@
    Bebas Neue (display) + Montserrat (body)
 ============================================================ */
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Bebas+Neue&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap');
 @property --ang { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
 
+/* ---------- Arabic font swap ---------- */
+[dir="rtl"] body,
+[dir="rtl"] .sg {
+  font-family: 'Cairo', 'Montserrat', sans-serif;
+}
+[dir="rtl"] h1,
+[dir="rtl"] h2,
+[dir="rtl"] h3,
+[dir="rtl"] .h1,
+[dir="rtl"] .stitle,
+[dir="rtl"] .svc-h1,
+[dir="rtl"] .svc-title,
+[dir="rtl"] .mth-card-title,
+[dir="rtl"] .mth-dial-name,
+[dir="rtl"] .mth-dial-num,
+[dir="rtl"] .boot-mark,
+[dir="rtl"] .boot-count,
+[dir="rtl"] .brand-txt,
+[dir="rtl"] .svc-metric-val,
+[dir="rtl"] .svc-price b,
+[dir="rtl"] .ins-metric-val b,
+[dir="rtl"] .tile-num,
+[dir="rtl"] .pstat-in b,
+[dir="rtl"] .tier-price b,
+[dir="rtl"] .ct-tel-grid b {
+  font-family: 'Cairo', 'Bebas Neue', sans-serif;
+  font-weight: 800;
+  letter-spacing: 0;
+}
 * { margin: 0; padding: 0; box-sizing: border-box; }
 button, input { font-family: inherit; }
 
@@ -232,8 +261,8 @@ h1, h2, h3 { font-family: 'Bebas Neue', sans-serif; font-weight: 400; }
 
 /* ============ HERO ============ */
 .hero {
-  position: relative; min-height: 80vh;   /* fallback */
-  min-height: 80svh;                       /* back from 72svh — matches .fac-hero */
+  position: relative; min-height: 80vh;
+  min-height: 80svh;
   display: flex; flex-direction: column; justify-content: flex-end;
   overflow: hidden; background: var(--abyss);
 }
@@ -266,7 +295,7 @@ h1, h2, h3 { font-family: 'Bebas Neue', sans-serif; font-weight: 400; }
 
 .hero-body {
   position: relative; z-index: 3; width: min(1240px, calc(100% - 80px)); margin: 0 auto;
-   padding: 104px 0 96px;   /* back from 92px 0 84px — matches .fac-hero-body */
+  padding: 104px 0 96px;
   display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 40px;
   will-change: transform, opacity;
 }
@@ -279,13 +308,13 @@ h1, h2, h3 { font-family: 'Bebas Neue', sans-serif; font-weight: 400; }
 
 .skew { transform: skewY(var(--skew, 0deg)); will-change: transform; }
 .h1 {
-  font-size: clamp(56px, 9vw, 132px);   /* was clamp(72px, 12vw, 176px) */
+  font-size: clamp(56px, 9vw, 132px);
   line-height: 0.85;
   text-transform: uppercase; color: #fff; letter-spacing: 0.01em;
 }
 .h1 .row {
   display: flex; align-items: center; gap: 0.1em; overflow: hidden;
-  padding: 0.04em 0; /* extra room so the chip's glow isn't clipped */
+  padding: 0.04em 0;
 }
 .h1 .w {
   display: inline-block; transform: translateY(112%) rotate(2.5deg); transform-origin: left bottom;
@@ -295,7 +324,7 @@ h1, h2, h3 { font-family: 'Bebas Neue', sans-serif; font-weight: 400; }
 .h1 .ghost { color: transparent; -webkit-text-stroke: 1.5px rgba(255,255,255,0.55); }
 .h1 .red { color: var(--red); text-shadow: 0 0 40px rgba(229,25,55,0.35); }
 
-/* hero headline image chip — framed, angled, alive */
+/* hero headline image chip */
 .h1 .chip {
   position: relative;
   display: inline-block;
@@ -306,7 +335,7 @@ h1, h2, h3 { font-family: 'Bebas Neue', sans-serif; font-weight: 400; }
   overflow: hidden;
   flex-shrink: 0;
   border: 1px solid rgba(229, 25, 55, 0.65);
-  background: linear-gradient(135deg, var(--deep), var(--red)); /* fallback while img loads */
+  background: linear-gradient(135deg, var(--deep), var(--red));
   box-shadow: 0 0 26px rgba(229, 25, 55, 0.3), inset 0 0 0 1px rgba(0, 0, 0, 0.35);
   transform: rotate(-2.5deg);
   transition: width 1.1s var(--ez) 0.8s, transform 0.45s var(--ez), box-shadow 0.45s ease;
@@ -316,7 +345,6 @@ h1, h2, h3 { font-family: 'Bebas Neue', sans-serif; font-weight: 400; }
   transform: rotate(0deg) scale(1.06);
   box-shadow: 0 0 42px rgba(229, 25, 55, 0.55), inset 0 0 0 1px rgba(0, 0, 0, 0.35);
 }
-/* glass top-light */
 .h1 .chip::after {
   content: '';
   position: absolute; inset: 0; z-index: 2; pointer-events: none;
@@ -324,7 +352,6 @@ h1, h2, h3 { font-family: 'Bebas Neue', sans-serif; font-weight: 400; }
     linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 45%),
     linear-gradient(0deg, rgba(11, 11, 12, 0.3), transparent 45%);
 }
-/* sweeping sheen */
 .h1 .chip::before {
   content: '';
   position: absolute; top: -40%; left: -45%;
@@ -342,10 +369,9 @@ h1, h2, h3 { font-family: 'Bebas Neue', sans-serif; font-weight: 400; }
   display: block; width: 100%; height: 100%; object-fit: cover;
   transform: scale(1.45);
   filter: saturate(1.05) contrast(1.08) brightness(0.95);
-  transition: transform 5s cubic-bezier(0.22, 1, 0.36, 1) 0.8s; /* slow ken-burns settle */
+  transition: transform 5s cubic-bezier(0.22, 1, 0.36, 1) 0.8s;
 }
 .is-in .h1 .chip img { transform: scale(1.02); }
-/* pulsing REC dot */
 .h1 .chip .chip-dot {
   position: absolute; top: 8%; right: 6%; z-index: 3;
   width: 0.07em; height: 0.07em; border-radius: 50%;
@@ -361,14 +387,12 @@ h1, h2, h3 { font-family: 'Bebas Neue', sans-serif; font-weight: 400; }
 }
 .is-in .lede { opacity: 1; transform: none; }
 
-/* hero button row (scoped so it never touches section.cta) */
 .hero .cta {
   display: flex; gap: 12px; flex-wrap: wrap;
   opacity: 0; transform: translateY(18px); transition: all .8s var(--ez) 1.1s;
 }
 .hero.is-in .cta { opacity: 1; transform: none; }
 
-/* floating telemetry cluster */
 .cluster {
   position: relative; width: 250px; display: flex; flex-direction: column; gap: 12px;
   will-change: transform;
@@ -417,10 +441,9 @@ h1, h2, h3 { font-family: 'Bebas Neue', sans-serif; font-weight: 400; }
 }
 @keyframes clFill { from { width: 52%; } to { width: var(--w, 82%); } }
 
-/* hero bottom stats */
 .hero-stats {
-  position: relative; z-index: 3; width: min(1240px, calc(100% - 80px)); 
-    margin: 0 auto 108px;    /* back to original */
+  position: relative; z-index: 3; width: min(1240px, calc(100% - 80px));
+  margin: 0 auto 108px;
   display: flex; align-items: center; gap: 28px;
   opacity: 0; transform: translateY(16px); transition: all .8s var(--ez) 1.25s;
 }
@@ -440,15 +463,31 @@ h1, h2, h3 { font-family: 'Bebas Neue', sans-serif; font-weight: 400; }
 .cue-track i { position: absolute; top: -18px; width: 1px; height: 18px; background: var(--red); animation: cue 1.8s cubic-bezier(0.65,0,0.35,1) infinite; }
 @keyframes cue { to { top: 60px; } }
 
-/* red belt marquee */
+/* ============================================================
+   RED BELT MARQUEE
+   LTR: translateX(-50%) → left
+   RTL: mirrored keyframe beltRTL → +50% → right
+============================================================ */
 .belt {
   position: absolute; left: -2%; right: -2%; bottom: 40px; z-index: 5;
   background: var(--red); transform: rotate(-1.6deg);
   padding: 11px 0; overflow: hidden; box-shadow: var(--glow);
 }
 .belt-shift { will-change: transform; }
-.belt-track { display: flex; width: max-content; animation: belt 24s linear infinite; }
+
+.belt-track {
+  display: flex;
+  width: max-content;
+  animation: belt 24s linear infinite;
+}
 @keyframes belt { to { transform: translateX(-50%); } }
+
+@keyframes beltRTL { to { transform: translateX(50%); } }
+[dir="rtl"] .belt-track {
+  animation-name: beltRTL;
+  animation-direction: normal;
+}
+
 .belt-half { display: flex; }
 .belt-half span {
   display: flex; align-items: center; white-space: nowrap; padding: 0 16px;
@@ -544,6 +583,8 @@ h1, h2, h3 { font-family: 'Bebas Neue', sans-serif; font-weight: 400; }
 }
 .ticker-track { display: flex; width: max-content; animation: tick 32s linear infinite; }
 @keyframes tick { to { transform: translateX(-50%); } }
+[dir="rtl"] .ticker-track { animation-name: tickRTL; }
+@keyframes tickRTL { to { transform: translateX(50%); } }
 .ticker-half { display: flex; }
 .ticker-half span {
   display: inline-flex; align-items: center; gap: 9px; padding: 15px 26px;
@@ -714,6 +755,8 @@ h1, h2, h3 { font-family: 'Bebas Neue', sans-serif; font-weight: 400; }
   display: block; width: 100%; height: 100%; background: var(--red);
   transform: scaleX(0); transform-origin: left; will-change: transform; box-shadow: var(--glow-sm);
 }
+/* RTL: progress bar fills from the right */
+[dir="rtl"] .fc-progress i { transform-origin: right; }
 
 /* ============ TELEMETRY ============ */
 .telemetry { padding: 120px 40px; }
@@ -1018,8 +1061,7 @@ h1, h2, h3 { font-family: 'Bebas Neue', sans-serif; font-weight: 400; }
 .pstat-in span { display: block; margin-top: 8px; font: 800 9px 'Montserrat'; letter-spacing: 0.18em; text-transform: uppercase; color: #fff; }
 .pstat-in p { margin: 8px 0 0; font-size: 11.5px; color: var(--muted); line-height: 1.55; }
 
-/* ============ CTA (final section — scoped as section.cta
-   so it never collides with the hero's .cta button row) ============ */
+/* ============ CTA ============ */
 section.cta {
   position: relative; padding: 150px 0; text-align: center; overflow: hidden;
   border-top: 1px solid var(--hair);
@@ -1100,6 +1142,71 @@ section.cta p { color: var(--muted); font-size: 14.5px; line-height: 1.75; margi
   transform: rotate(-90deg); transform-origin: 50% 50%; transform-box: fill-box;
 }
 
+/* ============ DIRECTION CONTRACT ============ */
+html[dir="ltr"] { direction: ltr; }
+html[dir="rtl"] { direction: rtl; }
+html[dir="ltr"] body { direction: ltr; }
+html[dir="rtl"] body { direction: rtl; }
+/* ============================================================
+   ARABIC HEADLINE FIX
+   Arabic glyphs (ج ح خ ر ز و ي ع غ م ن ه ة) have descenders that
+   drop below the Latin baseline. The default h1 line-height (0.85)
+   plus .row's overflow:hidden clips them. Give Arabic text extra
+   breathing room — more line-height and more bottom padding on
+   each .row so the descenders stay inside the clip window.
+============================================================ */
+[dir="rtl"] .h1,
+[dir="rtl"] .ins-h1,
+[dir="rtl"] .svc-h1,
+[dir="rtl"] .en-title {
+  line-height: 1.05;
+  padding-bottom: 0.06em;
+}
+
+/* The masked rows have overflow:hidden for the reveal animation.
+   Give them a few extra em of bottom space so nothing gets clipped
+   once the word lands. */
+[dir="rtl"] .h1 .row {
+  padding: 0.08em 0 0.14em;
+  overflow: hidden;
+}
+
+/* The reveal transform (translateY(112%) rotate(2.5deg)) needs a
+   slightly bigger initial offset in Arabic so it doesn't peek out
+   above the row's top edge either. */
+[dir="rtl"] .h1 .w {
+  transform: translateY(118%) rotate(2.5deg);
+}
+[dir="rtl"] .ins-hero.is-in .h1 .w,
+[dir="rtl"] .svc-hero.is-in .h1 .w,
+[dir="rtl"] .hero.is-in .h1 .w {
+  transform: translateY(0) rotate(0);
+}
+
+/* Featured / section display titles can also clip descenders under
+   tight line-heights — relax them a touch too. */
+[dir="rtl"] .stitle,
+[dir="rtl"] .ins-featured-title,
+[dir="rtl"] .ins-archive-title,
+[dir="rtl"] .mth-card-title,
+[dir="rtl"] .en-title,
+[dir="rtl"] .ins-tax-title,
+[dir="rtl"] .ins-news-title,
+[dir="rtl"] .svc-title,
+[dir="rtl"] .fc-meta h3 {
+  line-height: 1.15;
+  padding-bottom: 0.04em;
+}
+
+/* Newsletter card title and metric values — Arabic numerals with
+   descenders (3, 4, 5, 7, 9 in Cairo) can also clip slightly. */
+[dir="rtl"] .ins-metric-val b,
+[dir="rtl"] .tile-num,
+[dir="rtl"] .pstat-in b,
+[dir="rtl"] .en-cp-num,
+[dir="rtl"] .svc-metric-val {
+  line-height: 1.15;
+}
 /* ============ RESPONSIVE ============ */
 @media (max-width: 1100px) {
   .svc-grid { grid-template-columns: repeat(2, 1fr); }
@@ -1150,7 +1257,7 @@ section.cta p { color: var(--muted); font-size: 14.5px; line-height: 1.75; margi
 @media (max-width: 768px) {
   .foot-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
   .tc-stats { grid-template-columns: 1fr; }
-  .foot-bottom { padding-bottom: 90px; } /* clear the tab bar */
+  .foot-bottom { padding-bottom: 90px; }
   .tabbar {
     display: grid; grid-template-columns: repeat(4, 1fr);
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 75;
@@ -1211,4 +1318,122 @@ section.cta p { color: var(--muted); font-size: 14.5px; line-height: 1.75; margi
   .boot { display: none; }
   .cur-dot, .cur-ring { display: none !important; }
   .sg, .sg * { cursor: auto !important; }
+}
+/* ============================================================
+   ARABIC HEADLINE SCALE-DOWN
+   Cairo renders larger than Bebas Neue at the same font-size
+   (taller x-height, wider glyphs, no built-in letter-spacing).
+   Dial the display headline sizes down ~20% in RTL so Arabic
+   doesn't overflow or feel oversized.
+============================================================ */
+
+/* Hero headlines — the big ones */
+[dir="rtl"] .h1,
+[dir="rtl"] .fac-h1,
+[dir="rtl"] .svc-h1,
+[dir="rtl"] .ct-h1,
+[dir="rtl"] .ins-h1 {
+  font-size: clamp(44px, 7vw, 100px);
+}
+
+/* Section titles */
+[dir="rtl"] .stitle {
+  font-size: clamp(36px, 5.2vw, 66px);
+}
+
+/* Featured / dial / detail titles */
+[dir="rtl"] .ins-featured-title {
+  font-size: clamp(24px, 2.8vw, 36px);
+}
+[dir="rtl"] .ins-archive-title {
+  font-size: clamp(30px, 4vw, 54px);
+}
+[dir="rtl"] .en-title {
+  font-size: clamp(36px, 5.2vw, 74px);
+}
+[dir="rtl"] .mth-card-title {
+  font-size: clamp(28px, 3vw, 36px);
+}
+[dir="rtl"] .ct-hubs-title,
+[dir="rtl"] .ct-faq-title {
+  font-size: clamp(28px, 3.8vw, 48px);
+}
+
+/* Card titles, FAQ questions, tier names etc. */
+[dir="rtl"] .svc-title,
+[dir="rtl"] .ins-card-title,
+[dir="rtl"] .ct-hub-title,
+[dir="rtl"] .ct-side-title,
+[dir="rtl"] .tier-in h3,
+[dir="rtl"] .ins-news-title,
+[dir="rtl"] .ins-tax-title,
+[dir="rtl"] .fc-meta h3,
+[dir="rtl"] .bkm-head h3,
+[dir="rtl"] .bkm-done h3 {
+  font-size: clamp(19px, 1.6vw, 24px);
+}
+
+/* FAQ accordion questions and other small titles */
+[dir="rtl"] .ct-faq-q h4,
+[dir="rtl"] .en-p1-title,
+[dir="rtl"] .en-p2-title,
+[dir="rtl"] .svc-title,
+[dir="rtl"] .ct-hub-title {
+  font-size: clamp(16px, 1.3vw, 20px);
+}
+
+/* Big numeric displays — dial, tier price, boot count */
+[dir="rtl"] .mth-dial-num {
+  font-size: clamp(64px, 6vw, 78px);
+}
+[dir="rtl"] .tier-price b {
+  font-size: clamp(42px, 4.4vw, 50px);
+}
+[dir="rtl"] .boot-count {
+  font-size: 56px;
+}
+[dir="rtl"] .en-pass-name {
+  font-size: 28px;
+}
+[dir="rtl"] .pstat-in b {
+  font-size: clamp(34px, 3.6vw, 40px);
+}
+
+/* Section flags, kickers, ghost words */
+[dir="rtl"] .cta-ghost,
+[dir="rtl"] .foot-ghost {
+  font-size: clamp(90px, 20vw, 280px);
+}
+[dir="rtl"] .en-ghost {
+  font-size: clamp(140px, 22vw, 320px);
+}
+[dir="rtl"] .floor-word {
+  font-size: clamp(90px, 17vw, 220px);
+}
+
+/* Mobile — tighter scales */
+@media (max-width: 640px) {
+  [dir="rtl"] .h1,
+  [dir="rtl"] .fac-h1,
+  [dir="rtl"] .svc-h1,
+  [dir="rtl"] .ct-h1,
+  [dir="rtl"] .ins-h1 {
+    font-size: clamp(38px, 11vw, 62px);
+  }
+  [dir="rtl"] .stitle {
+    font-size: clamp(30px, 8vw, 48px);
+  }
+  [dir="rtl"] .en-title {
+    font-size: clamp(32px, 9vw, 52px);
+  }
+  [dir="rtl"] .ins-featured-title {
+    font-size: clamp(22px, 6vw, 28px);
+  }
+  [dir="rtl"] .ins-archive-title {
+    font-size: clamp(26px, 7.5vw, 40px);
+  }
+  [dir="rtl"] .ct-hubs-title,
+  [dir="rtl"] .ct-faq-title {
+    font-size: clamp(24px, 7vw, 38px);
+  }
 }

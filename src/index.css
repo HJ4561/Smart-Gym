@@ -8,3 +8,14 @@ body {
   font-family: 'Inter', -apple-system, sans-serif;
   background: #0A0A0B;
 }
+
+/* ============================================================
+   DIRECTION CONTRACT
+   Explicit LTR default for <html dir="ltr">.
+   RTL only under <html dir="rtl">.
+   Never set direction globally without scoping.
+============================================================ */
+html[dir="ltr"] { direction: ltr; }
+html[dir="rtl"] { direction: rtl; }
+html[dir="ltr"] body { direction: ltr; }
+html[dir="rtl"] body { direction: rtl; }
