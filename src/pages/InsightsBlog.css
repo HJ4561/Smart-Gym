@@ -710,8 +710,8 @@
   overflow: hidden;
   transition: border-color .35s ease, box-shadow .35s ease, transform .35s var(--ez);
 }
-.ins-grid:not(.is-in) .ins-card { opacity: 0; transform: translateY(26px) scale(0.985); }
-.ins-grid.is-in .ins-card {
+.ins-archive:not(.is-in) .ins-card { opacity: 0; transform: translateY(26px) scale(0.985); }
+.ins-archive.is-in .ins-card {
   animation: cardIn 0.75s var(--ez) backwards;
   animation-delay: calc(var(--i) * 75ms);
 }
@@ -1434,6 +1434,10 @@
   .ins-metrics.is-in .ins-metric,
   .ins-filterbar.is-in .fchip,
   .ins-filterbar.is-in .ins-search,
+  .ins-archive.is-in .ins-card {
+  animation-duration: 0.01s !important;
+  animation-delay: 0s !important;
+}
   .ins-taxonomy.is-in .ins-tax-tag {
     animation-duration: 0.01s !important;
     animation-delay: 0s !important;
