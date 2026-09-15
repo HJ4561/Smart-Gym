@@ -1421,6 +1421,51 @@
   .ins-tax-tags { min-width: 0; width: 100%; }
   .ins-tax-tag { font-size: 9px; padding: 6px 10px; }
 }
+/* ============================================================
+   TAXONOMY — mobile: heading centered, chips wrap centered below
+============================================================ */
+@media (max-width: 700px) {
+  .ins-taxonomy {
+    flex-direction: column;
+    align-items: center;         /* centers the column contents */
+    justify-content: center;
+    gap: 22px;
+    padding-bottom: 56px;
+    text-align: center;
+  }
+
+  /* heading block: full width, centered */
+  .ins-tax-left { width: 100%; }
+  .ins-tax-label {
+    font-size: 8.5px;
+    letter-spacing: 0.2em;
+    justify-content: center;
+    display: flex;               /* if label ever gets the red dash, it centers */
+  }
+  .ins-tax-title { font-size: 20px; }
+
+  /* chips: centered wrap below the heading */
+  .ins-tax-tags {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+  }
+  .ins-tax-tag {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    min-height: 38px;            /* comfortable touch target */
+    padding: 0 16px;
+    font-size: 9.5px;
+    letter-spacing: 0.12em;
+    white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ins-tax-tag:active { transform: scale(0.96); }
+}
 
 /* ============================================================
    REDUCED MOTION — global kill switches
