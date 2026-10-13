@@ -186,7 +186,7 @@ const planVisual = (plan, index = 0) => {
     { icon: I.bolt,     rec: true  },
     { icon: I.flame,    rec: false },
   ];
-  return map[index % 3];
+  return map[(index || 0) % 3];
 };
 
 /* ============================================================
@@ -249,7 +249,7 @@ const MembershipSignup = () => {
   const [plansData, setPlansData] = useState([]);
   const [plansLoading, setPlansLoading] = useState(true);
   const [plansError, setPlansError] = useState('');
-  const [planId, setPlanId] = useState(null);   // numeric backend id
+  const [planId, setPlanId] = useState(null);
 
   // ---- form fields ----
   const [form, setForm] = useState({
@@ -263,7 +263,7 @@ const MembershipSignup = () => {
     password: '',
     password2: '',
   });
-  const [vectors, setVectors] = useState([]); // kept as UI tags; not sent to backend
+  const [vectors, setVectors] = useState([]);
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState('');
 
@@ -278,7 +278,7 @@ const MembershipSignup = () => {
   const [processing, setProcessing] = useState(false);
   const [done, setDone] = useState(false);
   const [submitError, setSubmitError] = useState('');
-  const [result, setResult] = useState(null);   // backend response
+  const [result, setResult] = useState(null);
   const [sumOpen, setSumOpen] = useState(true);
   const [occ, setOcc] = useState(42);
   const [cvcFocus, setCvcFocus] = useState(false);
@@ -358,31 +358,10 @@ const MembershipSignup = () => {
     { icon: I.coach, t: t('en.trust.4.t'), d: t('en.trust.4.d') },
   ];
 
-  /* ---------- Validation ---------- */
-  const nameOk = form.full_name.trim().length >= 2;
-  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
-  const phoneOk = form.phone.replace(/\D/g, '').length >= 7;
-  const acamaOk = form.acama_number.trim().length >= 3;
-  const ageOk = Number(form.age) >= 12 && Number(form.age) <= 100;
-  const passwordOk = form.password.length >= 8;
-  const passwordMatch = form.password === form.password2;
-  const step1Ok = nameOk && emailOk && phoneOk && acamaOk && ageOk && passwordOk && passwordMatch && planId;
-
-  const cardOk = payMethod !== 'card' || card.num.replace(/\D/g, '').length === 16;
-  const expOk = payMethod !== 'card' || /^(0[1-9]|1[0-2])\/\d{2}$/.test(card.exp);
-  const cvcOk = payMethod !== 'card' || /^\d{3,4}$/.test(card.cvc);
-  const zipOk = payMethod !== 'card' || card.zip.trim().length >= 3;
-  const step2Ok = step1Ok && cardOk && expOk && cvcOk && zipOk && agree;
-
-  const brand = brandOf(card.num);
-  const cardDigits = card.num.replace(/\s/g, '');
-
-   /* ---------- Refs ---------- */
+  /* ---------- Refs ---------- */
   const hdrRef = useRef(null);
   const progRef = useRef(null);
   const topRingRef = useRef(null);
-  const panel1Ref = useRef(null);
-  const panel2Ref = useRef(null);
   const formsRef = useRef(null);
   const ghostRef = useRef(null);
   const cursorTarget = useRef({ x: 0, y: 0 });
@@ -401,18 +380,24 @@ const MembershipSignup = () => {
   const zipRef = useRef(null);
   const agreeRef = useRef(null);
 
-   // Refs used by the "missing fields" recap are declared below;
-  // this list is built inline inside the render instead.
-  const missingRefs = {
-    acama: acamaRef,
-    name: nameRef,
-    email: emailRef,
-    phone: phoneRef,
-    age: ageRef,
-    password: passwordRef,
-    password2: password2Ref,
-  };
+  /* ---------- Validation ---------- */
+  const nameOk = form.full_name.trim().length >= 2;
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
+  const phoneOk = form.phone.replace(/\D/g, '').length >= 7;
+  const acamaOk = form.acama_number.trim().length >= 3;
+  const ageOk = Number(form.age) >= 12 && Number(form.age) <= 100;
+  const passwordOk = form.password.length >= 8;
+  const passwordMatch = form.password === form.password2;
+  const step1Ok = nameOk && emailOk && phoneOk && acamaOk && ageOk && passwordOk && passwordMatch && planId;
 
+  const cardOk = card.num.replace(/\D/g, '').length === 16;
+  const expOk = /^(0[1-9]|1[0-2])\/\d{2}$/.test(card.exp);
+  const cvcOk = /^\d{3,4}$/.test(card.cvc);
+  const zipOk = card.zip.trim().length >= 3;
+  const step2Ok = step1Ok && cardOk && expOk && cvcOk && zipOk && agree;
+
+  const brand = brandOf(card.num);
+  const cardDigits = card.num.replace(/\s/g, '');
 
   /* ---------- Draft persistence (exclude password) ---------- */
   useEffect(() => {
@@ -473,7 +458,7 @@ const MembershipSignup = () => {
     return () => io.disconnect();
   }, [boot]);
 
-  /* ---------- Live occupancy ticker (kept for cosmetics) ---------- */
+  /* ---------- Live occupancy ticker ---------- */
   useEffect(() => {
     const id = setInterval(() => {
       setOcc((o) => Math.max(28, Math.min(64, o + (Math.random() < 0.5 ? -1 : 1) * (1 + Math.floor(Math.random() * 3)))));
@@ -569,15 +554,15 @@ const MembershipSignup = () => {
   const goStep = (n) => {
     setStep(n);
     requestAnimationFrame(() => {
-      (n === 2 ? panel2Ref : panel1Ref).current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      (n === 2 ? document.getElementById('panel2') : document.getElementById('panel1'))
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   };
 
-    const proceed = () => {
+  const proceed = () => {
     if (!step1Ok) {
       setTouched((x) => ({ ...x, acama: 1, name: 1, email: 1, phone: 1, age: 1, password: 1, password2: 1 }));
       flashErr();
-      // Focus the first missing field, in priority order
       const firstRef =
         (!acamaOk && acamaRef) ||
         (!nameOk && nameRef) ||
@@ -793,14 +778,6 @@ const MembershipSignup = () => {
               </span>
             </button>
           </div>
-
-          <div className="en-progress">
-            <div className="en-progress-head">
-              <i />{step === 1 ? t('en.progress.step1') : t('en.progress.step2')}
-              <b>{step === 1 ? '50' : '100'}{t('en.progress.pct')}</b>
-            </div>
-            <div className="en-progress-bar"><i style={{ width: step === 1 ? '50%' : '100%' }} /></div>
-          </div>
         </section>
 
         {/* GRID */}
@@ -810,30 +787,27 @@ const MembershipSignup = () => {
 
             {!done ? (
               <>
-                {/* PANEL 1 */}
-                <section ref={panel1Ref}
-                  className={`en-panel ${step === 1 ? 'open' : ''}`} data-rv>
+                {/* PANEL 1 — always open */}
+                <section
+                  id="panel1"
+                  ref={acamaRef ? undefined : undefined}
+                  className="en-panel open"
+                  data-rv
+                  style={{ maxHeight: 'none', overflow: 'visible' }}
+                >
                   <button type="button" className="en-panel-head"
-                    onClick={() => setStep(1)} aria-expanded={step === 1}>
+                    onClick={() => setStep(1)} aria-expanded="true">
                     <span className="en-panel-bar" />
                     <span className="en-panel-title">{t('en.p1.title')}</span>
                     <span className="en-panel-proto">{t('en.p1.proto')}</span>
                     <span className={`en-panel-state ${step1Ok ? 'ok' : ''}`}>
                       {step1Ok ? I.check(11) : I.target(12)}
                     </span>
-                    <span className={`en-panel-chev ${step === 1 ? 'up' : ''}`}>{I.chev(13)}</span>
+                    <span className="en-panel-chev up">{I.chev(13)}</span>
                   </button>
 
-                  {step !== 1 && step1Ok && (
-                    <div className="en-recap">
-                      <b>{form.full_name}</b><i /><span>{form.email}</span><i />
-                      <span>{duration} MO</span>
-                      <button type="button" className="en-recap-edit" onClick={() => goStep(1)}>EDIT</button>
-                    </div>
-                  )}
-
-                  <div className="en-panel-body">
-                    <div className="en-panel-in">
+                  <div className="en-panel-body" style={{ maxHeight: 'none', opacity: 1 }}>
+                    <div className="en-panel-in" style={{ visibility: 'visible', opacity: 1 }}>
 
                       <div className="en-fieldgrid">
                         <label ref={acamaRef} className={`en-field ${err('acama', !acamaOk, 'ENTER ACAMA #') ? 'bad' : ''}`}>
@@ -960,9 +934,8 @@ const MembershipSignup = () => {
                         </div>
                       </div>
 
-                      {/* VECTOR (cosmetic — not sent to backend) */}
+                      {/* VECTOR */}
                       <div className="en-vecwrap">
-
                         <div className="en-vec-head">
                           <span className="en-flabel">{t('en.p1.vecHead')}</span>
                           <span className="en-vec-multi">{t('en.p1.vecMulti')}</span>
@@ -993,44 +966,26 @@ const MembershipSignup = () => {
                   </div>
                 </section>
 
-                {/* PANEL 2 */}
-                <section ref={panel2Ref}
-                  className={`en-panel ${step === 2 ? 'open' : ''}`} data-rv>
+                {/* PANEL 2 — always open */}
+                <section
+                  id="panel2"
+                  className="en-panel open"
+                  data-rv
+                  style={{ maxHeight: 'none', overflow: 'visible' }}
+                >
                   <button type="button" className="en-panel-head"
-                    onClick={() => setStep(2)} aria-expanded={step === 2}>
+                    onClick={() => setStep(2)} aria-expanded="true">
                     <span className="en-panel-bar red" />
                     <span className="en-panel-title">{t('en.p2.title')}</span>
                     <span className="en-panel-proto">{t('en.p2.proto')}</span>
-                    <span className={`en-panel-state ${step2Ok ? 'ok' : step === 2 ? 'live' : ''}`}>
-                      {step2Ok ? I.check(11) : step === 2 ? I.target(12) : I.lock(11)}
+                    <span className={`en-panel-state ${step2Ok ? 'ok' : 'live'}`}>
+                      {step2Ok ? I.check(11) : I.target(12)}
                     </span>
-                    <span className={`en-panel-chev ${step === 2 ? 'up' : ''}`}>{I.chev(13)}</span>
+                    <span className="en-panel-chev up">{I.chev(13)}</span>
                   </button>
 
-                  {!step1Ok && (
-                    <div className="en-req">
-                      <span className="en-req-label">{I.shield(12)} {t('en.p2.reqLabel')}</span>
-                      <div className="en-req-chips">
-                        {[
-  !acamaOk      && { label: 'ACAMA #',           ref: acamaRef },
-  !nameOk       && { label: t('en.err.chipName'), ref: nameRef },
-  !emailOk      && { label: t('en.err.chipEmail'),ref: emailRef },
-  !phoneOk      && { label: t('en.err.chipPhone'),ref: phoneRef },
-  !ageOk        && { label: 'AGE',                ref: ageRef },
-  !passwordOk   && { label: 'PASSWORD',           ref: passwordRef },
-  !passwordMatch && { label: 'PASSWORDS MATCH',   ref: password2Ref },
-].filter(Boolean).map((m) => (
-  <button key={m.label} type="button"
-    onClick={() => { goStep(1); focusField(m.ref, 420); }}>
-    {m.label} {I.arrow(9)}
-  </button>
-))}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="en-panel-body">
-                    <div className="en-panel-in">
+                  <div className="en-panel-body" style={{ maxHeight: 'none', opacity: 1 }}>
+                    <div className="en-panel-in" style={{ visibility: 'visible', opacity: 1 }}>
 
                       <CardPreview
                         digits={cardDigits}
@@ -1042,27 +997,35 @@ const MembershipSignup = () => {
                       />
 
                       <span className="en-flabel">{t('en.p2.expressLabel')}</span>
-<div className="en-express">
-  <button type="button"
-    className={`en-express-btn ${payMethod === 'card' ? 'on' : ''}`}
-    onClick={() => setPayMethod('card')}>
-    {I.card(16)} CARD
-  </button>
-  <button type="button"
-    className={`en-express-btn ${payMethod === 'apple' ? 'on' : ''}`}
-    onClick={() => setPayMethod('apple')}>
-    {I.apple(18)} {t('en.p2.apple')}
-  </button>
-  <button type="button"
-    className={`en-express-btn ${payMethod === 'google' ? 'on' : ''}`}
-    onClick={() => setPayMethod('google')}>
-    {I.google(16)} {t('en.p2.google')}
-  </button>
-</div>
+                      <div className="en-express">
+                        <button type="button"
+                          className={`en-express-btn ${payMethod === 'card' ? 'on' : ''}`}
+                          onClick={() => setPayMethod('card')}>
+                          {I.card(16)} CARD
+                        </button>
+                        <button type="button"
+                          className={`en-express-btn ${payMethod === 'apple' ? 'on' : ''}`}
+                          onClick={() => setPayMethod('apple')}>
+                          {I.apple(18)} {t('en.p2.apple')}
+                        </button>
+                        <button type="button"
+                          className={`en-express-btn ${payMethod === 'google' ? 'on' : ''}`}
+                          onClick={() => setPayMethod('google')}>
+                          {I.google(16)} {t('en.p2.google')}
+                        </button>
+                      </div>
 
                       <div className="en-divider"><i />{t('en.p2.divider')}<i /></div>
 
-                      <div className={`en-cardfields ${payMethod === 'card' ? 'open' : ''}`}>
+                      {/* Card fields — always visible when card method chosen */}
+                      <div
+                        className={`en-cardfields ${payMethod === 'card' ? 'open' : ''}`}
+                        style={
+                          payMethod === 'card'
+                            ? { maxHeight: 'none', overflow: 'visible', opacity: 1 }
+                            : {}
+                        }
+                      >
                         <div className="en-cardfields-in">
                           <label ref={numRef} className={`en-field ${err('num', !cardOk, t('en.err.num')) ? 'bad' : ''}`}>
                             <span className="en-flabel">{t('en.p2.num')}</span>
@@ -1172,7 +1135,7 @@ const MembershipSignup = () => {
                 </section>
               </>
             ) : (
-              /* SUCCESS — pending admin approval */
+              /* SUCCESS */
               <section className="en-success">
                 <span className="en-success-halo" aria-hidden="true" />
                 <div className="en-success-head">
@@ -1224,7 +1187,7 @@ const MembershipSignup = () => {
             )}
           </div>
 
-          {/* ORDER SUMMARY */}
+          {/* ORDER SUMMARY — unchanged */}
           <aside className={`en-summary ${sumOpen ? 'open' : ''}`} data-rv>
             <span className="en-sum-topline" aria-hidden="true" />
 
@@ -1261,7 +1224,6 @@ const MembershipSignup = () => {
                   </div>
                 </div>
 
-                {/* DURATION PICKER */}
                 <div className="en-plan-switch" style={{ marginTop: 10 }}>
                   <span>DURATION (months)</span>
                   <div>
@@ -1351,7 +1313,7 @@ const MembershipSignup = () => {
         </section>
       </main>
 
-      {/* FOOTER */}
+      {/* FOOTER — unchanged */}
       <footer className="foot" id="contact">
         <div className="foot-grid">
           <div className="foot-brand">
@@ -1414,7 +1376,6 @@ const MembershipSignup = () => {
         <Link to="/join" className="on tab-join">{I.flame(18)}<span>{t('en.tab.join')}</span></Link>
       </nav>
 
-      {/* MOBILE PAYBAR */}
       {!done && (
         <div className="en-paybar">
           <button className="en-paybar-btn" disabled={paybarOff} onClick={primary}>
