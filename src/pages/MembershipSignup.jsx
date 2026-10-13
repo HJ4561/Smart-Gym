@@ -1,8 +1,9 @@
-// pages/MembershipSignup.jsx
+// src/pages/MembershipSignup.jsx
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useLang } from '../i18n/LangContext';
 import LangSwitch from '../i18n/LangSwitch';
+import publicService from '../services/publicService';
 import './MembershipSignup.css';
 
 /* ============================================================
@@ -53,7 +54,7 @@ const useTween = (target, duration = 650) => {
 };
 
 /* ============================================================
-   ICONS — all functions; ALWAYS call with a size: I.x(14)
+   ICONS
 ============================================================ */
 const I = {
   logo: (s = 18) => (
@@ -139,6 +140,12 @@ const I = {
   target: (s = 15) => (
     <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="4" /><circle cx="12" cy="12" r="0.8" fill="currentColor" stroke="none" /></svg>
   ),
+  camera: (s = 16) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8a2 2 0 0 1 2-2h2.5l1.5-2h6l1.5 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8z" /><circle cx="12" cy="12.5" r="3.5" /></svg>
+  ),
+  upload: (s = 14) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 16V4M12 4 7 9M12 4l5 5M4 20h16" /></svg>
+  ),
   home: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 10.5 12 3l9 7.5" /><path d="M5 9.5V21h14V9.5" /></svg>
   ),
@@ -148,14 +155,16 @@ const I = {
 };
 
 /* ============================================================
-   STATIC IMAGE PATHS
+   STATIC IMAGES
 ============================================================ */
 const IMG = {
   facility: 'https://images.unsplash.com/photo-1540497077202-7c8a3999166f?auto=format&fit=crop&w=1200&q=80',
   avatar: 'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=120&q=80',
 };
 
-/* Field formatting */
+/* ============================================================
+   FORMATTERS
+============================================================ */
 const fmtCard = (v) => v.replace(/\D/g, '').slice(0, 16).replace(/(\d{4})(?=\d)/g, '$1 ');
 const fmtExp = (v) => {
   const d = v.replace(/\D/g, '').slice(0, 4);
@@ -168,6 +177,16 @@ const brandOf = (v) => {
   if (d[0] === '5') return 'MC';
   if (d[0] === '3') return 'AMEX';
   return '';
+};
+
+/* Plan → UI accent mapping (Basic/Pro/Elite) */
+const planVisual = (plan, index) => {
+  const map = [
+    { icon: I.dumbbell, rec: false },
+    { icon: I.bolt,     rec: true  },
+    { icon: I.flame,    rec: false },
+  ];
+  return map[index % 3];
 };
 
 /* ============================================================
@@ -225,23 +244,91 @@ const MembershipSignup = () => {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const [step, setStep] = useState(1);
-  const [planId, setPlanId] = useState('pro');
-  const [vectors, setVectors] = useState([]);
+
+  // ---- live plans from backend ----
+  const [plansData, setPlansData] = useState([]);
+  const [plansLoading, setPlansLoading] = useState(true);
+  const [plansError, setPlansError] = useState('');
+  const [planId, setPlanId] = useState(null);   // numeric backend id
+
+  // ---- form fields ----
+  const [form, setForm] = useState({
+    acama_number: '',
+    full_name: '',
+    email: '',
+    phone: '',
+    address: '',
+    age: '',
+    gender: 'male',
+    password: '',
+    password2: '',
+  });
+  const [vectors, setVectors] = useState([]); // kept as UI tags; not sent to backend
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState('');
+
+  const [duration, setDuration] = useState(1);
   const [payMethod, setPayMethod] = useState('card');
-  const [form, setForm] = useState({ name: '', email: '', phone: '', node: 'n1' });
   const [card, setCard] = useState({ num: '', exp: '', cvc: '', zip: '' });
   const [autoRenew, setAutoRenew] = useState(true);
   const [agree, setAgree] = useState(false);
+
   const [touched, setTouched] = useState({});
   const [flash, setFlash] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [done, setDone] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [result, setResult] = useState(null);   // backend response
   const [sumOpen, setSumOpen] = useState(true);
   const [occ, setOcc] = useState(42);
-  const [scan, setScan] = useState(false);
   const [cvcFocus, setCvcFocus] = useState(false);
 
-  /* ---------- Translated content arrays ---------- */
+  const fileInputRef = useRef(null);
+
+  /* ---------- Load plans ---------- */
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const data = await publicService.plans();
+        if (!alive) return;
+        setPlansData(Array.isArray(data) ? data : []);
+        if (Array.isArray(data) && data.length) setPlanId(data[0].id);
+        setPlansError('');
+      } catch (e) {
+        if (!alive) return;
+        setPlansError(e.message || 'Failed to load plans.');
+      } finally {
+        if (alive) setPlansLoading(false);
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
+
+  /* ---------- Derived plan object ---------- */
+  const plan = useMemo(() => {
+    return plansData.find((p) => p.id === planId) || plansData[0] || {
+      id: 0, display_name: '—', name: '—',
+      price_monthly: 0, price_annual: 0, features: [],
+    };
+  }, [plansData, planId]);
+
+  const monthly = Number(plan.price_monthly || 0);
+  const annual = Number(plan.price_annual || 0);
+
+  const price = useMemo(() => {
+    if (duration >= 12) {
+      const years = duration / 12;
+      return annual * years;
+    }
+    return monthly * duration;
+  }, [duration, monthly, annual]);
+
+  const tweenPrice = useTween(price, 700);
+  const passText = useDecode('PASS #PENDING', boot);
+  const doneText = useDecode(t('en.ok.pass'), done);
+
+  /* ---------- i18n-driven static arrays ---------- */
   const NODES = [
     { id: 'n1', label: t('en.node.1') },
     { id: 'n2', label: t('en.node.2') },
@@ -258,24 +345,6 @@ const MembershipSignup = () => {
     { id: 'recovery', label: t('en.vec.recovery.t'), sub: t('en.vec.recovery.s'), icon: I.cryo },
   ];
 
-  const PLANS = [
-    {
-      id: 'base', short: t('en.plan.base.short'), name: t('en.plan.base.name'), price: 49,
-      desc: t('en.plan.base.desc'),
-      perks: [t('en.plan.base.p1'), t('en.plan.base.p2'), t('en.plan.base.p3'), t('en.plan.base.p4'), t('en.plan.base.p5')],
-    },
-    {
-      id: 'pro', short: t('en.plan.pro.short'), name: t('en.plan.pro.name'), price: 79, rec: true,
-      desc: t('en.plan.pro.desc'),
-      perks: [t('en.plan.pro.p1'), t('en.plan.pro.p2'), t('en.plan.pro.p3'), t('en.plan.pro.p4'), t('en.plan.pro.p5')],
-    },
-    {
-      id: 'elite', short: t('en.plan.elite.short'), name: t('en.plan.elite.name'), price: 119,
-      desc: t('en.plan.elite.desc'),
-      perks: [t('en.plan.elite.p1'), t('en.plan.elite.p2'), t('en.plan.elite.p3'), t('en.plan.elite.p4'), t('en.plan.elite.p5')],
-    },
-  ];
-
   const SUM_TRUST = [
     { icon: I.shield, t: t('en.sum.trust1t'), d: t('en.sum.trust1d') },
     { icon: I.target, t: t('en.sum.trust2t'), d: t('en.sum.trust2d') },
@@ -289,39 +358,15 @@ const MembershipSignup = () => {
     { icon: I.coach, t: t('en.trust.4.t'), d: t('en.trust.4.d') },
   ];
 
-  const plan = PLANS.find((p) => p.id === planId) || PLANS[1];
-  const price = plan.price;
-  const tweenPrice = useTween(price, 700);
-
-  const passText = useDecode('PASS #8841-TK', boot);
-  const doneText = useDecode(t('en.ok.pass'), done);
-
-  const hdrRef = useRef(null);
-  const progRef = useRef(null);
-  const topRingRef = useRef(null);
-  const panel1Ref = useRef(null);
-  const panel2Ref = useRef(null);
-  const formsRef = useRef(null);
-  const ghostRef = useRef(null);
-  const cursorTarget = useRef({ x: 0, y: 0 });
-  const bootRef = useRef(false);
-
-  const nameRef = useRef(null);
-  const emailRef = useRef(null);
-  const phoneRef = useRef(null);
-  const vecRef = useRef(null);
-  const numRef = useRef(null);
-  const expRef = useRef(null);
-  const cvcRef = useRef(null);
-  const zipRef = useRef(null);
-  const agreeRef = useRef(null);
-
-  /* ---- validation ---- */
+  /* ---------- Validation ---------- */
+  const nameOk = form.full_name.trim().length >= 2;
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
-  const nameOk = form.name.trim().length >= 2;
   const phoneOk = form.phone.replace(/\D/g, '').length >= 7;
-  const vectorsOk = vectors.length > 0;
-  const step1Ok = nameOk && emailOk && phoneOk && vectorsOk;
+  const acamaOk = form.acama_number.trim().length >= 3;
+  const ageOk = Number(form.age) >= 12 && Number(form.age) <= 100;
+  const passwordOk = form.password.length >= 8;
+  const passwordMatch = form.password === form.password2;
+  const step1Ok = nameOk && emailOk && phoneOk && acamaOk && ageOk && passwordOk && passwordMatch && planId;
 
   const cardOk = payMethod !== 'card' || card.num.replace(/\D/g, '').length === 16;
   const expOk = payMethod !== 'card' || /^(0[1-9]|1[0-2])\/\d{2}$/.test(card.exp);
@@ -332,23 +377,52 @@ const MembershipSignup = () => {
   const brand = brandOf(card.num);
   const cardDigits = card.num.replace(/\s/g, '');
 
-  const missing = useMemo(() => {
-    const m = [];
-    if (!nameOk) m.push({ label: t('en.err.chipName'), ref: nameRef });
-    if (!emailOk) m.push({ label: t('en.err.chipEmail'), ref: emailRef });
-    if (!phoneOk) m.push({ label: t('en.err.chipPhone'), ref: phoneRef });
-    if (!vectorsOk) m.push({ label: t('en.err.chipVector'), ref: vecRef });
-    return m;
-  }, [nameOk, emailOk, phoneOk, vectorsOk, t]);
+   /* ---------- Refs ---------- */
+  const hdrRef = useRef(null);
+  const progRef = useRef(null);
+  const topRingRef = useRef(null);
+  const panel1Ref = useRef(null);
+  const panel2Ref = useRef(null);
+  const formsRef = useRef(null);
+  const ghostRef = useRef(null);
+  const cursorTarget = useRef({ x: 0, y: 0 });
+  const bootRef = useRef(false);
 
-  /* Draft persistence */
+  const acamaRef = useRef(null);
+  const nameRef = useRef(null);
+  const emailRef = useRef(null);
+  const phoneRef = useRef(null);
+  const ageRef = useRef(null);
+  const passwordRef = useRef(null);
+  const password2Ref = useRef(null);
+  const numRef = useRef(null);
+  const expRef = useRef(null);
+  const cvcRef = useRef(null);
+  const zipRef = useRef(null);
+  const agreeRef = useRef(null);
+
+   // Refs used by the "missing fields" recap are declared below;
+  // this list is built inline inside the render instead.
+  const missingRefs = {
+    acama: acamaRef,
+    name: nameRef,
+    email: emailRef,
+    phone: phoneRef,
+    age: ageRef,
+    password: passwordRef,
+    password2: password2Ref,
+  };
+
+
+  /* ---------- Draft persistence (exclude password) ---------- */
   useEffect(() => {
     try {
       const d = JSON.parse(localStorage.getItem('sg-enroll-draft') || 'null');
       if (d) {
-        if (d.form) setForm((f) => ({ ...f, ...d.form }));
+        if (d.form) setForm((f) => ({ ...f, ...d.form, password: '', password2: '' }));
         if (Array.isArray(d.vectors)) setVectors(d.vectors);
         if (d.planId) setPlanId(d.planId);
+        if (d.duration) setDuration(d.duration);
       }
     } catch { /* ignore */ }
   }, []);
@@ -356,11 +430,14 @@ const MembershipSignup = () => {
   useEffect(() => {
     if (done) { localStorage.removeItem('sg-enroll-draft'); return; }
     try {
-      localStorage.setItem('sg-enroll-draft', JSON.stringify({ form, vectors, planId }));
+      const { password, password2, ...safeForm } = form;
+      localStorage.setItem('sg-enroll-draft', JSON.stringify({
+        form: safeForm, vectors, planId, duration,
+      }));
     } catch { /* ignore */ }
-  }, [form, vectors, planId, done]);
+  }, [form, vectors, planId, duration, done]);
 
-  /* Boot */
+  /* ---------- Boot ---------- */
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     let raf, t0;
@@ -385,7 +462,7 @@ const MembershipSignup = () => {
     return () => clearTimeout(tid);
   }, [boot]);
 
-  /* Reveal on scroll */
+  /* ---------- Reveal on scroll ---------- */
   useEffect(() => {
     if (!boot) return;
     const els = document.querySelectorAll('[data-rv]');
@@ -396,7 +473,7 @@ const MembershipSignup = () => {
     return () => io.disconnect();
   }, [boot]);
 
-  /* Live occupancy ticker */
+  /* ---------- Live occupancy ticker (kept for cosmetics) ---------- */
   useEffect(() => {
     const id = setInterval(() => {
       setOcc((o) => Math.max(28, Math.min(64, o + (Math.random() < 0.5 ? -1 : 1) * (1 + Math.floor(Math.random() * 3)))));
@@ -404,7 +481,7 @@ const MembershipSignup = () => {
     return () => clearInterval(id);
   }, []);
 
-  /* Master rAF */
+  /* ---------- Master rAF ---------- */
   useEffect(() => {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const onMove = (e) => { cursorTarget.current = { x: e.clientX, y: e.clientY }; };
@@ -442,7 +519,7 @@ const MembershipSignup = () => {
     };
   }, []);
 
-  /* Custom cursor */
+  /* ---------- Custom cursor ---------- */
   useEffect(() => {
     if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -468,34 +545,13 @@ const MembershipSignup = () => {
     return () => { cancelAnimationFrame(raf); window.removeEventListener('mouseover', over); };
   }, []);
 
-  /* Magnetic buttons */
-  useEffect(() => {
-    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const els = Array.from(document.querySelectorAll('.btn, .en-cta, .en-express-btn'));
-    const cleanups = els.map((el) => {
-      const onMove = (e) => {
-        const r = el.getBoundingClientRect();
-        const dx = e.clientX - (r.left + r.width / 2);
-        const dy = e.clientY - (r.top + r.height / 2);
-        el.style.translate = `${dx * 0.12}px ${dy * 0.2}px`;
-      };
-      const onLeave = () => { el.style.translate = ''; };
-      el.addEventListener('mousemove', onMove);
-      el.addEventListener('mouseleave', onLeave);
-      return () => {
-        el.removeEventListener('mousemove', onMove);
-        el.removeEventListener('mouseleave', onLeave);
-      };
-    });
-    return () => cleanups.forEach((c) => c());
-  }, [bootGone, step, done]);
-
+  /* ---------- Menu scroll lock ---------- */
   useEffect(() => {
     document.body.classList.toggle('no-scroll', menuOpen);
     return () => document.body.classList.remove('no-scroll');
   }, [menuOpen]);
 
+  /* ---------- Helpers ---------- */
   const flashErr = () => {
     setFlash(true);
     setTimeout(() => setFlash(false), 600);
@@ -517,36 +573,83 @@ const MembershipSignup = () => {
     });
   };
 
-  const proceed = () => goStep(2);
-
-  const submit = () => {
-    if (processing || done) return;
-    if (!step2Ok) {
-      setTouched((x) => ({ ...x, name: 1, email: 1, phone: 1, vectors: 1, num: 1, exp: 1, cvc: 1, zip: 1, agree: 1 }));
+  const proceed = () => {
+    if (!step1Ok) {
+      setTouched((x) => ({ ...x, acama: 1, name: 1, email: 1, phone: 1, age: 1, password: 1, password2: 1 }));
       flashErr();
-      if (!step1Ok) {
-        goStep(1);
-        const first = missing[0];
-        if (first) focusField(first.ref, 420);
-      } else {
-        const target = !cardOk ? numRef : !expOk ? expRef : !cvcOk ? cvcRef : !zipOk ? zipRef : agreeRef;
-        focusField(target, 60);
-      }
+      const first = missing[0];
+      if (first) focusField(first.ref, 60);
       return;
     }
+    goStep(2);
+  };
+
+  /* ---------- Photo handling ---------- */
+  const handlePhoto = (file) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setSubmitError('Photo must be an image file.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setSubmitError('Photo must be under 5MB.');
+      return;
+    }
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
+    setSubmitError('');
+  };
+
+  const onFilePick = (e) => handlePhoto(e.target.files?.[0]);
+
+  /* ---------- Submit ---------- */
+  const submit = async () => {
+    if (processing || done) return;
+
+    if (!step2Ok) {
+      setTouched((x) => ({ ...x, num: 1, exp: 1, cvc: 1, zip: 1, agree: 1 }));
+      flashErr();
+      const target = !cardOk ? numRef : !expOk ? expRef : !cvcOk ? cvcRef : !zipOk ? zipRef : agreeRef;
+      focusField(target, 60);
+      return;
+    }
+
+    setSubmitError('');
     setProcessing(true);
-    setTimeout(() => {
-      setProcessing(false);
+
+    try {
+      const payload = {
+        acama_number: form.acama_number.trim(),
+        full_name: form.full_name.trim(),
+        email: form.email.trim().toLowerCase(),
+        phone: form.phone.trim(),
+        address: form.address.trim(),
+        age: Number(form.age),
+        gender: form.gender,
+        plan: planId,
+        duration_months: Number(duration),
+        password: form.password,
+      };
+
+      const data = await publicService.register(payload, photoFile);
+      setResult(data);
       setDone(true);
       setSumOpen(true);
       requestAnimationFrame(() => formsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
-    }, 1700);
+    } catch (e) {
+      setSubmitError(e.message || 'Submission failed. Please try again.');
+      flashErr();
+    } finally {
+      setProcessing(false);
+    }
   };
 
   const primary = () => (done ? null : step === 1 ? proceed() : submit());
   const paybarOff = done || processing;
   const hudPct = done ? 100 : step2Ok ? 92 : step1Ok ? 58 : step === 2 ? 40 : 12;
   const err = (k, bad, msg) => (touched[k] && bad ? msg : null);
+
+  const PLANS_FOR_SWITCH = plansData.slice(0, 3);
 
   return (
     <div className={`sg ${menuOpen ? 'menu-open' : ''}`}>
@@ -714,8 +817,8 @@ const MembershipSignup = () => {
 
                   {step !== 1 && step1Ok && (
                     <div className="en-recap">
-                      <b>{form.name}</b><i /><span>{form.email}</span><i />
-                      <span>{vectors.length} VECTOR{vectors.length > 1 ? 'S' : ''}</span>
+                      <b>{form.full_name}</b><i /><span>{form.email}</span><i />
+                      <span>{duration} MO</span>
                       <button type="button" className="en-recap-edit" onClick={() => goStep(1)}>EDIT</button>
                     </div>
                   )}
@@ -724,11 +827,21 @@ const MembershipSignup = () => {
                     <div className="en-panel-in">
 
                       <div className="en-fieldgrid">
+                        <label ref={acamaRef} className={`en-field ${err('acama', !acamaOk, 'ENTER ACAMA #') ? 'bad' : ''}`}>
+                          <span className="en-flabel">ACAMA NUMBER</span>
+                          <div className="en-input">
+                            <input type="text" placeholder="AC-XXXX-XXXX" value={form.acama_number}
+                              onChange={(e) => setForm({ ...form, acama_number: e.target.value.toUpperCase() })}
+                              onBlur={() => setTouched((x) => ({ ...x, acama: 1 }))} />
+                            <span className="en-in-ico">{I.key(14)}</span>
+                          </div>
+                        </label>
+
                         <label ref={nameRef} className={`en-field ${err('name', !nameOk, t('en.err.name')) ? 'bad' : ''}`}>
                           <span className="en-flabel">{t('en.p1.name')}</span>
                           <div className="en-input">
-                            <input type="text" placeholder={t('en.p1.namePh')} value={form.name}
-                              onChange={(e) => setForm({ ...form, name: e.target.value })}
+                            <input type="text" placeholder={t('en.p1.namePh')} value={form.full_name}
+                              onChange={(e) => setForm({ ...form, full_name: e.target.value })}
                               onBlur={() => setTouched((x) => ({ ...x, name: 1 }))} />
                             <span className="en-in-ico">{I.user(14)}</span>
                           </div>
@@ -754,20 +867,93 @@ const MembershipSignup = () => {
                           </div>
                         </label>
 
+                        <label ref={ageRef} className={`en-field ${err('age', !ageOk, 'ENTER VALID AGE') ? 'bad' : ''}`}>
+                          <span className="en-flabel">AGE</span>
+                          <div className="en-input">
+                            <input type="number" min="12" max="100" placeholder="25" value={form.age}
+                              onChange={(e) => setForm({ ...form, age: e.target.value.replace(/\D/g, '').slice(0, 3) })}
+                              onBlur={() => setTouched((x) => ({ ...x, age: 1 }))} />
+                            <span className="en-in-ico">{I.target(14)}</span>
+                          </div>
+                        </label>
+
                         <label className="en-field">
-                          <span className="en-flabel">{t('en.p1.node')}</span>
+                          <span className="en-flabel">GENDER</span>
                           <div className="en-input en-select">
-                            <select value={form.node}
-                              onChange={(e) => setForm({ ...form, node: e.target.value })}>
-                              {NODES.map((n) => <option key={n.id} value={n.id}>{n.label}</option>)}
+                            <select value={form.gender}
+                              onChange={(e) => setForm({ ...form, gender: e.target.value })}>
+                              <option value="male">Male</option>
+                              <option value="female">Female</option>
+                              <option value="other">Other</option>
                             </select>
-                            <span className="en-in-ico">{I.node(14)}</span>
+                            <span className="en-in-ico">{I.user(14)}</span>
                             <span className="en-sel-arrow">{I.chev(11)}</span>
+                          </div>
+                        </label>
+
+                        <label ref={passwordRef} className={`en-field ${err('password', !passwordOk, 'MIN 8 CHARACTERS') ? 'bad' : ''}`}>
+                          <span className="en-flabel">PASSWORD</span>
+                          <div className="en-input">
+                            <input type="password" placeholder="••••••••" value={form.password}
+                              onChange={(e) => setForm({ ...form, password: e.target.value })}
+                              onBlur={() => setTouched((x) => ({ ...x, password: 1 }))} />
+                            <span className="en-in-ico">{I.lock(14)}</span>
+                          </div>
+                        </label>
+
+                        <label ref={password2Ref} className={`en-field ${err('password2', !passwordMatch, 'PASSWORDS DO NOT MATCH') ? 'bad' : ''}`}>
+                          <span className="en-flabel">CONFIRM PASSWORD</span>
+                          <div className="en-input">
+                            <input type="password" placeholder="••••••••" value={form.password2}
+                              onChange={(e) => setForm({ ...form, password2: e.target.value })}
+                              onBlur={() => setTouched((x) => ({ ...x, password2: 1 }))} />
+                            <span className="en-in-ico">{I.lock(14)}</span>
+                          </div>
+                        </label>
+
+                        <label className="en-field" style={{ gridColumn: '1 / -1' }}>
+                          <span className="en-flabel">ADDRESS</span>
+                          <div className="en-input">
+                            <input type="text" placeholder="City, Street, Building" value={form.address}
+                              onChange={(e) => setForm({ ...form, address: e.target.value })} />
+                            <span className="en-in-ico">{I.node(14)}</span>
                           </div>
                         </label>
                       </div>
 
-                      <div ref={vecRef} className={`en-vecwrap ${err('vectors', !vectorsOk, t('en.err.vec')) ? 'bad' : ''}`}>
+                      {/* PHOTO */}
+                      <div className="en-vecwrap" style={{ marginTop: 18 }}>
+                        <div className="en-vec-head">
+                          <span className="en-flabel">PROFILE PHOTO (optional — used for gym entry verification)</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+                          {photoPreview ? (
+                            <img src={photoPreview} alt="preview"
+                              style={{ width: 72, height: 72, borderRadius: 12, objectFit: 'cover' }} />
+                          ) : (
+                            <span style={{
+                              width: 72, height: 72, borderRadius: 12,
+                              background: 'rgba(255,255,255,0.04)',
+                              display: 'grid', placeItems: 'center',
+                            }}>{I.camera(22)}</span>
+                          )}
+                          <input ref={fileInputRef} type="file" accept="image/*"
+                            onChange={onFilePick} style={{ display: 'none' }} />
+                          <button type="button" className="btn btn-ghost btn-sm"
+                            onClick={() => fileInputRef.current?.click()}>
+                            {I.upload(12)} {photoFile ? 'CHANGE PHOTO' : 'UPLOAD PHOTO'}
+                          </button>
+                          {photoFile && (
+                            <span style={{ opacity: 0.6, fontSize: 12 }}>
+                              {photoFile.name} ({Math.round(photoFile.size / 1024)} KB)
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* VECTOR (cosmetic — not sent to backend) */}
+                      <div className="en-vecwrap">
+
                         <div className="en-vec-head">
                           <span className="en-flabel">{t('en.p1.vecHead')}</span>
                           <span className="en-vec-multi">{t('en.p1.vecMulti')}</span>
@@ -779,7 +965,7 @@ const MembershipSignup = () => {
                               <button type="button" key={v.id}
                                 className={`en-chip ${on ? 'on' : ''}`}
                                 style={{ '--i': vi }}
-                                onClick={() => { setVectors((s) => s.includes(v.id) ? s.filter((x) => x !== v.id) : [...s, v.id]); setTouched((x) => ({ ...x, vectors: 1 })); }}
+                                onClick={() => setVectors((s) => s.includes(v.id) ? s.filter((x) => x !== v.id) : [...s, v.id])}
                                 aria-pressed={on}>
                                 <span className="en-chip-ico">{v.icon(15)}</span>
                                 <span className="en-chip-txt"><b>{v.label}</b><i>{v.sub}</i></span>
@@ -816,12 +1002,20 @@ const MembershipSignup = () => {
                     <div className="en-req">
                       <span className="en-req-label">{I.shield(12)} {t('en.p2.reqLabel')}</span>
                       <div className="en-req-chips">
-                        {missing.map((m) => (
-                          <button key={m.label} type="button"
-                            onClick={() => { goStep(1); focusField(m.ref, 420); }}>
-                            {m.label} {I.arrow(9)}
-                          </button>
-                        ))}
+                        {[
+  !acamaOk      && { label: 'ACAMA #',           ref: acamaRef },
+  !nameOk       && { label: t('en.err.chipName'), ref: nameRef },
+  !emailOk      && { label: t('en.err.chipEmail'),ref: emailRef },
+  !phoneOk      && { label: t('en.err.chipPhone'),ref: phoneRef },
+  !ageOk        && { label: 'AGE',                ref: ageRef },
+  !passwordOk   && { label: 'PASSWORD',           ref: passwordRef },
+  !passwordMatch && { label: 'PASSWORDS MATCH',   ref: password2Ref },
+].filter(Boolean).map((m) => (
+  <button key={m.label} type="button"
+    onClick={() => { goStep(1); focusField(m.ref, 420); }}>
+    {m.label} {I.arrow(9)}
+  </button>
+))}
                       </div>
                     </div>
                   )}
@@ -831,7 +1025,7 @@ const MembershipSignup = () => {
 
                       <CardPreview
                         digits={cardDigits}
-                        name={form.name}
+                        name={form.full_name}
                         exp={card.exp}
                         brand={brand}
                         flipped={cvcFocus}
@@ -911,7 +1105,7 @@ const MembershipSignup = () => {
                           <span className="en-box">{I.check(11)}</span>
                           <span className="en-check-txt">
                             <b>{t('en.p2.autoB')}</b>
-                            <i>{t('en.p2.autoI.pre')}{`$${price}.00`}{t('en.p2.autoI.post')}</i>
+                            <i>{t('en.p2.autoI.pre')}{`$${price.toFixed(2)}`}{t('en.p2.autoI.post')}</i>
                           </span>
                         </label>
 
@@ -925,6 +1119,17 @@ const MembershipSignup = () => {
                           </span>
                         </label>
                       </div>
+
+                      {submitError && (
+                        <div style={{
+                          marginTop: 12, padding: '10px 14px', borderRadius: 8,
+                          background: 'rgba(229,25,55,0.12)',
+                          border: '1px solid rgba(229,25,55,0.4)',
+                          color: '#ff8a9a', fontSize: 13,
+                        }}>
+                          {submitError}
+                        </div>
+                      )}
 
                       <div className="en-flowl" aria-hidden="true">
                         <span>{I.lock(10)} {t('en.p2.tokenAes')}</span>
@@ -940,10 +1145,6 @@ const MembershipSignup = () => {
                         onClick={submit} disabled={processing}>
                         {processing ? (
                           <>{t('en.p2.processing')}<span className="en-dots"><i /><i /><i /></span></>
-                        ) : payMethod === 'apple' ? (
-                          <>{I.apple(15)} {t('en.p2.submitApple')} {I.arrow()}</>
-                        ) : payMethod === 'google' ? (
-                          <>{I.google(14)} {t('en.p2.submitGoogle')} {I.arrow()}</>
                         ) : (
                           <>{I.bolt(14)} {t('en.p2.submit')} {I.arrow()}</>
                         )}
@@ -957,7 +1158,7 @@ const MembershipSignup = () => {
                 </section>
               </>
             ) : (
-              /* SUCCESS */
+              /* SUCCESS — pending admin approval */
               <section className="en-success">
                 <span className="en-success-halo" aria-hidden="true" />
                 <div className="en-success-head">
@@ -965,39 +1166,46 @@ const MembershipSignup = () => {
                     <circle cx="32" cy="32" r="28" pathLength="1" />
                     <path d="M20 33.5 28.5 42 45 24" pathLength="1" />
                   </svg>
-                  <h2>{t('en.ok.title')}</h2>
-                  <p className="en-success-sub">{doneText}</p>
+                  <h2>REGISTRATION RECEIVED</h2>
+                  <p className="en-success-sub">
+                    Your request is pending admin approval. You'll receive an email once it's activated.
+                  </p>
                 </div>
 
-                <div className={`en-pass ${scan ? 'scan' : ''}`}>
+                <div className="en-pass">
                   <div className="en-pass-top">
                     <span className="en-pass-brand">{I.logo(13)} SMART<em>GYM</em></span>
-                    <span className="en-pass-tier">{plan.short} {t('en.ok.tier')}</span>
+                    <span className="en-pass-tier">{result?.plan_name || plan.display_name}</span>
                   </div>
-                  <div className="en-pass-name">{form.name || t('en.ok.athlete')}</div>
+                  <div className="en-pass-name">{form.full_name}</div>
                   <div className="en-pass-row">
-                    <div><span>{t('en.ok.memberId')}</span><b>SG-8841-TK</b></div>
-                    <div><span>{t('en.ok.homeNode')}</span><b>{NODES.find(n => n.id === form.node)?.label.split('—')[0].trim() || 'HQ'}</b></div>
-                    <div><span>{t('en.ok.status')}</span><b className="ok">{t('en.ok.active')}</b></div>
+                    <div><span>ACAMA #</span><b>{form.acama_number}</b></div>
+                    <div><span>DURATION</span><b>{result?.duration_months || duration} MO</b></div>
+                    <div>
+                      <span>STATUS</span>
+                      <b className="ok">{(result?.status || 'PENDING').toUpperCase()}</b>
+                    </div>
                   </div>
                   <div className="en-pass-barcode" aria-hidden="true" />
                   <span className="en-pass-shine" aria-hidden="true" />
-                  <span className="en-nfc-rings" aria-hidden="true"><i /><i /><i /></span>
-                  <span className="en-pass-nfc">{I.nfc(13)} {t('en.ok.nfc')}</span>
                 </div>
 
                 <div className="en-success-actions">
-                  <button className="btn btn-red" onClick={() => { setScan(true); setTimeout(() => setScan(false), 1200); }}>
-                    {I.apple(14)} {t('en.ok.appleWallet')}
-                  </button>
-                  <button className="btn en-ghostbtn" onClick={() => { setScan(true); setTimeout(() => setScan(false), 1200); }}>
-                    {I.nfc(14)} {t('en.ok.simTurn')}
-                  </button>
+                  <Link to="/" className="btn btn-red">
+                    BACK TO HOME
+                  </Link>
                 </div>
 
                 <p className="en-success-note">
-                  {t('en.ok.notePre')}<b>{form.email}</b>{t('en.ok.notePost')}
+                  Confirmation sent to <b>{form.email}</b>. Keep your Acama number safe —{' '}
+                  <b>{form.acama_number}</b> — you'll use it at gym entry.
                 </p>
+
+                {result?.id && (
+                  <p className="en-success-note" style={{ opacity: 0.6 }}>
+                    Reference #{result.id}
+                  </p>
+                )}
               </section>
             )}
           </div>
@@ -1017,21 +1225,37 @@ const MembershipSignup = () => {
                 <span className="en-sum-eyebrow">{I.bolt(11)} {t('en.sum.eyebrow')}</span>
 
                 <div className="en-sum-title">
-                  <h2 key={planId}>{plan.name}</h2>
+                  <h2 key={planId}>{plan.display_name}</h2>
                   <div className="en-sum-price" key={`p${planId}`}>
                     <b>${Math.round(tweenPrice)}</b><span>{t('en.sum.perMonth')}</span>
                   </div>
                 </div>
-                <p className="en-sum-desc">{plan.desc}</p>
+                <p className="en-sum-desc">{plan.description || '—'}</p>
 
                 <div className="en-plan-switch">
                   <span>{t('en.sum.switch')}</span>
                   <div>
-                    {PLANS.map((p) => (
+                    {plansLoading && <span style={{ opacity: 0.6, fontSize: 12 }}>Loading plans…</span>}
+                    {plansError && <span style={{ color: '#ff8a9a', fontSize: 12 }}>{plansError}</span>}
+                    {!plansLoading && !plansError && PLANS_FOR_SWITCH.map((p) => (
                       <button type="button" key={p.id}
                         className={p.id === planId ? 'on' : ''}
                         onClick={() => setPlanId(p.id)}>
-                        {p.short}{p.rec && <i />}
+                        {p.display_name}{planVisual(p).rec && <i />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* DURATION PICKER */}
+                <div className="en-plan-switch" style={{ marginTop: 10 }}>
+                  <span>DURATION (months)</span>
+                  <div>
+                    {[1, 3, 6, 12].map((m) => (
+                      <button type="button" key={m}
+                        className={m === duration ? 'on' : ''}
+                        onClick={() => setDuration(m)}>
+                        {m} MO{m >= 12 && <i />}
                       </button>
                     ))}
                   </div>
@@ -1054,25 +1278,23 @@ const MembershipSignup = () => {
                 <div className="en-perks">
                   <span className="en-perks-head">{t('en.sum.perksHead')}</span>
                   <ul>
-                    {plan.perks.map((p, i) => (
+                    {(plan.features || []).map((p, i) => (
                       <li key={p} style={{ '--i': i }}>
                         <span className="en-perk-ico">{I.shield(12)}</span>{p}
                       </li>
                     ))}
+                    {(!plan.features || plan.features.length === 0) && (
+                      <li style={{ opacity: 0.5 }}>No features listed for this plan.</li>
+                    )}
                   </ul>
                 </div>
 
                 <div className="en-lines">
-                  <div className="en-line"><span>{plan.short}{t('en.sum.line1')}</span><b>${price.toFixed(2)}</b></div>
-                  <div className="en-line">
-                    <span>{t('en.sum.line2')} <em className="en-promo">{t('en.sum.promo')}</em></span>
-                    <b><s>$45.99</s> $0.00</b>
-                  </div>
-                  <div className="en-line"><span>{t('en.sum.line3')}</span><b>$0.00 <em>{t('en.sum.waived')}</em></b></div>
-                  <div className="en-line"><span>{t('en.sum.line4')}</span><b>$0.00</b></div>
+                  <div className="en-line"><span>{plan.display_name} × {duration} MO</span><b>${price.toFixed(2)}</b></div>
+                  <div className="en-line"><span>Tax (0%)</span><b>$0.00</b></div>
                 </div>
 
-                <div className="en-total" key={`t${planId}`}>
+                <div className="en-total" key={`t${planId}-${duration}`}>
                   <div>
                     <span>{t('en.sum.total')}</span>
                     <em>{t('en.sum.totalSub')}</em>

@@ -1,15 +1,18 @@
 Folder PATH listing
 Volume serial number is 0E02-175C
 C:.
+|   .gitignore
 |   .oxlintrc.json
 |   index.html
 |   oxlint.config.js
 |   package-lock.json
 |   package.json
-|   project-structure.txt
 |   README.md
+|   structure.txt
+|   vercel.json
 |   vite.config.js
 |   
++---node_modules
 |   |   .package-lock.json
 |   |   
 |   +---.bin
@@ -26,6 +29,7 @@ C:.
 |   |       vite.cmd
 |   |       vite.ps1
 |   |       
+|   +---.vite
 |   |   \---deps
 |   |           lucide-react.js
 |   |           lucide-react.js.map
@@ -34,15 +38,18 @@ C:.
 |   |           react-dom.js.map
 |   |           react-dom_client.js
 |   |           react-dom_client.js.map
+|   |           react-router-dom.js
+|   |           react-router-dom.js.map
 |   |           react.js
 |   |           react.js.map
 |   |           react_jsx-dev-runtime.js
 |   |           react_jsx-dev-runtime.js.map
 |   |           react_jsx-runtime.js
 |   |           react_jsx-runtime.js.map
-|   |           rolldown-runtime-EAsCxrDo.js
+|   |           rolldown-runtime-DC62tzP2.js
 |   |           _metadata.json
 |   |           
+|   +---.vite-temp
 |   +---@oxc-project
 |   |   \---types
 |   |           LICENSE
@@ -67,6 +74,7 @@ C:.
 |   |       |   package.json
 |   |       |   README.md
 |   |       |   
+|   |       \---dist
 |   |           |   filter-B_mD-HGz.mjs
 |   |           |   index.d.mts
 |   |           |   index.mjs
@@ -123,6 +131,7 @@ C:.
 |   |       |   package.json
 |   |       |   README.md
 |   |       |   
+|   |       +---dist
 |   |       |       index.d.ts
 |   |       |       index.js
 |   |       |       refresh-runtime.js
@@ -136,6 +145,7 @@ C:.
 |   |   |   package.json
 |   |   |   README.md
 |   |   |   
+|   |   \---dist
 |   |           index.d.ts
 |   |           index.js
 |   |           index.js.map
@@ -164,6 +174,7 @@ C:.
 |   |   |   package.json
 |   |   |   README.md
 |   |   |   
+|   |   \---dist
 |   |           index.cjs
 |   |           index.d.cts
 |   |           index.d.mts
@@ -178,6 +189,7 @@ C:.
 |   |   |       package.json
 |   |   |       README.md
 |   |   |       
+|   |   +---dist
 |   |   |   |   client.d.ts
 |   |   |   |   debug.d.ts
 |   |   |   |   dom-mini.d.ts
@@ -573,6 +585,8 @@ C:.
 |   |   |       |               create-render-state.mjs.map
 |   |   |       |               
 |   |   |       +---utils
+|   |   |       |   |   distance.mjs
+|   |   |       |   |   distance.mjs.map
 |   |   |       |   |   get-context-window.mjs
 |   |   |       |   |   get-context-window.mjs.map
 |   |   |       |   |   is-browser.mjs
@@ -700,6 +714,7 @@ C:.
 |   |   |   package.json
 |   |   |   README.md
 |   |   |   
+|   |   \---dist
 |   |       |   lucide-react.d.ts
 |   |       |   lucide-react.prefixed.d.ts
 |   |       |   lucide-react.suffixed.d.ts
@@ -777,6 +792,12 @@ C:.
 |   |           |       align-end-horizontal.mjs.map
 |   |           |       align-end-vertical.mjs
 |   |           |       align-end-vertical.mjs.map
+|   |           |       align-horizontal-distribute-center.mjs
+|   |           |       align-horizontal-distribute-center.mjs.map
+|   |           |       align-horizontal-distribute-end.mjs
+|   |           |       align-horizontal-distribute-end.mjs.map
+|   |           |       align-horizontal-distribute-start.mjs
+|   |           |       align-horizontal-distribute-start.mjs.map
 |   |           |       align-horizontal-justify-center.mjs
 |   |           |       align-horizontal-justify-center.mjs.map
 |   |           |       align-horizontal-justify-end.mjs
@@ -797,6 +818,12 @@ C:.
 |   |           |       align-start-horizontal.mjs.map
 |   |           |       align-start-vertical.mjs
 |   |           |       align-start-vertical.mjs.map
+|   |           |       align-vertical-distribute-center.mjs
+|   |           |       align-vertical-distribute-center.mjs.map
+|   |           |       align-vertical-distribute-end.mjs
+|   |           |       align-vertical-distribute-end.mjs.map
+|   |           |       align-vertical-distribute-start.mjs
+|   |           |       align-vertical-distribute-start.mjs.map
 |   |           |       align-vertical-justify-center.mjs
 |   |           |       align-vertical-justify-center.mjs.map
 |   |           |       align-vertical-justify-end.mjs
@@ -4894,6 +4921,7 @@ C:.
 |   |   |   LICENSE.md
 |   |   |   package.json
 |   |   |   
+|   |   \---dist
 |   |       |   index.d.ts
 |   |       |   motion-dom.dev.js
 |   |       |   motion-dom.js
@@ -5480,6 +5508,7 @@ C:.
 |   |   |   LICENSE.md
 |   |   |   package.json
 |   |   |   
+|   |   \---dist
 |   |       |   index.d.ts
 |   |       |   motion-utils.dev.js
 |   |       |   motion-utils.js
@@ -5600,6 +5629,7 @@ C:.
 |   |   +---bin
 |   |   |       oxlint
 |   |   |       
+|   |   \---dist
 |   |           bindings.js
 |   |           cli.js
 |   |           index.d.ts
@@ -5780,6 +5810,7 @@ C:.
 |   |   |   package.json
 |   |   |   README.md
 |   |   |   
+|   |   +---dist
 |   |   |   +---development
 |   |   |   |   |   browser-BR5QG7ZC.d.mts
 |   |   |   |   |   browser-eq4RgLsD.d.ts
@@ -5966,6 +5997,7 @@ C:.
 |   |   |   package.json
 |   |   |   README.md
 |   |   |   
+|   |   \---dist
 |   |           index.d.mts
 |   |           index.d.ts
 |   |           index.js
@@ -5980,6 +6012,7 @@ C:.
 |   |   +---bin
 |   |   |       cli.mjs
 |   |   |       
+|   |   \---dist
 |   |       |   cli.d.mts
 |   |       |   cli.mjs
 |   |       |   config.d.mts
@@ -6017,6 +6050,7 @@ C:.
 |   |               create-bundler-option-kXHnIt4b.mjs
 |   |               define-config-Demdg3_4.mjs
 |   |               define-config-DjHYbH6S.d.mts
+|   |               dist-DKbukT1H.mjs
 |   |               error-CRNyaqoL.mjs
 |   |               get-log-filter-AjBknEEO.d.mts
 |   |               load-config-BH5SJ8XZ.mjs
@@ -6085,6 +6119,7 @@ C:.
 |   |   |   package.json
 |   |   |   README.md
 |   |   |   
+|   |   \---dist
 |   |           index.cjs
 |   |           index.d.cts
 |   |           index.d.mts
@@ -6118,6 +6153,7 @@ C:.
 |       |       openChrome.js
 |       |       vite.js
 |       |       
+|       +---dist
 |       |   +---client
 |       |   |       bundledDevClient.mjs
 |       |   |       client.mjs
@@ -6134,6 +6170,7 @@ C:.
 |       |       |   
 |       |       \---chunks
 |       |               build.js
+|       |               dist.js
 |       |               lib.js
 |       |               moduleRunnerTransport.d.ts
 |       |               node.js
@@ -6168,12 +6205,29 @@ C:.
     |   App.jsx
     |   index.css
     |   main.jsx
-    |   SmartGymHome.css
-    |   SmartGymHome.jsx
     |   
     +---assets
     |       hero.png
     |       react.svg
     |       vite.svg
     |       
+    +---i18n
+    |       LangContext.jsx
+    |       LangSwitch.css
+    |       LangSwitch.jsx
+    |       strings.js
+    |       
     \---pages
+            ContactSupport.css
+            ContactSupport.jsx
+            FacilitiesShowcase.css
+            FacilitiesShowcase.jsx
+            InsightsBlog.css
+            InsightsBlog.jsx
+            MembershipSignup.css
+            MembershipSignup.jsx
+            ServicesCatalog.css
+            ServicesCatalog.jsx
+            SmartGymHome.css
+            SmartGymHome.jsx
+            

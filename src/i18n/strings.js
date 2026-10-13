@@ -1533,4 +1533,44 @@ export const strings = {
   'ct.tab.facilities': { en: 'FACILITIES', ar: 'المرافق' },
   'ct.tab.services':   { en: 'SERVICES',   ar: 'الخدمات' },
   'ct.tab.join':       { en: 'JOIN NOW',   ar: 'انضم الآن' },
+
+    /* ============================================================
+     NEW KEYS — Batch B (photo upload, real registration)
+  ============================================================ */
+  'en.photo.title':       { en: 'PROFILE PHOTO',                             ar: 'صورة الملف الشخصي' },
+  'en.photo.hint':        { en: 'Optional — used for gym entry verification', ar: 'اختياري — تُستخدم للتحقق عند دخول النادي' },
+  'en.photo.upload':      { en: 'UPLOAD PHOTO',                              ar: 'ارفع صورة' },
+  'en.photo.change':      { en: 'CHANGE PHOTO',                              ar: 'تغيير الصورة' },
+  'en.photo.errorType':   { en: 'Photo must be an image file.',              ar: 'يجب أن تكون الصورة ملف صورة.' },
+  'en.photo.errorSize':   { en: 'Photo must be under 5 MB.',                 ar: 'يجب أن تكون الصورة أقل من 5 ميجا.' },
+
+  'en.field.acama':       { en: 'ACAMA NUMBER',                              ar: 'رقم الأكامـا' },
+  'en.field.age':         { en: 'AGE',                                       ar: 'العمر' },
+  'en.field.gender':      { en: 'GENDER',                                    ar: 'الجنس' },
+  'en.field.address':     { en: 'ADDRESS',                                   ar: 'العنوان' },
+  'en.field.password':    { en: 'PASSWORD',                                  ar: 'كلمة المرور' },
+  'en.field.password2':   { en: 'CONFIRM PASSWORD',                          ar: 'تأكيد كلمة المرور' },
+  'en.field.duration':    { en: 'DURATION (months)',                         ar: 'المدة (بالأشهر)' },
+  'en.field.months':      { en: 'MO',                                        ar: 'شهر' },
+
+  'en.err.acama':         { en: 'ENTER ACAMA #',                             ar: 'أدخل رقم الأكامـا' },
+  'en.err.age':           { en: 'VALID AGE (12–100)',                        ar: 'عمر صالح (12–100)' },
+  'en.err.password':      { en: 'MIN 8 CHARACTERS',                          ar: '8 أحرف على الأقل' },
+  'en.err.password2':     { en: 'PASSWORDS DO NOT MATCH',                    ar: 'كلمتا المرور غير متطابقتين' },
+
+  'en.err.api':           { en: 'SUBMISSION FAILED — TRY AGAIN',             ar: 'فشل الإرسال — حاول مرة أخرى' },
+
+  'en.ok.pendingTitle':   { en: 'REGISTRATION RECEIVED',                     ar: 'تم استلام التسجيل' },
+  'en.ok.pendingSub':     { en: "Your request is pending admin approval. You'll receive an email once it's activated.", ar: 'طلبك قيد موافقة الإدارة. ستصلك رسالة بريد عند التفعيل.' },
+  'en.ok.statusPending':  { en: 'PENDING',                                   ar: 'قيد المراجعة' },
+  'en.ok.statusPaid':     { en: 'PAID',                                      ar: 'مدفوع' },
+  'en.ok.backHome':       { en: 'BACK TO HOME',                              ar: 'العودة للرئيسية' },
+  'en.ok.confirmSent':    { en: 'Confirmation sent to',                      ar: 'تم إرسال تأكيد إلى' },
+  'en.ok.acamaNote':      { en: 'Keep your Acama number safe — you will use it at gym entry.', ar: 'احتفظ برقم الأكامـا — ستستخدمه عند دخول النادي.' },
+  'en.ok.reference':      { en: 'Reference',                                 ar: 'المرجع' },
+
+  'en.plan.loading':      { en: 'Loading plans…',                            ar: 'جارٍ تحميل الخطط…' },
+  'en.plan.loadError':    { en: 'Could not load plans from server.',         ar: 'تعذّر تحميل الخطط من الخادم.' },
+  'en.plan.noFeatures':   { en: 'No features listed.',                       ar: 'لا مزايا مدرجة.' },
 };
+
