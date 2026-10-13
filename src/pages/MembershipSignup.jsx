@@ -180,7 +180,7 @@ const brandOf = (v) => {
 };
 
 /* Plan → UI accent mapping (Basic/Pro/Elite) */
-const planVisual = (plan, index) => {
+const planVisual = (plan, index = 0) => {
   const map = [
     { icon: I.dumbbell, rec: false },
     { icon: I.bolt,     rec: true  },
@@ -573,12 +573,21 @@ const MembershipSignup = () => {
     });
   };
 
-  const proceed = () => {
+    const proceed = () => {
     if (!step1Ok) {
       setTouched((x) => ({ ...x, acama: 1, name: 1, email: 1, phone: 1, age: 1, password: 1, password2: 1 }));
       flashErr();
-      const first = missing[0];
-      if (first) focusField(first.ref, 60);
+      // Focus the first missing field, in priority order
+      const firstRef =
+        (!acamaOk && acamaRef) ||
+        (!nameOk && nameRef) ||
+        (!emailOk && emailRef) ||
+        (!phoneOk && phoneRef) ||
+        (!ageOk && ageRef) ||
+        (!passwordOk && passwordRef) ||
+        (!passwordMatch && password2Ref) ||
+        null;
+      if (firstRef) focusField(firstRef, 60);
       return;
     }
     goStep(2);
@@ -1033,18 +1042,23 @@ const MembershipSignup = () => {
                       />
 
                       <span className="en-flabel">{t('en.p2.expressLabel')}</span>
-                      <div className="en-express">
-                        <button type="button"
-                          className={`en-express-btn ${payMethod === 'apple' ? 'on' : ''}`}
-                          onClick={() => setPayMethod('apple')}>
-                          {I.apple(18)} {t('en.p2.apple')}
-                        </button>
-                        <button type="button"
-                          className={`en-express-btn ${payMethod === 'google' ? 'on' : ''}`}
-                          onClick={() => setPayMethod('google')}>
-                          {I.google(16)} {t('en.p2.google')}
-                        </button>
-                      </div>
+<div className="en-express">
+  <button type="button"
+    className={`en-express-btn ${payMethod === 'card' ? 'on' : ''}`}
+    onClick={() => setPayMethod('card')}>
+    {I.card(16)} CARD
+  </button>
+  <button type="button"
+    className={`en-express-btn ${payMethod === 'apple' ? 'on' : ''}`}
+    onClick={() => setPayMethod('apple')}>
+    {I.apple(18)} {t('en.p2.apple')}
+  </button>
+  <button type="button"
+    className={`en-express-btn ${payMethod === 'google' ? 'on' : ''}`}
+    onClick={() => setPayMethod('google')}>
+    {I.google(16)} {t('en.p2.google')}
+  </button>
+</div>
 
                       <div className="en-divider"><i />{t('en.p2.divider')}<i /></div>
 
@@ -1237,11 +1251,11 @@ const MembershipSignup = () => {
                   <div>
                     {plansLoading && <span style={{ opacity: 0.6, fontSize: 12 }}>Loading plans…</span>}
                     {plansError && <span style={{ color: '#ff8a9a', fontSize: 12 }}>{plansError}</span>}
-                    {!plansLoading && !plansError && PLANS_FOR_SWITCH.map((p) => (
+                    {!plansLoading && !plansError && PLANS_FOR_SWITCH.map((p, i) => (
                       <button type="button" key={p.id}
                         className={p.id === planId ? 'on' : ''}
                         onClick={() => setPlanId(p.id)}>
-                        {p.display_name}{planVisual(p).rec && <i />}
+                        {p.display_name}{planVisual(p, i).rec && <i />}
                       </button>
                     ))}
                   </div>
