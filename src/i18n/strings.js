@@ -1544,7 +1544,7 @@ export const strings = {
   'en.photo.errorType':   { en: 'Photo must be an image file.',              ar: 'يجب أن تكون الصورة ملف صورة.' },
   'en.photo.errorSize':   { en: 'Photo must be under 5 MB.',                 ar: 'يجب أن تكون الصورة أقل من 5 ميجا.' },
 
-  'en.field.acama':       { en: 'ACAMA NUMBER',                              ar: 'رقم الأكامـا' },
+  'en.field.iqama':       { en: 'IQAMA NUMBER',                              ar: 'رقم الإقامة' },
   'en.field.age':         { en: 'AGE',                                       ar: 'العمر' },
   'en.field.gender':      { en: 'GENDER',                                    ar: 'الجنس' },
   'en.field.address':     { en: 'ADDRESS',                                   ar: 'العنوان' },
@@ -1553,7 +1553,7 @@ export const strings = {
   'en.field.duration':    { en: 'DURATION (months)',                         ar: 'المدة (بالأشهر)' },
   'en.field.months':      { en: 'MO',                                        ar: 'شهر' },
 
-  'en.err.acama':         { en: 'ENTER ACAMA #',                             ar: 'أدخل رقم الأكامـا' },
+  'en.err.iqama':         { en: 'ENTER IQAMA #',                             ar: 'أدخل رقم الإقامة' },
   'en.err.age':           { en: 'VALID AGE (12–100)',                        ar: 'عمر صالح (12–100)' },
   'en.err.password':      { en: 'MIN 8 CHARACTERS',                          ar: '8 أحرف على الأقل' },
   'en.err.password2':     { en: 'PASSWORDS DO NOT MATCH',                    ar: 'كلمتا المرور غير متطابقتين' },
@@ -1566,7 +1566,7 @@ export const strings = {
   'en.ok.statusPaid':     { en: 'PAID',                                      ar: 'مدفوع' },
   'en.ok.backHome':       { en: 'BACK TO HOME',                              ar: 'العودة للرئيسية' },
   'en.ok.confirmSent':    { en: 'Confirmation sent to',                      ar: 'تم إرسال تأكيد إلى' },
-  'en.ok.acamaNote':      { en: 'Keep your Acama number safe — you will use it at gym entry.', ar: 'احتفظ برقم الأكامـا — ستستخدمه عند دخول النادي.' },
+  'en.ok.iqamaNote':      { en: 'Keep your Iqama number safe — you will use it at gym entry.', ar: 'احتفظ برقم الإقامة — ستستخدمه عند دخول النادي.' },
   'en.ok.reference':      { en: 'Reference',                                 ar: 'المرجع' },
 
   'en.plan.loading':      { en: 'Loading plans…',                            ar: 'جارٍ تحميل الخطط…' },

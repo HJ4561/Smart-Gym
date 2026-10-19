@@ -253,7 +253,7 @@ const MembershipSignup = () => {
 
   // ---- form fields ----
   const [form, setForm] = useState({
-    acama_number: '',
+    iqama_number: '',
     full_name: '',
     email: '',
     phone: '',
@@ -367,7 +367,7 @@ const MembershipSignup = () => {
   const cursorTarget = useRef({ x: 0, y: 0 });
   const bootRef = useRef(false);
 
-  const acamaRef = useRef(null);
+  const iqamaRef = useRef(null);
   const nameRef = useRef(null);
   const emailRef = useRef(null);
   const phoneRef = useRef(null);
@@ -384,11 +384,11 @@ const MembershipSignup = () => {
   const nameOk = form.full_name.trim().length >= 2;
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
   const phoneOk = form.phone.replace(/\D/g, '').length >= 7;
-  const acamaOk = form.acama_number.trim().length >= 3;
+  const iqamaOk = form.iqama_number.trim().length >= 3;
   const ageOk = Number(form.age) >= 12 && Number(form.age) <= 100;
   const passwordOk = form.password.length >= 8;
   const passwordMatch = form.password === form.password2;
-  const step1Ok = nameOk && emailOk && phoneOk && acamaOk && ageOk && passwordOk && passwordMatch && planId;
+  const step1Ok = nameOk && emailOk && phoneOk && iqamaOk && ageOk && passwordOk && passwordMatch && planId;
 
   const cardOk = card.num.replace(/\D/g, '').length === 16;
   const expOk = /^(0[1-9]|1[0-2])\/\d{2}$/.test(card.exp);
@@ -561,10 +561,10 @@ const MembershipSignup = () => {
 
   const proceed = () => {
     if (!step1Ok) {
-      setTouched((x) => ({ ...x, acama: 1, name: 1, email: 1, phone: 1, age: 1, password: 1, password2: 1 }));
+      setTouched((x) => ({ ...x, iqama: 1, name: 1, email: 1, phone: 1, age: 1, password: 1, password2: 1 }));
       flashErr();
       const firstRef =
-        (!acamaOk && acamaRef) ||
+        (!iqamaOk && iqamaRef) ||
         (!nameOk && nameRef) ||
         (!emailOk && emailRef) ||
         (!phoneOk && phoneRef) ||
@@ -613,7 +613,7 @@ const MembershipSignup = () => {
 
     try {
       const payload = {
-        acama_number: form.acama_number.trim(),
+        iqama_number: form.iqama_number.trim(),
         full_name: form.full_name.trim(),
         email: form.email.trim().toLowerCase(),
         phone: form.phone.trim(),
@@ -790,7 +790,7 @@ const MembershipSignup = () => {
                 {/* PANEL 1 — always open */}
                 <section
                   id="panel1"
-                  ref={acamaRef ? undefined : undefined}
+                  ref={iqamaRef ? undefined : undefined}
                   className="en-panel open"
                   data-rv
                   style={{ maxHeight: 'none', overflow: 'visible' }}
@@ -810,12 +810,12 @@ const MembershipSignup = () => {
                     <div className="en-panel-in" style={{ visibility: 'visible', opacity: 1 }}>
 
                       <div className="en-fieldgrid">
-                        <label ref={acamaRef} className={`en-field ${err('acama', !acamaOk, 'ENTER ACAMA #') ? 'bad' : ''}`}>
-                          <span className="en-flabel">ACAMA NUMBER</span>
+                        <label ref={iqamaRef} className={`en-field ${err('iqama', !iqamaOk, 'ENTER IQAMA #') ? 'bad' : ''}`}>
+                          <span className="en-flabel">IQAMA NUMBER</span>
                           <div className="en-input">
-                            <input type="text" placeholder="AC-XXXX-XXXX" value={form.acama_number}
-                              onChange={(e) => setForm({ ...form, acama_number: e.target.value.toUpperCase() })}
-                              onBlur={() => setTouched((x) => ({ ...x, acama: 1 }))} />
+                            <input type="text" inputMode="numeric" placeholder="2XXXXXXXXX" value={form.iqama_number}
+                              onChange={(e) => setForm({ ...form, iqama_number: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                              onBlur={() => setTouched((x) => ({ ...x, iqama: 1 }))} />
                             <span className="en-in-ico">{I.key(14)}</span>
                           </div>
                         </label>
@@ -1156,7 +1156,7 @@ const MembershipSignup = () => {
                   </div>
                   <div className="en-pass-name">{form.full_name}</div>
                   <div className="en-pass-row">
-                    <div><span>ACAMA #</span><b>{form.acama_number}</b></div>
+                    <div><span>IQAMA #</span><b>{form.iqama_number}</b></div>
                     <div><span>DURATION</span><b>{result?.duration_months || duration} MO</b></div>
                     <div>
                       <span>STATUS</span>
@@ -1174,8 +1174,8 @@ const MembershipSignup = () => {
                 </div>
 
                 <p className="en-success-note">
-                  Confirmation sent to <b>{form.email}</b>. Keep your Acama number safe —{' '}
-                  <b>{form.acama_number}</b> — you'll use it at gym entry.
+                  Confirmation sent to <b>{form.email}</b>. Keep your Iqama number safe —{' '}
+                  <b>{form.iqama_number}</b> — you'll use it at gym entry.
                 </p>
 
                 {result?.id && (
