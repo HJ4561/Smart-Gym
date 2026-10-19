@@ -1,10 +1,16 @@
 // src/pages/MembershipSignup.jsx
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useLang } from '../i18n/LangContext';
 import LangSwitch from '../i18n/LangSwitch';
 import publicService from '../services/publicService';
+import LiveCamera from '../components/LiveCamera';
+import MoyasarForm from '../components/MoyasarForm';
 import './MembershipSignup.css';
+
+// Read by the payment callback page after Moyasar redirects back.
+export const PENDING_KEY = 'sg-enroll-pending';
+const IQAMA_RE = /^2\d{9}$/;
 
 /* ============================================================
    HELPERS
@@ -162,23 +168,6 @@ const IMG = {
   avatar: 'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=120&q=80',
 };
 
-/* ============================================================
-   FORMATTERS
-============================================================ */
-const fmtCard = (v) => v.replace(/\D/g, '').slice(0, 16).replace(/(\d{4})(?=\d)/g, '$1 ');
-const fmtExp = (v) => {
-  const d = v.replace(/\D/g, '').slice(0, 4);
-  return d.length > 2 ? d.slice(0, 2) + '/' + d.slice(2) : d;
-};
-const brandOf = (v) => {
-  const d = v.replace(/\D/g, '');
-  if (!d) return '';
-  if (d[0] === '4') return 'VISA';
-  if (d[0] === '5') return 'MC';
-  if (d[0] === '3') return 'AMEX';
-  return '';
-};
-
 /* Plan → UI accent mapping (Basic/Pro/Elite) */
 const planVisual = (plan, index = 0) => {
   const map = [
@@ -190,53 +179,10 @@ const planVisual = (plan, index = 0) => {
 };
 
 /* ============================================================
-   CARD PREVIEW
-============================================================ */
-const CardPreview = ({ digits, name, exp, brand, flipped, t }) => {
-  const groups = useMemo(() => {
-    const out = [];
-    for (let i = 0; i < 16; i++) out.push(digits[i] || '•');
-    return [out.slice(0, 4), out.slice(4, 8), out.slice(8, 12), out.slice(12, 16)];
-  }, [digits]);
-
-  return (
-    <div className="en-cardprev">
-      <div className={`en-cp-inner ${flipped ? 'flip' : ''} ${brand ? 'b-' + brand.toLowerCase() : ''}`}>
-        <div className="en-cp-face en-cp-front">
-          <span className="en-cp-shine" aria-hidden="true" />
-          <div className="en-cp-top">
-            <span className="en-cp-chip" aria-hidden="true" />
-            <span className="en-cp-brand">{brand || t('en.cp.brand')}</span>
-          </div>
-          <div className="en-cp-num">
-            {groups.map((g, gi) => (
-              <span key={gi} className={g.includes('•') ? 'ph' : ''}>{g.join('')}</span>
-            ))}
-          </div>
-          <div className="en-cp-bottom">
-            <div><span>{t('en.cp.holder')}</span><b>{(name || t('en.cp.namePh')).toUpperCase()}</b></div>
-            <div><span>{t('en.cp.expires')}</span><b>{exp || t('en.cp.expPh')}</b></div>
-            <span className="en-cp-nfc">{I.nfc(14)}</span>
-          </div>
-        </div>
-        <div className="en-cp-face en-cp-back">
-          <span className="en-cp-stripe" aria-hidden="true" />
-          <div className="en-cp-cvcrow">
-            <span className="en-cp-sig" />
-            <span className="en-cp-cvc">•••</span>
-          </div>
-          <span className="en-cp-backnote">{t('en.cp.cvcNote')}</span>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-/* ============================================================
    COMPONENT
 ============================================================ */
 const MembershipSignup = () => {
-  const { t } = useLang();
+  const { t, lang } = useLang();
 
   const [bootPct, setBootPct] = useState(0);
   const [boot, setBoot] = useState(false);
@@ -264,26 +210,19 @@ const MembershipSignup = () => {
     password2: '',
   });
   const [vectors, setVectors] = useState([]);
-  const [photoFile, setPhotoFile] = useState(null);
-  const [photoPreview, setPhotoPreview] = useState('');
+  const [photoFile, setPhotoFile] = useState(null);   // live camera capture
 
   const [duration, setDuration] = useState(1);
-  const [payMethod, setPayMethod] = useState('card');
-  const [card, setCard] = useState({ num: '', exp: '', cvc: '', zip: '' });
-  const [autoRenew, setAutoRenew] = useState(true);
   const [agree, setAgree] = useState(false);
 
   const [touched, setTouched] = useState({});
   const [flash, setFlash] = useState(false);
   const [processing, setProcessing] = useState(false);
-  const [done, setDone] = useState(false);
   const [submitError, setSubmitError] = useState('');
-  const [result, setResult] = useState(null);
+  // Set once the registration exists: { regId, params (Moyasar form), inputs it was created from }
+  const [checkout, setCheckout] = useState(null);
   const [sumOpen, setSumOpen] = useState(true);
   const [occ, setOcc] = useState(42);
-  const [cvcFocus, setCvcFocus] = useState(false);
-
-  const fileInputRef = useRef(null);
 
   /* ---------- Load plans ---------- */
   useEffect(() => {
@@ -326,7 +265,6 @@ const MembershipSignup = () => {
 
   const tweenPrice = useTween(price, 700);
   const passText = useDecode('PASS #PENDING', boot);
-  const doneText = useDecode(t('en.ok.pass'), done);
 
   /* ---------- i18n-driven static arrays ---------- */
   const NODES = [
@@ -374,30 +312,29 @@ const MembershipSignup = () => {
   const ageRef = useRef(null);
   const passwordRef = useRef(null);
   const password2Ref = useRef(null);
-  const numRef = useRef(null);
-  const expRef = useRef(null);
-  const cvcRef = useRef(null);
-  const zipRef = useRef(null);
+  const photoRef = useRef(null);
   const agreeRef = useRef(null);
+  const payRef = useRef(null);
 
   /* ---------- Validation ---------- */
   const nameOk = form.full_name.trim().length >= 2;
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
   const phoneOk = form.phone.replace(/\D/g, '').length >= 7;
-  const iqamaOk = form.iqama_number.trim().length >= 3;
+  const iqamaOk = IQAMA_RE.test(form.iqama_number);
   const ageOk = Number(form.age) >= 12 && Number(form.age) <= 100;
   const passwordOk = form.password.length >= 8;
   const passwordMatch = form.password === form.password2;
-  const step1Ok = nameOk && emailOk && phoneOk && iqamaOk && ageOk && passwordOk && passwordMatch && planId;
+  const photoOk = !!photoFile;
+  const step1Ok = nameOk && emailOk && phoneOk && iqamaOk && ageOk && passwordOk && passwordMatch && photoOk && planId;
+  const step2Ok = step1Ok && agree;
 
-  const cardOk = card.num.replace(/\D/g, '').length === 16;
-  const expOk = /^(0[1-9]|1[0-2])\/\d{2}$/.test(card.exp);
-  const cvcOk = /^\d{3,4}$/.test(card.cvc);
-  const zipOk = card.zip.trim().length >= 3;
-  const step2Ok = step1Ok && cardOk && expOk && cvcOk && zipOk && agree;
-
-  const brand = brandOf(card.num);
-  const cardDigits = card.num.replace(/\s/g, '');
+  /* ---------- Any change after registering invalidates the checkout ---------- */
+  const activeCheckout = checkout
+    && checkout.inputs.form === form
+    && checkout.inputs.planId === planId
+    && checkout.inputs.duration === duration
+    && checkout.inputs.photoFile === photoFile
+    ? checkout : null;
 
   /* ---------- Draft persistence (exclude password) ---------- */
   useEffect(() => {
@@ -412,15 +349,15 @@ const MembershipSignup = () => {
     } catch { /* ignore */ }
   }, []);
 
+  // Cleared by the payment callback page once payment is confirmed.
   useEffect(() => {
-    if (done) { localStorage.removeItem('sg-enroll-draft'); return; }
     try {
       const { password, password2, ...safeForm } = form;
       localStorage.setItem('sg-enroll-draft', JSON.stringify({
         form: safeForm, vectors, planId, duration,
       }));
     } catch { /* ignore */ }
-  }, [form, vectors, planId, duration, done]);
+  }, [form, vectors, planId, duration]);
 
   /* ---------- Boot ---------- */
   useEffect(() => {
@@ -561,7 +498,7 @@ const MembershipSignup = () => {
 
   const proceed = () => {
     if (!step1Ok) {
-      setTouched((x) => ({ ...x, iqama: 1, name: 1, email: 1, phone: 1, age: 1, password: 1, password2: 1 }));
+      setTouched((x) => ({ ...x, iqama: 1, name: 1, email: 1, phone: 1, age: 1, password: 1, password2: 1, photo: 1 }));
       flashErr();
       const firstRef =
         (!iqamaOk && iqamaRef) ||
@@ -571,6 +508,7 @@ const MembershipSignup = () => {
         (!ageOk && ageRef) ||
         (!passwordOk && passwordRef) ||
         (!passwordMatch && password2Ref) ||
+        (!photoOk && photoRef) ||
         null;
       if (firstRef) focusField(firstRef, 60);
       return;
@@ -578,33 +516,16 @@ const MembershipSignup = () => {
     goStep(2);
   };
 
-  /* ---------- Photo handling ---------- */
-  const handlePhoto = (file) => {
-    if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      setSubmitError('Photo must be an image file.');
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setSubmitError('Photo must be under 5MB.');
-      return;
-    }
-    setPhotoFile(file);
-    setPhotoPreview(URL.createObjectURL(file));
-    setSubmitError('');
-  };
-
-  const onFilePick = (e) => handlePhoto(e.target.files?.[0]);
-
-  /* ---------- Submit ---------- */
+  /* ---------- Submit: create (or refresh) the registration, then show Moyasar ---------- */
   const submit = async () => {
-    if (processing || done) return;
+    if (processing) return;
+    if (activeCheckout) { focusField(payRef, 0); return; }
 
+    if (!step1Ok) { goStep(1); proceed(); return; }
     if (!step2Ok) {
-      setTouched((x) => ({ ...x, num: 1, exp: 1, cvc: 1, zip: 1, agree: 1 }));
+      setTouched((x) => ({ ...x, agree: 1 }));
       flashErr();
-      const target = !cardOk ? numRef : !expOk ? expRef : !cvcOk ? cvcRef : !zipOk ? zipRef : agreeRef;
-      focusField(target, 60);
+      focusField(agreeRef, 60);
       return;
     }
 
@@ -626,10 +547,22 @@ const MembershipSignup = () => {
       };
 
       const data = await publicService.register(payload, photoFile);
-      setResult(data);
-      setDone(true);
-      setSumOpen(true);
-      requestAnimationFrame(() => formsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+      try {
+        sessionStorage.setItem(PENDING_KEY, JSON.stringify({
+          regId: data.id,
+          full_name: payload.full_name,
+          email: payload.email,
+          iqama_number: payload.iqama_number,
+          plan_name: plan.display_name,
+          duration_months: payload.duration_months,
+        }));
+      } catch { /* ignore — callback page falls back to a generic message */ }
+      setCheckout({
+        regId: data.id,
+        params: data.payment,
+        inputs: { form, planId, duration, photoFile },
+      });
+      focusField(payRef, 80);
     } catch (e) {
       setSubmitError(e.message || 'Submission failed. Please try again.');
       flashErr();
@@ -638,9 +571,14 @@ const MembershipSignup = () => {
     }
   };
 
-  const primary = () => (done ? null : step === 1 ? proceed() : submit());
-  const paybarOff = done || processing;
-  const hudPct = done ? 100 : step2Ok ? 92 : step1Ok ? 58 : step === 2 ? 40 : 12;
+  const attachPayment = useCallback(
+    (paymentId) => publicService.attachPayment(activeCheckout?.regId, paymentId),
+    [activeCheckout?.regId],
+  );
+
+  const primary = () => (step === 1 ? proceed() : submit());
+  const paybarOff = processing;
+  const hudPct = activeCheckout ? 92 : step2Ok ? 80 : step1Ok ? 58 : step === 2 ? 40 : 12;
   const err = (k, bad, msg) => (touched[k] && bad ? msg : null);
 
   const PLANS_FOR_SWITCH = plansData.slice(0, 3);
@@ -663,17 +601,15 @@ const MembershipSignup = () => {
       )}
 
       {/* HUD */}
-      {!done && (
-        <aside className="en-hud" aria-label="Enrollment progress">
-          <button type="button" className={`en-hud-node ${step === 1 ? 'on' : 'done'}`}
-            onClick={() => step !== 1 && goStep(1)} aria-label="Go to step 1">01</button>
-          <span className="en-hud-line"><i style={{ height: `${hudPct}%` }} /></span>
-          <button type="button"
-            className={`en-hud-node ${step === 2 ? 'on' : ''}`}
-            onClick={() => step !== 2 && goStep(2)} aria-label="Go to step 2">02</button>
-          <span className="en-hud-pct"><b>{hudPct}</b>%<i>{t('en.hud.pct')}</i></span>
-        </aside>
-      )}
+      <aside className="en-hud" aria-label="Enrollment progress">
+        <button type="button" className={`en-hud-node ${step === 1 ? 'on' : 'done'}`}
+          onClick={() => step !== 1 && goStep(1)} aria-label="Go to step 1">01</button>
+        <span className="en-hud-line"><i style={{ height: `${hudPct}%` }} /></span>
+        <button type="button"
+          className={`en-hud-node ${step === 2 ? 'on' : ''}`}
+          onClick={() => step !== 2 && goStep(2)} aria-label="Go to step 2">02</button>
+        <span className="en-hud-pct"><b>{hudPct}</b>%<i>{t('en.hud.pct')}</i></span>
+      </aside>
 
       {/* HEADER */}
       <header className="hdr" ref={hdrRef}>
@@ -750,8 +686,8 @@ const MembershipSignup = () => {
 
           <div className="en-steps" data-rv style={{ '--d': '180ms' }}>
             <span className="en-steps-line" aria-hidden="true">
-              <i style={{ width: `${done ? 100 : step === 2 ? 100 : step1Ok ? 50 : 0}%` }} />
-              <u style={{ left: `${done ? 100 : step === 2 ? 100 : step1Ok ? 50 : 0}%` }} />
+              <i style={{ width: `${step === 2 ? 100 : step1Ok ? 50 : 0}%` }} />
+              <u style={{ left: `${step === 2 ? 100 : step1Ok ? 50 : 0}%` }} />
             </span>
 
             <button type="button"
@@ -784,8 +720,6 @@ const MembershipSignup = () => {
         <section className="en-grid" ref={formsRef}>
 
           <div className={`en-forms ${flash ? 'en-shake' : ''}`}>
-
-            {!done ? (
               <>
                 {/* PANEL 1 — always open */}
                 <section
@@ -904,34 +838,16 @@ const MembershipSignup = () => {
                         </label>
                       </div>
 
-                      {/* PHOTO */}
-                      <div className="en-vecwrap" style={{ marginTop: 18 }}>
+                      {/* LIVE PHOTO */}
+                      <div className="en-vecwrap" style={{ marginTop: 18 }} ref={photoRef}>
                         <div className="en-vec-head">
-                          <span className="en-flabel">PROFILE PHOTO (optional — used for gym entry verification)</span>
+                          <span className="en-flabel">LIVE PHOTO — used to verify your face at the gym entrance</span>
+                          {touched.photo && !photoOk && <span className="en-vec-multi" style={{ color: '#ff8a9a' }}>TAKE A PHOTO</span>}
                         </div>
-                        <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-                          {photoPreview ? (
-                            <img src={photoPreview} alt="preview"
-                              style={{ width: 72, height: 72, borderRadius: 12, objectFit: 'cover' }} />
-                          ) : (
-                            <span style={{
-                              width: 72, height: 72, borderRadius: 12,
-                              background: 'rgba(255,255,255,0.04)',
-                              display: 'grid', placeItems: 'center',
-                            }}>{I.camera(22)}</span>
-                          )}
-                          <input ref={fileInputRef} type="file" accept="image/*"
-                            onChange={onFilePick} style={{ display: 'none' }} />
-                          <button type="button" className="btn btn-ghost btn-sm"
-                            onClick={() => fileInputRef.current?.click()}>
-                            {I.upload(12)} {photoFile ? 'CHANGE PHOTO' : 'UPLOAD PHOTO'}
-                          </button>
-                          {photoFile && (
-                            <span style={{ opacity: 0.6, fontSize: 12 }}>
-                              {photoFile.name} ({Math.round(photoFile.size / 1024)} KB)
-                            </span>
-                          )}
-                        </div>
+                        <LiveCamera
+                          onCapture={(file) => { setPhotoFile(file); setTouched((x) => ({ ...x, photo: 1 })); }}
+                          invalid={!!touched.photo && !photoOk}
+                        />
                       </div>
 
                       {/* VECTOR */}
@@ -987,105 +903,7 @@ const MembershipSignup = () => {
                   <div className="en-panel-body" style={{ maxHeight: 'none', opacity: 1 }}>
                     <div className="en-panel-in" style={{ visibility: 'visible', opacity: 1 }}>
 
-                      <CardPreview
-                        digits={cardDigits}
-                        name={form.full_name}
-                        exp={card.exp}
-                        brand={brand}
-                        flipped={cvcFocus}
-                        t={t}
-                      />
-
-                      <span className="en-flabel">{t('en.p2.expressLabel')}</span>
-                      <div className="en-express">
-                        <button type="button"
-                          className={`en-express-btn ${payMethod === 'card' ? 'on' : ''}`}
-                          onClick={() => setPayMethod('card')}>
-                          {I.card(16)} CARD
-                        </button>
-                        <button type="button"
-                          className={`en-express-btn ${payMethod === 'apple' ? 'on' : ''}`}
-                          onClick={() => setPayMethod('apple')}>
-                          {I.apple(18)} {t('en.p2.apple')}
-                        </button>
-                        <button type="button"
-                          className={`en-express-btn ${payMethod === 'google' ? 'on' : ''}`}
-                          onClick={() => setPayMethod('google')}>
-                          {I.google(16)} {t('en.p2.google')}
-                        </button>
-                      </div>
-
-                      <div className="en-divider"><i />{t('en.p2.divider')}<i /></div>
-
-                      {/* Card fields — always visible when card method chosen */}
-                      <div
-                        className={`en-cardfields ${payMethod === 'card' ? 'open' : ''}`}
-                        style={
-                          payMethod === 'card'
-                            ? { maxHeight: 'none', overflow: 'visible', opacity: 1 }
-                            : {}
-                        }
-                      >
-                        <div className="en-cardfields-in">
-                          <label ref={numRef} className={`en-field ${err('num', !cardOk, t('en.err.num')) ? 'bad' : ''}`}>
-                            <span className="en-flabel">{t('en.p2.num')}</span>
-                            <div className="en-input">
-                              <input className="mono" inputMode="numeric" placeholder="4242 4242 4242 4242"
-                                value={card.num}
-                                onChange={(e) => setCard({ ...card, num: fmtCard(e.target.value) })}
-                                onBlur={() => setTouched((x) => ({ ...x, num: 1 }))} />
-                              <span className="en-brands">
-                                {['VISA', 'MC', 'AMEX'].map((b) => (
-                                  <span key={b} className={brand === b ? 'on' : ''}>{b}</span>
-                                ))}
-                              </span>
-                            </div>
-                          </label>
-
-                          <div className="en-fieldrow">
-                            <label ref={expRef} className={`en-field ${err('exp', !expOk, t('en.err.exp')) ? 'bad' : ''}`}>
-                              <span className="en-flabel">{t('en.p2.exp')}</span>
-                              <div className="en-input">
-                                <input className="mono" inputMode="numeric" placeholder="MM / YY"
-                                  value={card.exp}
-                                  onChange={(e) => setCard({ ...card, exp: fmtExp(e.target.value) })}
-                                  onBlur={() => setTouched((x) => ({ ...x, exp: 1 }))} />
-                              </div>
-                            </label>
-                            <label ref={cvcRef} className={`en-field ${err('cvc', !cvcOk, t('en.err.cvc')) ? 'bad' : ''}`}>
-                              <span className="en-flabel">{t('en.p2.cvc')}</span>
-                              <div className="en-input">
-                                <input className="mono" inputMode="numeric" placeholder="•••" type="password"
-                                  value={card.cvc}
-                                  onFocus={() => setCvcFocus(true)}
-                                  onBlur={() => { setCvcFocus(false); setTouched((x) => ({ ...x, cvc: 1 })); }}
-                                  onChange={(e) => setCard({ ...card, cvc: e.target.value.replace(/\D/g, '').slice(0, 4) })} />
-                              </div>
-                            </label>
-                            <label ref={zipRef} className={`en-field ${err('zip', !zipOk, t('en.err.zip')) ? 'bad' : ''}`}>
-                              <span className="en-flabel">{t('en.p2.zip')}</span>
-                              <div className="en-input">
-                                <input className="mono" inputMode="numeric" placeholder="10001"
-                                  value={card.zip}
-                                  onChange={(e) => setCard({ ...card, zip: e.target.value.replace(/\D/g, '').slice(0, 5) })}
-                                  onBlur={() => setTouched((x) => ({ ...x, zip: 1 }))} />
-                              </div>
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-
                       <div className="en-checks">
-                        <label className="en-check">
-                          <input type="checkbox" checked={autoRenew}
-                            onChange={(e) => setAutoRenew(e.target.checked)} />
-                          <span className="en-box">{I.check(11)}</span>
-                          <span className="en-check-txt">
-                            <b>{t('en.p2.autoB')}</b>
-                            <i>{t('en.p2.autoI.pre')}{`$${price.toFixed(2)}`}{t('en.p2.autoI.post')}</i>
-                          </span>
-                        </label>
-
                         <label ref={agreeRef} className={`en-check ${err('agree', !agree, t('en.err.agree')) ? 'bad' : ''}`}>
                           <input type="checkbox" checked={agree}
                             onChange={(e) => { setAgree(e.target.checked); setTouched((x) => ({ ...x, agree: 1 })); }} />
@@ -1108,83 +926,33 @@ const MembershipSignup = () => {
                         </div>
                       )}
 
-                      <div className="en-flowl" aria-hidden="true">
-                        <span>{I.lock(10)} {t('en.p2.tokenAes')}</span>
-                        <svg viewBox="0 0 220 8" preserveAspectRatio="none">
-                          <line className="en-flowl-track" x1="0" y1="4" x2="220" y2="4" />
-                          <line className="en-flowl-run" x1="0" y1="4" x2="220" y2="4" />
-                        </svg>
-                        <span>{t('en.p2.tokenVault')}</span>
-                      </div>
-
-                      <button type="button"
-                        className={`btn btn-red btn-lg en-cta ${processing ? 'busy' : ''}`}
-                        onClick={submit} disabled={processing}>
-                        {processing ? (
-                          <>{t('en.p2.processing')}<span className="en-dots"><i /><i /><i /></span></>
-                        ) : (
-                          <>{I.bolt(14)} {t('en.p2.submit')} {I.arrow()}</>
-                        )}
-                      </button>
+                      {!activeCheckout ? (
+                        <button type="button"
+                          className={`btn btn-red btn-lg en-cta ${processing ? 'busy' : ''}`}
+                          onClick={submit} disabled={processing}>
+                          {processing ? (
+                            <>{t('en.p2.processing')}<span className="en-dots"><i /><i /><i /></span></>
+                          ) : (
+                            <>{I.lock(14)} CONTINUE TO SECURE PAYMENT {I.arrow()}</>
+                          )}
+                        </button>
+                      ) : (
+                        <div className="en-pay" ref={payRef}>
+                          <div className="en-pay-head">
+                            <span>{I.lock(12)} PAY SAR {(activeCheckout.params.amount / 100).toFixed(2)}</span>
+                            <span>REF #{activeCheckout.regId}</span>
+                          </div>
+                          <MoyasarForm checkout={activeCheckout.params} onPaymentCreated={attachPayment} lang={lang} />
+                        </div>
+                      )}
 
                       <p className="en-secure-note">
-                        {I.lock(11)} {t('en.p2.secure')}
+                        {I.lock(11)} Card and STC Pay details are entered on Moyasar's secure form and never reach our servers.
                       </p>
                     </div>
                   </div>
                 </section>
               </>
-            ) : (
-              /* SUCCESS */
-              <section className="en-success">
-                <span className="en-success-halo" aria-hidden="true" />
-                <div className="en-success-head">
-                  <svg className="en-cdraw" viewBox="0 0 64 64" fill="none" aria-hidden="true">
-                    <circle cx="32" cy="32" r="28" pathLength="1" />
-                    <path d="M20 33.5 28.5 42 45 24" pathLength="1" />
-                  </svg>
-                  <h2>REGISTRATION RECEIVED</h2>
-                  <p className="en-success-sub">
-                    Your request is pending admin approval. You'll receive an email once it's activated.
-                  </p>
-                </div>
-
-                <div className="en-pass">
-                  <div className="en-pass-top">
-                    <span className="en-pass-brand">{I.logo(13)} SMART<em>GYM</em></span>
-                    <span className="en-pass-tier">{result?.plan_name || plan.display_name}</span>
-                  </div>
-                  <div className="en-pass-name">{form.full_name}</div>
-                  <div className="en-pass-row">
-                    <div><span>IQAMA #</span><b>{form.iqama_number}</b></div>
-                    <div><span>DURATION</span><b>{result?.duration_months || duration} MO</b></div>
-                    <div>
-                      <span>STATUS</span>
-                      <b className="ok">{(result?.status || 'PENDING').toUpperCase()}</b>
-                    </div>
-                  </div>
-                  <div className="en-pass-barcode" aria-hidden="true" />
-                  <span className="en-pass-shine" aria-hidden="true" />
-                </div>
-
-                <div className="en-success-actions">
-                  <Link to="/" className="btn btn-red">
-                    BACK TO HOME
-                  </Link>
-                </div>
-
-                <p className="en-success-note">
-                  Confirmation sent to <b>{form.email}</b>. Keep your Iqama number safe —{' '}
-                  <b>{form.iqama_number}</b> — you'll use it at gym entry.
-                </p>
-
-                {result?.id && (
-                  <p className="en-success-note" style={{ opacity: 0.6 }}>
-                    Reference #{result.id}
-                  </p>
-                )}
-              </section>
-            )}
           </div>
 
           {/* ORDER SUMMARY — unchanged */}
@@ -1193,7 +961,7 @@ const MembershipSignup = () => {
 
             <button type="button" className="en-sum-toggle" onClick={() => setSumOpen(!sumOpen)} aria-expanded={sumOpen}>
               <span>{I.card(15)} {t('en.sum.order')}</span>
-              <b>${price.toFixed(2)} {I.chev(12)}</b>
+              <b>SAR {price.toFixed(2)} {I.chev(12)}</b>
             </button>
 
             <div className="en-sum-body">
@@ -1204,7 +972,7 @@ const MembershipSignup = () => {
                 <div className="en-sum-title">
                   <h2 key={planId}>{plan.display_name}</h2>
                   <div className="en-sum-price" key={`p${planId}`}>
-                    <b>${Math.round(tweenPrice)}</b><span>{t('en.sum.perMonth')}</span>
+                    <b>SAR {Math.round(tweenPrice)}</b><span>{t('en.sum.perMonth')}</span>
                   </div>
                 </div>
                 <p className="en-sum-desc">{plan.description || '—'}</p>
@@ -1266,8 +1034,8 @@ const MembershipSignup = () => {
                 </div>
 
                 <div className="en-lines">
-                  <div className="en-line"><span>{plan.display_name} × {duration} MO</span><b>${price.toFixed(2)}</b></div>
-                  <div className="en-line"><span>Tax (0%)</span><b>$0.00</b></div>
+                  <div className="en-line"><span>{plan.display_name} × {duration} MO</span><b>SAR {price.toFixed(2)}</b></div>
+                  <div className="en-line"><span>Tax (0%)</span><b>SAR 0.00</b></div>
                 </div>
 
                 <div className="en-total" key={`t${planId}-${duration}`}>
@@ -1275,7 +1043,7 @@ const MembershipSignup = () => {
                     <span>{t('en.sum.total')}</span>
                     <em>{t('en.sum.totalSub')}</em>
                   </div>
-                  <b>${tweenPrice.toFixed(2)} <i>{t('en.sum.usd')}</i></b>
+                  <b>{tweenPrice.toFixed(2)} <i>{t('en.sum.usd')}</i></b>
                 </div>
 
                 <div className="en-sum-trust">
@@ -1376,15 +1144,13 @@ const MembershipSignup = () => {
         <Link to="/join" className="on tab-join">{I.flame(18)}<span>{t('en.tab.join')}</span></Link>
       </nav>
 
-      {!done && (
-        <div className="en-paybar">
-          <button className="en-paybar-btn" disabled={paybarOff} onClick={primary}>
-            {I.bolt(14)} {step === 1 ? t('en.paybar.step1') : t('en.paybar.step2')}
-            <b>${price.toFixed(2)}</b>
-          </button>
-          <span className="en-paybar-sec">{I.lock(10)} {t('en.paybar.sec')}</span>
-        </div>
-      )}
+      <div className="en-paybar">
+        <button className="en-paybar-btn" disabled={paybarOff} onClick={primary}>
+          {I.bolt(14)} {step === 1 ? t('en.paybar.step1') : t('en.paybar.step2')}
+          <b>SAR {price.toFixed(2)}</b>
+        </button>
+        <span className="en-paybar-sec">{I.lock(10)} {t('en.paybar.sec')}</span>
+      </div>
     </div>
   );
 };

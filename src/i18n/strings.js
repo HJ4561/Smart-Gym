@@ -850,7 +850,7 @@ export const strings = {
   'en.sum.promo': { en: 'PROMO', ar: 'عرض' },
   'en.sum.total': { en: 'TOTAL DUE TODAY', ar: 'الإجمالي المستحق اليوم' },
   'en.sum.totalSub': { en: 'IMMEDIATE PASS PROVISIONING', ar: 'تجهيز فوري للتصريح' },
-  'en.sum.usd': { en: 'USD', ar: 'USD' },
+  'en.sum.usd': { en: 'SAR', ar: 'ر.س' },
   'en.sum.trust1t': { en: '256-BIT BIOMETRIC ENCLAVE', ar: 'قبو حيوي 256 بت' },
   'en.sum.trust1d': { en: 'Hardware security level data storage', ar: 'تخزين بيانات بمستوى أمان العتاد' },
   'en.sum.trust2t': { en: '14-DAY PEAK GUARANTEE', ar: 'ضمان الذروة 14 يومًا' },

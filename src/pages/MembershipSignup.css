@@ -1818,3 +1818,89 @@
   .en-panel-body, .en-cardfields, .en-sum-body { transition: none; }
   .en-cp-inner { transition: none; }
 }
+/* ============================================================
+   LIVE CAMERA (registration photo)
+============================================================ */
+.en-cam {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 12px;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-s);
+  background: rgba(255,255,255,0.02);
+}
+.en-cam.bad { border-color: rgba(229,25,55,0.5); }
+.en-cam-stage {
+  position: relative;
+  width: 200px;
+  max-width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--r-s);
+  overflow: hidden;
+  background: rgba(255,255,255,0.04);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.en-cam-stage video,
+.en-cam-stage img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.en-cam-stage video.mirror { transform: scaleX(-1); }
+.en-cam-guide {
+  position: absolute;
+  inset: 12% 18% 16%;
+  border: 2px dashed rgba(255,255,255,0.55);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.en-cam-empty { color: var(--muted); }
+.en-cam-side {
+  flex: 1 1 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+}
+.en-cam-hint { margin: 0; font-size: 12px; line-height: 1.5; color: var(--muted); }
+.en-cam-err { margin: 0; font-size: 12px; color: #ff8a9a; }
+
+/* ============================================================
+   MOYASAR PAYMENT
+============================================================ */
+.en-pay {
+  margin-top: 6px;
+  padding: 16px;
+  border: 1px solid var(--hair);
+  border-radius: var(--r-s);
+  background: #fff;          /* Moyasar's form is styled for a light background */
+  color: #111;
+}
+.en-pay-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  font: 700 11px 'Montserrat', sans-serif;
+  letter-spacing: 0.12em;
+}
+.en-pay-error {
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(229,25,55,0.12);
+  border: 1px solid rgba(229,25,55,0.4);
+  color: #b3122b;
+  font-size: 13px;
+}
+
+/* ============================================================
+   PAYMENT CALLBACK PAGE
+============================================================ */
+.en-callback {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 40px 16px;
+}
+.en-callback .en-success { width: min(560px, 100%); }

@@ -32,8 +32,8 @@ export const publicService = {
   /**
    * Submit a new member registration.
    * @param {Object} payload — plain object with all fields
-   * @param {File|null} photoFile — optional image File
-   * @returns {Promise<Object>} the created MembershipRegistration status object
+   * @param {File} photoFile — live camera capture (required by the backend)
+   * @returns {Promise<Object>} { id, status, payment_status, payment: <Moyasar form params> }
    */
   async register(payload, photoFile = null) {
     const form = new FormData();
@@ -53,6 +53,21 @@ export const publicService = {
 
   async registrationStatus(id) {
     const { data } = await api.get(`/public/register/${id}/status/`);
+    return data;
+  },
+
+  // ============ PAYMENT (Moyasar) ============
+  /** Link a just-created Moyasar payment to its registration (from the form's on_completed). */
+  async attachPayment(registrationId, paymentId) {
+    const { data } = await api.post(`/public/register/${registrationId}/payment/attach/`, {
+      payment_id: paymentId,
+    });
+    return data;
+  },
+
+  /** Ask the backend to verify a payment with Moyasar. Returns { id, status, payment_status, payment_failure_reason }. */
+  async verifyPayment(paymentId) {
+    const { data } = await api.post('/public/payments/moyasar/verify/', { payment_id: paymentId });
     return data;
   },
 

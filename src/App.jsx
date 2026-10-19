@@ -6,6 +6,7 @@ import ServicesCatalog from './pages/ServicesCatalog';
 import InsightsBlog from './pages/InsightsBlog';
 import ContactSupport from './pages/ContactSupport';
 import MembershipSignup from './pages/MembershipSignup';
+import PaymentCallback from './pages/PaymentCallback';
 import './App.css';
 
 const ScrollManager = () => {
@@ -36,6 +37,7 @@ function App() {
         <Route path="/insights" element={<InsightsBlog />} />
         <Route path="/contact" element={<ContactSupport />} />
         <Route path="/join" element={<MembershipSignup />} />
+        <Route path="/join/payment-callback" element={<PaymentCallback />} />
       </Routes>
     </Router>
   );
