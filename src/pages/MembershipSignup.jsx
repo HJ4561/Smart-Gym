@@ -206,8 +206,6 @@ const MembershipSignup = () => {
     address: '',
     age: '',
     gender: 'male',
-    password: '',
-    password2: '',
   });
   const [vectors, setVectors] = useState([]);
   const [photoFile, setPhotoFile] = useState(null);   // live camera capture
@@ -310,8 +308,6 @@ const MembershipSignup = () => {
   const emailRef = useRef(null);
   const phoneRef = useRef(null);
   const ageRef = useRef(null);
-  const passwordRef = useRef(null);
-  const password2Ref = useRef(null);
   const photoRef = useRef(null);
   const agreeRef = useRef(null);
   const payRef = useRef(null);
@@ -322,10 +318,8 @@ const MembershipSignup = () => {
   const phoneOk = form.phone.replace(/\D/g, '').length >= 7;
   const iqamaOk = IQAMA_RE.test(form.iqama_number);
   const ageOk = Number(form.age) >= 12 && Number(form.age) <= 100;
-  const passwordOk = form.password.length >= 8;
-  const passwordMatch = form.password === form.password2;
   const photoOk = !!photoFile;
-  const step1Ok = nameOk && emailOk && phoneOk && iqamaOk && ageOk && passwordOk && passwordMatch && photoOk && planId;
+  const step1Ok = nameOk && emailOk && phoneOk && iqamaOk && ageOk && photoOk && planId;
   const step2Ok = step1Ok && agree;
 
   /* ---------- Any change after registering invalidates the checkout ---------- */
@@ -336,12 +330,12 @@ const MembershipSignup = () => {
     && checkout.inputs.photoFile === photoFile
     ? checkout : null;
 
-  /* ---------- Draft persistence (exclude password) ---------- */
+  /* ---------- Draft persistence ---------- */
   useEffect(() => {
     try {
       const d = JSON.parse(localStorage.getItem('sg-enroll-draft') || 'null');
       if (d) {
-        if (d.form) setForm((f) => ({ ...f, ...d.form, password: '', password2: '' }));
+        if (d.form) setForm((f) => ({ ...f, ...d.form }));
         if (Array.isArray(d.vectors)) setVectors(d.vectors);
         if (d.planId) setPlanId(d.planId);
         if (d.duration) setDuration(d.duration);
@@ -352,9 +346,8 @@ const MembershipSignup = () => {
   // Cleared by the payment callback page once payment is confirmed.
   useEffect(() => {
     try {
-      const { password, password2, ...safeForm } = form;
       localStorage.setItem('sg-enroll-draft', JSON.stringify({
-        form: safeForm, vectors, planId, duration,
+        form, vectors, planId, duration,
       }));
     } catch { /* ignore */ }
   }, [form, vectors, planId, duration]);
@@ -473,7 +466,7 @@ const MembershipSignup = () => {
 
   const proceed = () => {
     if (!step1Ok) {
-      setTouched((x) => ({ ...x, iqama: 1, name: 1, email: 1, phone: 1, age: 1, password: 1, password2: 1, photo: 1 }));
+      setTouched((x) => ({ ...x, iqama: 1, name: 1, email: 1, phone: 1, age: 1, photo: 1 }));
       flashErr();
       const firstRef =
         (!iqamaOk && iqamaRef) ||
@@ -481,8 +474,6 @@ const MembershipSignup = () => {
         (!emailOk && emailRef) ||
         (!phoneOk && phoneRef) ||
         (!ageOk && ageRef) ||
-        (!passwordOk && passwordRef) ||
-        (!passwordMatch && password2Ref) ||
         (!photoOk && photoRef) ||
         null;
       if (firstRef) focusField(firstRef, 60);
@@ -518,7 +509,6 @@ const MembershipSignup = () => {
         gender: form.gender,
         plan: planId,
         duration_months: Number(duration),
-        password: form.password,
       };
 
       const data = await publicService.register(payload, photoFile);
@@ -781,25 +771,6 @@ const MembershipSignup = () => {
                           </div>
                         </label>
 
-                        <label ref={passwordRef} className={`en-field ${err('password', !passwordOk, 'MIN 8 CHARACTERS') ? 'bad' : ''}`}>
-                          <span className="en-flabel">PASSWORD</span>
-                          <div className="en-input">
-                            <input type="password" placeholder="••••••••" value={form.password}
-                              onChange={(e) => setForm({ ...form, password: e.target.value })}
-                              onBlur={() => setTouched((x) => ({ ...x, password: 1 }))} />
-                            <span className="en-in-ico">{I.lock(14)}</span>
-                          </div>
-                        </label>
-
-                        <label ref={password2Ref} className={`en-field ${err('password2', !passwordMatch, 'PASSWORDS DO NOT MATCH') ? 'bad' : ''}`}>
-                          <span className="en-flabel">CONFIRM PASSWORD</span>
-                          <div className="en-input">
-                            <input type="password" placeholder="••••••••" value={form.password2}
-                              onChange={(e) => setForm({ ...form, password2: e.target.value })}
-                              onBlur={() => setTouched((x) => ({ ...x, password2: 1 }))} />
-                            <span className="en-in-ico">{I.lock(14)}</span>
-                          </div>
-                        </label>
 
                         <label className="en-field" style={{ gridColumn: '1 / -1' }}>
                           <span className="en-flabel">ADDRESS</span>

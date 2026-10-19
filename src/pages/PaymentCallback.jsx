@@ -90,7 +90,7 @@ const PaymentCallback = () => {
                 </svg>
                 <h2>PAYMENT CONFIRMED</h2>
                 <p className="en-success-sub">
-                  Your registration is now pending admin approval. You'll receive an email once your membership is activated.
+                  Your registration is now pending admin approval. Once it's approved we'll email your login details, including a temporary password to change on first login.
                 </p>
               </div>
 
