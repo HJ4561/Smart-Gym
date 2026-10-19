@@ -495,31 +495,6 @@ const FacilitiesShowcase = () => {
     };
   }, []);
 
-  /* Custom cursor */
-  useEffect(() => {
-    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const dot = document.querySelector('.cur-dot');
-    const ring = document.querySelector('.cur-ring');
-    if (!dot || !ring) return;
-    const rp = { x: innerWidth / 2, y: innerHeight / 2 };
-    let raf;
-    const loop = () => {
-      rp.x += (cursorTarget.current.x - rp.x) * 0.16;
-      rp.y += (cursorTarget.current.y - rp.y) * 0.16;
-      dot.style.transform = `translate(${cursorTarget.current.x}px, ${cursorTarget.current.y}px)`;
-      ring.style.transform = `translate(${rp.x}px, ${rp.y}px)`;
-      raf = requestAnimationFrame(loop);
-    };
-    raf = requestAnimationFrame(loop);
-    const over = (e) => {
-      const hit = e.target.closest('a, button, input, .facility-card, .bkm-slot');
-      ring.classList.toggle('big', !!hit);
-      dot.classList.toggle('big', !!hit);
-    };
-    window.addEventListener('mouseover', over, { passive: true });
-    return () => { cancelAnimationFrame(raf); window.removeEventListener('mouseover', over); };
-  }, []);
 
   useEffect(() => {
     document.body.classList.toggle('no-scroll', menuOpen);
@@ -555,8 +530,6 @@ const FacilitiesShowcase = () => {
   return (
     <div className={`sg ${menuOpen ? 'menu-open' : ''}`}>
       <div className="rails" aria-hidden="true"><i /><i /></div>
-      <span className="cur-dot" aria-hidden="true" />
-      <span className="cur-ring" aria-hidden="true" />
 
       {!bootGone && (
         <div className={`boot ${boot ? 'is-done' : ''}`} aria-hidden="true">

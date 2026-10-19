@@ -7,6 +7,7 @@ import InsightsBlog from './pages/InsightsBlog';
 import ContactSupport from './pages/ContactSupport';
 import MembershipSignup from './pages/MembershipSignup';
 import PaymentCallback from './pages/PaymentCallback';
+import CustomCursor from './components/CustomCursor';
 import './App.css';
 
 const ScrollManager = () => {
@@ -30,6 +31,7 @@ function App() {
   return (
     <Router>
       <ScrollManager />
+      <CustomCursor />
       <Routes>
         <Route path="/" element={<SmartGymHome />} />
         <Route path="/facilities" element={<FacilitiesShowcase />} />

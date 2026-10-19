@@ -102,22 +102,7 @@ h1, h2, h3 { font-family: 'Bebas Neue', sans-serif; font-weight: 400; }
   .rails i:last-child { right: 26px; }
 }
 
-/* ============ CUSTOM CURSOR ============ */
-.cur-dot, .cur-ring { display: none; }
-@media (hover: hover) and (pointer: fine) {
-  .sg, .sg a, .sg button, .sg input, .sg .row-item, .sg .svc-in, .sg .fc-card { cursor: none; }
-  .cur-dot {
-    display: block; position: fixed; top: -3px; left: -3px; z-index: 200; pointer-events: none;
-    width: 6px; height: 6px; border-radius: 50%; background: var(--red);
-  }
-  .cur-ring {
-    display: block; position: fixed; top: -18px; left: -18px; z-index: 199; pointer-events: none;
-    width: 36px; height: 36px; border-radius: 50%;
-    border: 1px solid rgba(229, 25, 55, 0.55);
-    transition: width .3s var(--ez), height .3s var(--ez), top .3s var(--ez), left .3s var(--ez), border-color .3s ease;
-  }
-  .cur-ring.big { width: 56px; height: 56px; top: -28px; left: -28px; border-color: rgba(229,25,55,0.9); }
-}
+/* Custom cursor: see src/components/CustomCursor.css */
 
 /* ============ PRELOADER ============ */
 .boot {
