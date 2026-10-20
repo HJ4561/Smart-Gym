@@ -2,6 +2,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useLang } from '../i18n/LangContext';
+import { imageSet } from '../i18n/images';
+import useCollection from '../hooks/useCollection';
+import usePageTitle from '../hooks/usePageTitle';
 import LangSwitch from '../i18n/LangSwitch';
 import './SmartGymHome.css';
 
@@ -37,6 +40,14 @@ const Counter = ({ to, active, decimals = 0, duration = 1500 }) => {
     return () => cancelAnimationFrame(raf);
   }, [active, to, duration]);
   return <>{decimals ? v.toFixed(decimals) : Math.round(v).toLocaleString('en-US')}</>;
+};
+
+/* Animated number from an admin-edited text: leading number counts up, the rest is kept. */
+const CountText = ({ value, active }) => {
+  const m = /^([\d][\d,]*(?:\.\d+)?)(.*)$/.exec(String(value).trim());
+  if (!m) return <>{value}</>;
+  const decimals = (m[1].split('.')[1] || '').length;
+  return <><Counter to={parseFloat(m[1].replace(/,/g, ''))} active={active} decimals={decimals} />{m[2]}</>;
 };
 
 const useVelocitySkew = () => {
@@ -129,19 +140,13 @@ const I = {
 /* ============================================================
    STATIC IMAGES
 ============================================================ */
-const IMG_SECTORS = {
-  s1: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA23dg0PwZOBLQHFc5L3CR2koDzZ1qCtI2wt0JljLuzWtCzeGO68fwgDV7qXQgzKxDWKCiti668_e4ByD5btmEGMpGqu_U8lV5ijrvOn5eAuLUNyUUKLpZWINudKPQcwOTezUIpXEXcTuzGumCpH8Q6pWIRGC7Xj-gg95KfkINm3lxdWhmXlqlMDniXSXc_3ozdnLJ0EyKdjn8axgsuhCVcvwMjVDcpnDrNQS2y7b0wzuYrBuDdsAtqYQ',
-  s2: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDOsUJYZow6PF3XJwRRZJamWbc9ddU024GZW5iYBS5YlX4EO3DDUAI3dHyFQDoMdJvbtf7R38ks3-k6qzgQCZI3O_fh8AlKbR2yz3z-vvjax-8pbzy1dL8MmpX_CBEVnFXLJMN1iYuyI040STPXWEzoFvokbtgqeVqQmgXzQm81YFcKwPRKKxmHZ1rsG5fWLzKw3zV5oN83c3X0ZyTSUA8_9j4e_FdcLtOesXhJpPxFWvFCBOXElsKRMg',
-  s3: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDV3CcgN4obCgXaNL3RUNHyf7x2YtvrhJxgbTM4wNNCyA1usAhn_KDjDwELDf84TfRTpL1XkdyU8ZUtARAGnprs3EKZDEJ51h2jc-2m5hsMpfzYpk2AULO5c1yneYCggtcTjPWXCpT_ps8x8zbPxqZc8l6XR4DVu7nGp631CfhhqejxKIfo186fJTeZMjG5wgJeybWGckIhfiGt5e0LVdjMSYt-kqgWzqX9phNvE5WUmgXR32Thq9fFCA',
-  s4: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDk5Oh9gpB5ucwXqc_fWi5ICkJK3Y4l6P_-ng0_hFqqNi3-XJgiH4Kq3JApvU80yRgokkd7VoIugJmYt1j_iBTZno_W5pcu-kFgsrfJ_6im9GXAwYcdyCHwWPSzAuMnBkiSnFqix318GepuMGsqTRVJQL3xIhRP-bD2EjxntBw8xaBjzmlbETZCo0JHIziPUuTM5ejE2NDZyBjeIWmt8AYVEypg5dWvCPAnQBvlkpjaRpsra11V68EPVg',
-};
-const IMG_WHY = {
+const IMG_WHY_DEFAULT = {
   r1: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=800&q=80',
   r2: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=800&q=80',
   r3: 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=800&q=80',
   r4: 'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=800&q=80',
 };
-const IMG_SERVICES = {
+const IMG_SERVICES_DEFAULT = {
   1: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA90ADfv5q015Hdv9wJrN2PR94gE-LFkELeKTwdRgiQX8excZjoGepxEN01fxEOkcmxVAOJokVXvHi6HSkoMoTwipTWaG7D1R8Uqz9elu-sp7XiXEudLEW9IP328m3CWd3HpdZZOwTqjoT7yitwdqfx02m-Jj13qvdqhNxEKWBt1qvanvvDy2zZ2nvN-iDRV5m6X-iksFc08fT4FEPCr88r9WLaK0mfI1VL9atxsaGz4gYqdm_ihVrx4Q',
   2: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBlS-alKP7soJN2iWlTU8Xx_RWinLindW32FbUrPxCs9yAasAE6chTuxhM2gVTBY_qBhU8baKOt-zYpNTgoCca3ucS77oMHMwcjX9O_uQOb63hZgY5AEDY_KrEuh93vzQKMrd0WlmLMYyDw5w14YqedkF8-YBVCU5VZKcWhMWA1cv_JUyZqtOaoaaQZzEmlY33KIM3HKQyjMHpllP7KG_906MZNrJN0MWToCEnmJIf-rvvfP7F1KPNfDw',
   3: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCRHsZzWN12JER7VHxDXN-RPFk-D4rsmxLnxmnYbUnZLgB--rhdlx4hNHByEVsF4Vlw_PMROWl278isfWsLDgyaA3dlssuYkhdjCIVEZ1v82sYcCZvlTbGy9Z6nShFxsbg-T43tUFti9JLYLGCwIIqZMUdkR8eioWw5PZanlFnCknEK_He41RjJJbW603phHF_Gk_NKLpNUI1Yi07iSqVhKlEZw-hg3E0LD4GY_cZ1tdj6HOCkW-OBxeQ',
@@ -154,7 +159,11 @@ const IMG_SERVICES = {
 ============================================================ */
 
 const SmartGymHome = () => {
-  const { t } = useLang();
+  const { t, img, pick } = useLang();
+  usePageTitle();
+  // Admin-managed images (Public Website → Site Content), built-in ones as fallback.
+  const IMG_WHY = imageSet(img, 'home.why', IMG_WHY_DEFAULT);
+  const IMG_SERVICES = imageSet(img, 'home.services', IMG_SERVICES_DEFAULT);
 
   const [bootPct, setBootPct] = useState(0);
   const [boot, setBoot] = useState(false);
@@ -198,10 +207,10 @@ const SmartGymHome = () => {
   ];
 
   const floorStats = [
-    { label: t('home.floor.tile1.lab'), value: 418,   unit: t('home.floor.tile1.unit'), badge: t('home.floor.tile1.badge'), live: true, pct: 72,  note: t('home.floor.tile1.note') },
-    { label: t('home.floor.tile2.lab'), value: 41320, unit: t('home.floor.tile2.unit'), badge: t('home.floor.tile2.badge'),           pct: 64,  note: t('home.floor.tile2.note') },
-    { label: t('home.floor.tile3.lab'), value: 386,   unit: t('home.floor.tile3.unit'), badge: t('home.floor.tile3.badge'),           pct: 81,  note: t('home.floor.tile3.note') },
-    { label: t('home.floor.tile4.lab'), value: 0,     unit: t('home.floor.tile4.unit'), badge: t('home.floor.tile4.badge'),           pct: 100, note: t('home.floor.tile4.note') },
+    { label: t('home.floor.tile1.lab'), value: t('home.floor.tile1.v'),   unit: t('home.floor.tile1.unit'), badge: t('home.floor.tile1.badge'), live: true, pct: 72,  note: t('home.floor.tile1.note') },
+    { label: t('home.floor.tile2.lab'), value: t('home.floor.tile2.v'), unit: t('home.floor.tile2.unit'), badge: t('home.floor.tile2.badge'),           pct: 64,  note: t('home.floor.tile2.note') },
+    { label: t('home.floor.tile3.lab'), value: t('home.floor.tile3.v'),   unit: t('home.floor.tile3.unit'), badge: t('home.floor.tile3.badge'),           pct: 81,  note: t('home.floor.tile3.note') },
+    { label: t('home.floor.tile4.lab'), value: t('home.floor.tile4.v'),     unit: t('home.floor.tile4.unit'), badge: t('home.floor.tile4.badge'),           pct: 100, note: t('home.floor.tile4.note') },
   ];
 
   const floorFeed = [
@@ -228,31 +237,29 @@ const SmartGymHome = () => {
     [t('home.why.c3.v'), t('home.why.c3.l')],
   ];
 
-  const sectors = [
-    { title: t('home.fc.s1.t'), tag: t('home.fc.s1.tag'), badge: t('home.fc.s1.b'), desc: t('home.fc.s1.d'),
-      meta: [[t('home.fc.s1.m1k'), '6/8'], [t('home.fc.s1.m2k'), '26°C'], [t('home.fc.s1.m3k'), '99.8%']],
-      cta: t('home.fc.s1.cta'), img: IMG_SECTORS.s1 },
-    { title: t('home.fc.s2.t'), tag: t('home.fc.s2.tag'), badge: t('home.fc.s2.b'), desc: t('home.fc.s2.d'),
-      meta: [[t('home.fc.s2.m1k'), '11/16'], [t('home.fc.s2.m2k'), 'ACTIVE'], [t('home.fc.s2.m3k'), 'ON-SITE']],
-      cta: t('home.fc.s2.cta'), img: IMG_SECTORS.s2 },
-    { title: t('home.fc.s3.t'), tag: t('home.fc.s3.tag'), badge: t('home.fc.s3.b'), desc: t('home.fc.s3.d'),
-      meta: [[t('home.fc.s3.m1k'), '45°C'], [t('home.fc.s3.m2k'), '-110°C'], [t('home.fc.s3.m3k'), '4°C']],
-      cta: t('home.fc.s3.cta'), img: IMG_SECTORS.s3 },
-    { title: t('home.fc.s4.t'), tag: t('home.fc.s4.tag'), badge: t('home.fc.s4.b'), desc: t('home.fc.s4.d'),
-      meta: [[t('home.fc.s4.m1k'), '15/18'], [t('home.fc.s4.m2k'), 'CALIB'], [t('home.fc.s4.m3k'), 'SYNC']],
-      cta: t('home.fc.s4.cta'), img: IMG_SECTORS.s4 },
-  ];
+  // Facilities preview: the first four from the admin portal (Public Website → Lists → Facilities).
+  const { items: facilityItems } = useCollection('facilities');
+  const sectors = (facilityItems || []).slice(0, 4).map((item) => {
+    const d = item.data || {};
+    return {
+      id: item.id,
+      title: pick(d.title), tag: pick(d.tag), desc: pick(d.description),
+      badge: [t('fac.card.status'), pick(d.status)].filter(Boolean).join(' '),
+      meta: [1, 2, 3].map((n) => [pick(d[`stat${n}_label`]), d[`stat${n}_value`]]).filter(([k, v]) => k && v),
+      img: item.image_url,
+    };
+  });
 
   const services = [
-    { id: 1, category: 'biometrics', title: t('svc.card1.title'), price: '$120', per: t('svc.card1.per'), duration: '60 MINS', badge: 'DIAGNOSTIC',
+    { id: 1, category: 'biometrics', title: t('svc.card1.title'), price: t('svc.card1.price'), per: t('svc.card1.per'), duration: t('svc.card1.duration'), badge: t('svc.card1.tag'),
       tags: [t('svc.card1.tag1'), t('svc.card1.tag2'), t('svc.card1.tag3')], description: t('svc.card1.desc'), image: IMG_SERVICES[1] },
-    { id: 2, category: 'coaching', title: t('svc.card2.title'), price: '$95', per: '/ HR', duration: '75 MINS', badge: 'TIER 1 ELITE',
+    { id: 2, category: 'coaching', title: t('svc.card2.title'), price: t('svc.card2.price'), per: t('svc.card2.per'), duration: t('svc.card2.duration'), badge: t('svc.card2.tag'),
       tags: [t('svc.card2.tag1'), t('svc.card2.tag2'), t('svc.card2.tag3')], description: t('svc.card2.desc'), image: IMG_SERVICES[2] },
-    { id: 3, category: 'nutrition', title: t('svc.card3.title'), price: '$149', per: t('svc.card3.per'), duration: 'MONTHLY', badge: 'BIO-FUEL',
+    { id: 3, category: 'nutrition', title: t('svc.card3.title'), price: t('svc.card3.price'), per: t('svc.card3.per'), duration: t('svc.card3.duration'), badge: t('svc.card3.tag'),
       tags: [t('svc.card3.tag1'), t('svc.card3.tag2'), t('svc.card3.tag3')], description: t('svc.card3.desc'), image: IMG_SERVICES[3] },
-    { id: 4, category: 'combat', title: t('svc.card4.title'), price: '$40', per: '/ DROP-IN', duration: '50 MINS', badge: 'HIGH INTENSITY',
+    { id: 4, category: 'combat', title: t('svc.card4.title'), price: t('svc.card4.price'), per: t('svc.card4.per'), duration: t('svc.card4.duration'), badge: t('svc.card4.tag'),
       tags: [t('svc.card4.tag1'), t('svc.card4.tag2'), t('svc.card4.tag3')], description: t('svc.card4.desc'), image: IMG_SERVICES[4] },
-    { id: 5, category: 'recovery', title: t('svc.card5.title'), price: '$65', per: t('svc.card5.per'), duration: '45 MINS', badge: 'BIO-HACK',
+    { id: 5, category: 'recovery', title: t('svc.card5.title'), price: t('svc.card5.price'), per: t('svc.card5.per'), duration: t('svc.card5.duration'), badge: t('svc.card5.tag'),
       tags: [t('svc.card5.tag1'), t('svc.card5.tag2'), t('svc.card5.tag3')], description: t('svc.card5.desc'), image: IMG_SERVICES[5] },
   ];
 
@@ -292,10 +299,10 @@ const SmartGymHome = () => {
   const planIncludes = [t('home.pr.inc1'), t('home.pr.inc2'), t('home.pr.inc3'), t('home.pr.inc4')];
 
   const proofStats = [
-    { n: 99.4, d: 1, suffix: '%',  title: t('home.pf.s1.t'), desc: t('home.pf.s1.d') },
-    { n: 1.4,  d: 1, suffix: 'M+', title: t('home.pf.s2.t'), desc: t('home.pf.s2.d'), red: true },
-    { raw: '24/7',                 title: t('home.pf.s3.t'), desc: t('home.pf.s3.d') },
-    { n: 0.02, d: 2, suffix: 's',  title: t('home.pf.s4.t'), desc: t('home.pf.s4.d'), red: true },
+    { v: t('home.pf.s1.v'), title: t('home.pf.s1.t'), desc: t('home.pf.s1.d') },
+    { v: t('home.pf.s2.v'), title: t('home.pf.s2.t'), desc: t('home.pf.s2.d'), red: true },
+    { v: t('home.pf.s3.v'), title: t('home.pf.s3.t'), desc: t('home.pf.s3.d') },
+    { v: t('home.pf.s4.v'), title: t('home.pf.s4.t'), desc: t('home.pf.s4.d'), red: true },
   ];
 
   const QUOTE = t('home.pf.quote');
@@ -669,17 +676,17 @@ const SmartGymHome = () => {
           <div className="cluster" ref={heroClusterRef} aria-hidden="true">
             <div className="cl-card">
               <div className="cl-top"><span>{t('home.cl.hr')}</span><b className="live-dot" />{t('home.cl.live')}</div>
-              <div className="cl-num">142<em>{t('home.cl.hrUnit')}</em></div>
+              <div className="cl-num">{t('home.cl.hrVal')}<em>{t('home.cl.hrUnit')}</em></div>
               <div className="cl-pulse"><span /><span /><span /><span /><span /></div>
             </div>
             <div className="cl-card cl-2">
               <div className="cl-top"><span>{t('home.cl.pwr')}</span><b>{t('home.cl.pwrZone')}</b></div>
-              <div className="cl-num">940<em>{t('home.cl.pwrUnit')}</em></div>
+              <div className="cl-num">{t('home.cl.pwrVal')}<em>{t('home.cl.pwrUnit')}</em></div>
               <div className="cl-bar"><i /></div>
             </div>
             <div className="cl-card cl-3">
               <div className="cl-top"><span>{t('home.cl.cap')}</span></div>
-              <div className="cl-row"><span className="cl-pct">82%</span><span className="cl-sub">{t('home.cl.capSub')}</span></div>
+              <div className="cl-row"><span className="cl-pct">{t('home.cl.capVal')}</span><span className="cl-sub">{t('home.cl.capSub')}</span></div>
               <div className="cl-bar"><i style={{ '--w': '82%' }} /></div>
             </div>
           </div>
@@ -743,7 +750,7 @@ const SmartGymHome = () => {
                   <span className="tile-lab">{s.label}</span>
                   <span className={`pill ${s.live ? 'live' : ''}`}>{s.badge}</span>
                 </div>
-                <div className="tile-num"><Counter to={s.value} active={isVisible.stats} /><em>{s.unit}</em></div>
+                <div className="tile-num"><CountText value={s.value} active={isVisible.stats} /><em>{s.unit}</em></div>
                 <div className="tile-bar"><span style={{ '--w': `${s.pct}%` }} /></div>
                 <p className="tile-note">{s.note}</p>
               </div>
@@ -834,8 +841,8 @@ const SmartGymHome = () => {
             </article>
 
             {sectors.map((f, i) => (
-              <article className="fc-card" key={f.title}>
-                <div className="fc-img"><img src={f.img} alt={f.title} loading="lazy" /></div>
+              <article className="fc-card" key={f.id}>
+                <div className="fc-img">{f.img && <img src={f.img} alt={f.title} loading="lazy" />}</div>
                 <span className="fc-badge">{f.badge}</span>
                 <span className="fc-idx">S/{String(i + 1).padStart(2, '0')}</span>
                 <div className="fc-meta">
@@ -848,7 +855,7 @@ const SmartGymHome = () => {
                         <span className="fc-stat" key={k}><b>{v}</b><small>{k}</small></span>
                       ))}
                     </div>
-                    <button className="btn btn-red btn-sm">{f.cta}</button>
+                    <Link to="/facilities" className="btn btn-red btn-sm">{t('home.fc.cta')}</Link>
                   </div>
                 </div>
               </article>
@@ -978,7 +985,7 @@ const SmartGymHome = () => {
                   <h3>{s.title}</h3>
                   <p>{s.description}</p>
                   <div className="svc-tags">{s.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
-                  <button className="btn btn-red btn-sm svc-book">{t('home.svc.book')} {I.arrow(10)}</button>
+                  <Link to="/services" className="btn btn-red btn-sm svc-book">{t('home.svc.book')} {I.arrow(10)}</Link>
                 </div>
               </div>
             </article>
@@ -1068,7 +1075,7 @@ const SmartGymHome = () => {
               <div className="pstat" key={s.title} style={{ '--i': i }}>
                 <div className="pstat-in">
                   <b style={s.red ? { color: 'var(--red)' } : null}>
-                    {s.raw ?? <><Counter to={s.n} active={isVisible.proof} decimals={s.d} />{s.suffix}</>}
+                    <CountText value={s.v} active={isVisible.proof} />
                   </b>
                   <span>{s.title}</span>
                   <p>{s.desc}</p>
@@ -1087,10 +1094,10 @@ const SmartGymHome = () => {
           <span className="cta-eyebrow"><i />{t('home.cta.eyebrow')}</span>
           <h2>{t('home.cta.h2a')}<br /><em>{t('home.cta.h2b')}</em></h2>
           <p>{t('home.cta.desc')}</p>
-          <button className="btn btn-red btn-lg cta-btn" ref={ctaBtnRef}
+          <Link to="/join" className="btn btn-red btn-lg cta-btn" ref={ctaBtnRef}
             onMouseMove={magMove} onMouseLeave={magLeave}>
             {t('home.cta.btn')} {I.arrow()}
-          </button>
+          </Link>
         </div>
       </section>
 

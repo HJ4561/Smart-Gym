@@ -5,6 +5,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import publicService from '../services/publicService';
+import { useLang } from '../i18n/LangContext';
+import usePageTitle from '../hooks/usePageTitle';
 import { PENDING_KEY } from './MembershipSignup';
 import './MembershipSignup.css';
 
@@ -16,11 +18,13 @@ const readPending = () => {
 };
 
 const PaymentCallback = () => {
+  const { t } = useLang();
+  usePageTitle(t('pay.title'));
   const [params] = useSearchParams();
   const paymentId = params.get('id');
   const [state, setState] = useState(paymentId ? 'verifying' : 'error'); // verifying | paid | pending | failed | error
   const [info, setInfo] = useState(null);
-  const [message, setMessage] = useState(paymentId ? '' : 'No payment reference was returned.');
+  const [message, setMessage] = useState(paymentId ? null : { key: 'pay.msg.noRef' });
   const [summary] = useState(readPending);
 
   useEffect(() => {
@@ -43,30 +47,32 @@ const PaymentCallback = () => {
         }
         if (data.payment_status === 'failed') {
           setState('failed');
-          setMessage(data.payment_failure_reason || 'The payment was declined.');
+          setMessage(data.payment_failure_reason ? { text: data.payment_failure_reason } : { key: 'pay.msg.declined' });
           return;
         }
         if (data.payment_failure_reason) {
           // Paid but flagged for manual review (e.g. amount mismatch) — don't keep polling.
           setState('pending');
-          setMessage('Your payment needs a manual check by our team. We will contact you by email.');
+          setMessage({ key: 'pay.msg.review' });
           return;
         }
       } catch (e) {
         if (!alive) return;
-        setMessage(e.message);
+        setMessage({ text: e.message });
       }
       if (n + 1 < MAX_POLLS) {
         timer = setTimeout(() => attempt(n + 1), POLL_MS);
       } else {
         setState('pending');
-        setMessage((m) => m || 'We are still confirming your payment. You will receive an email once it is confirmed — no need to pay again.');
+        setMessage((m) => m || { key: 'pay.msg.stillConfirming' });
       }
     };
 
     attempt(0);
     return () => { alive = false; clearTimeout(timer); };
   }, [paymentId]);
+
+  const messageText = message?.key ? t(message.key) : message?.text;
 
   return (
     <div className="sg">
@@ -76,8 +82,8 @@ const PaymentCallback = () => {
 
           {state === 'verifying' && (
             <div className="en-success-head">
-              <h2>CONFIRMING PAYMENT<span className="en-dots"><i /><i /><i /></span></h2>
-              <p className="en-success-sub">Verifying your payment with Moyasar. Please don't close this page.</p>
+              <h2>{t('pay.verifying.title')}<span className="en-dots"><i /><i /><i /></span></h2>
+              <p className="en-success-sub">{t('pay.verifying.sub')}</p>
             </div>
           )}
 
@@ -88,9 +94,9 @@ const PaymentCallback = () => {
                   <circle cx="32" cy="32" r="28" pathLength="1" />
                   <path d="M20 33.5 28.5 42 45 24" pathLength="1" />
                 </svg>
-                <h2>PAYMENT CONFIRMED</h2>
+                <h2>{t('pay.paid.title')}</h2>
                 <p className="en-success-sub">
-                  Your registration is now pending admin approval. You'll receive an email once your membership is activated.
+                  {t('pay.paid.sub')}
                 </p>
               </div>
 
@@ -102,9 +108,9 @@ const PaymentCallback = () => {
                   </div>
                   <div className="en-pass-name">{summary.full_name}</div>
                   <div className="en-pass-row">
-                    <div><span>IQAMA #</span><b>{summary.iqama_number}</b></div>
-                    <div><span>DURATION</span><b>{summary.duration_months} MO</b></div>
-                    <div><span>STATUS</span><b className="ok">PENDING APPROVAL</b></div>
+                    <div><span>{t('pay.pass.iqama')}</span><b>{summary.iqama_number}</b></div>
+                    <div><span>{t('pay.pass.duration')}</span><b>{summary.duration_months} {t('en.field.months')}</b></div>
+                    <div><span>{t('pay.pass.status')}</span><b className="ok">{t('pay.pass.pending')}</b></div>
                   </div>
                   <div className="en-pass-barcode" aria-hidden="true" />
                   <span className="en-pass-shine" aria-hidden="true" />
@@ -113,8 +119,8 @@ const PaymentCallback = () => {
 
               {summary && (
                 <p className="en-success-note">
-                  Confirmation goes to <b>{summary.email}</b>. Keep your Iqama number —{' '}
-                  <b>{summary.iqama_number}</b> — you'll use it at gym entry.
+                  {t('pay.note.pre')} <b>{summary.email}</b>. {t('pay.note.iqama')}{' '}
+                  <b>{summary.iqama_number}</b> {t('pay.note.post')}
                 </p>
               )}
             </>
@@ -122,38 +128,38 @@ const PaymentCallback = () => {
 
           {state === 'pending' && (
             <div className="en-success-head">
-              <h2>PAYMENT PROCESSING</h2>
-              <p className="en-success-sub">{message}</p>
+              <h2>{t('pay.pending.title')}</h2>
+              <p className="en-success-sub">{messageText}</p>
             </div>
           )}
 
           {state === 'failed' && (
             <div className="en-success-head">
-              <h2>PAYMENT NOT COMPLETED</h2>
-              <p className="en-success-sub">{message}</p>
+              <h2>{t('pay.failed.title')}</h2>
+              <p className="en-success-sub">{messageText}</p>
               <p className="en-success-note">
-                You haven't been charged for this attempt. Your details are saved — go back, retake your photo and try again.
+                {t('pay.failed.note')}
               </p>
             </div>
           )}
 
           {state === 'error' && (
             <div className="en-success-head">
-              <h2>SOMETHING WENT WRONG</h2>
-              <p className="en-success-sub">{message}</p>
+              <h2>{t('pay.error.title')}</h2>
+              <p className="en-success-sub">{messageText}</p>
             </div>
           )}
 
           <div className="en-success-actions">
             {state === 'failed' || state === 'error' ? (
-              <Link to="/join" className="btn btn-red">TRY AGAIN</Link>
+              <Link to="/join" className="btn btn-red">{t('pay.retry')}</Link>
             ) : (
-              <Link to="/" className="btn btn-red">BACK TO HOME</Link>
+              <Link to="/" className="btn btn-red">{t('en.ok.backHome')}</Link>
             )}
           </div>
 
           {info?.id && (
-            <p className="en-success-note" style={{ opacity: 0.6 }}>Reference #{info.id}</p>
+            <p className="en-success-note" style={{ opacity: 0.6 }}>{t('en.ok.reference')} #{info.id}</p>
           )}
         </section>
       </main>

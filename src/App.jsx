@@ -7,6 +7,8 @@ import InsightsBlog from './pages/InsightsBlog';
 import ContactSupport from './pages/ContactSupport';
 import MembershipSignup from './pages/MembershipSignup';
 import PaymentCallback from './pages/PaymentCallback';
+import ArticlePage from './pages/ArticlePage';
+import NotFound from './pages/NotFound';
 import CustomCursor from './components/CustomCursor';
 import './App.css';
 
@@ -37,9 +39,11 @@ function App() {
         <Route path="/facilities" element={<FacilitiesShowcase />} />
         <Route path="/services" element={<ServicesCatalog />} />
         <Route path="/insights" element={<InsightsBlog />} />
+        <Route path="/insights/:slug" element={<ArticlePage />} />
         <Route path="/contact" element={<ContactSupport />} />
         <Route path="/join" element={<MembershipSignup />} />
         <Route path="/join/payment-callback" element={<PaymentCallback />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );

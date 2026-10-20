@@ -3,6 +3,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import './ServicesCatalog.css';
 import { useLang } from '../i18n/LangContext';
+import { imageSet } from '../i18n/images';
+import usePageTitle from '../hooks/usePageTitle';
 import LangSwitch from '../i18n/LangSwitch';
 
 /* ============================================================
@@ -114,7 +116,7 @@ const I = {
 /* ============================================================
    STATIC IMAGES
 ============================================================ */
-const IMG = {
+const IMG_DEFAULT = {
   heroBg:    'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1920&q=80',
   vo2:       'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=1400&q=80',
   coaching:  'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=1400&q=80',
@@ -127,7 +129,10 @@ const IMG = {
    COMPONENT
 ============================================================ */
 const ServicesCatalog = () => {
-  const { t } = useLang();
+  const { t, img } = useLang();
+  usePageTitle(t('nav.services'));
+  // Admin-managed images (Public Website → Site Content), built-in ones as fallback.
+  const IMG = imageSet(img, 'svc', IMG_DEFAULT);
 
   const [bootPct, setBootPct] = useState(0);
   const [boot, setBoot] = useState(false);
@@ -183,9 +188,9 @@ const ServicesCatalog = () => {
   const services = [
     {
       id: 1, category: 'diagnostics',
-      labLabel: t('svc.card1.lab'), labName: 'KORTEX-V5', labMeta: t('svc.card1.meta'),
+      labLabel: t('svc.card1.lab'), labName: t('svc.card1.labName'), labMeta: t('svc.card1.meta'),
       tag: t('svc.card1.tag'), title: t('svc.card1.title'),
-      price: '$120', per: t('svc.card1.per'),
+      price: t('svc.card1.price'), per: t('svc.card1.per'),
       duration: t('svc.card1.duration'), durationIcon: I.timer, ctaIcon: I.calendar, cta: t('svc.card1.cta'),
       desc: t('svc.card1.desc'),
       tags: [t('svc.card1.tag1'), t('svc.card1.tag2'), t('svc.card1.tag3')],
@@ -193,9 +198,9 @@ const ServicesCatalog = () => {
     },
     {
       id: 2, category: 'coaching',
-      labLabel: t('svc.card2.lab'), labName: 'RPE-9 MATRIX', labMeta: t('svc.card2.meta'),
+      labLabel: t('svc.card2.lab'), labName: t('svc.card2.labName'), labMeta: t('svc.card2.meta'),
       tag: t('svc.card2.tag'), title: t('svc.card2.title'),
-      price: '$160', per: t('svc.card2.per'),
+      price: t('svc.card2.price'), per: t('svc.card2.per'),
       duration: t('svc.card2.duration'), durationIcon: I.dumbbell, ctaIcon: I.arrow, cta: t('svc.card2.cta'),
       desc: t('svc.card2.desc'),
       tags: [t('svc.card2.tag1'), t('svc.card2.tag2'), t('svc.card2.tag3')],
@@ -203,9 +208,9 @@ const ServicesCatalog = () => {
     },
     {
       id: 3, category: 'nutrition',
-      labLabel: t('svc.card3.lab'), labName: 'DEXA 360', labMeta: t('svc.card3.meta'),
+      labLabel: t('svc.card3.lab'), labName: t('svc.card3.labName'), labMeta: t('svc.card3.meta'),
       tag: t('svc.card3.tag'), title: t('svc.card3.title'),
-      price: '$95', per: t('svc.card3.per'),
+      price: t('svc.card3.price'), per: t('svc.card3.per'),
       duration: t('svc.card3.duration'), durationIcon: I.hub, ctaIcon: I.arrow, cta: t('svc.card3.cta'),
       desc: t('svc.card3.desc'),
       tags: [t('svc.card3.tag1'), t('svc.card3.tag2'), t('svc.card3.tag3')],
@@ -213,9 +218,9 @@ const ServicesCatalog = () => {
     },
     {
       id: 4, category: 'combat',
-      labLabel: t('svc.card4.lab'), labName: '650 PSI PEAK', labMeta: t('svc.card4.meta'),
+      labLabel: t('svc.card4.lab'), labName: t('svc.card4.labName'), labMeta: t('svc.card4.meta'),
       tag: t('svc.card4.tag'), title: t('svc.card4.title'),
-      price: '$140', per: t('svc.card4.per'),
+      price: t('svc.card4.price'), per: t('svc.card4.per'),
       duration: t('svc.card4.duration'), durationIcon: I.mma, ctaIcon: I.mma, cta: t('svc.card4.cta'),
       desc: t('svc.card4.desc'),
       tags: [t('svc.card4.tag1'), t('svc.card4.tag2'), t('svc.card4.tag3')],
@@ -223,9 +228,9 @@ const ServicesCatalog = () => {
     },
     {
       id: 5, category: 'recovery',
-      labLabel: t('svc.card5.lab'), labName: '4X WASHOUT', labMeta: t('svc.card5.meta'),
+      labLabel: t('svc.card5.lab'), labName: t('svc.card5.labName'), labMeta: t('svc.card5.meta'),
       tag: t('svc.card5.tag'), title: t('svc.card5.title'),
-      price: '$85', per: t('svc.card5.per'),
+      price: t('svc.card5.price'), per: t('svc.card5.per'),
       duration: t('svc.card5.duration'), durationIcon: I.cryo, ctaIcon: I.cryo, cta: t('svc.card5.cta'),
       desc: t('svc.card5.desc'),
       tags: [t('svc.card5.tag1'), t('svc.card5.tag2'), t('svc.card5.tag3')],
@@ -234,8 +239,8 @@ const ServicesCatalog = () => {
   ];
 
   const sideTelemetry = [
-    { l: t('svc.tel.lactate'), v: '3.8 mmol/L' },
-    { l: t('svc.tel.maxO2'),   v: '58.4 ml/kg' },
+    { l: t('svc.tel.lactate'), v: t('svc.tel.lactateV') },
+    { l: t('svc.tel.maxO2'),   v: t('svc.tel.maxO2V') },
     { l: t('svc.tel.chamber'), v: t('svc.tel.ready'), hl: true },
   ];
 
@@ -842,9 +847,9 @@ const ServicesCatalog = () => {
                         <span className="svc-dur-ico">{s.durationIcon}</span>
                         {s.duration}
                       </span>
-                      <button className="btn btn-red btn-sm svc-cta">
+                      <Link to="/join" className="btn btn-red btn-sm svc-cta">
                         {s.ctaIcon} {s.cta}
-                      </button>
+                      </Link>
                     </div>
                   </div>
 
@@ -1047,7 +1052,7 @@ const ServicesCatalog = () => {
           <span className="cta-eyebrow"><i />{t('svc.cta.eyebrow')}</span>
           <h2>{t('svc.cta.h2a')}<br /><em>{t('svc.cta.h2b')}</em></h2>
           <p>{t('svc.cta.desc')}</p>
-          <button className="btn btn-red btn-lg cta-btn">{t('svc.cta.btn')} {I.arrow()}</button>
+          <Link to="/join" className="btn btn-red btn-lg cta-btn">{t('svc.cta.btn')} {I.arrow()}</Link>
         </div>
       </section>
 

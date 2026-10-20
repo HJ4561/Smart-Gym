@@ -1353,3 +1353,10 @@
   .ct-faq-a { transition: none; }
   .ct-urgent-track i { transition: none; }
 }
+/* Contact form: honeypot + send error */
+.ct-hp { position: absolute; left: -10000px; width: 1px; height: 1px; opacity: 0; }
+.ct-error {
+  margin-top: 12px;
+  color: var(--red);
+  font-size: 13px;
+}

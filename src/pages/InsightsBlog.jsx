@@ -2,6 +2,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useLang } from '../i18n/LangContext';
+import { imageSet } from '../i18n/images';
+import usePageTitle from '../hooks/usePageTitle';
+import useCollection from '../hooks/useCollection';
+import publicService from '../services/publicService';
+import { articleView } from './articleView';
 import LangSwitch from '../i18n/LangSwitch';
 import './InsightsBlog.css';
 
@@ -108,21 +113,21 @@ const I = {
 /* ============================================================
    STATIC IMAGES
 ============================================================ */
-const IMG = {
+const IMG_DEFAULT = {
   heroBg: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1920&q=80',
   featured: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1600&q=80',
-  vo2: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=900&q=80',
-  nutrition: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=900&q=80',
-  cryo: 'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?auto=format&fit=crop&w=900&q=80',
-  grip: 'https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?auto=format&fit=crop&w=900&q=80',
-  squat: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80',
 };
+
+const PAGE_SIZE = 9;
 
 /* ============================================================
    COMPONENT
 ============================================================ */
 const InsightsBlog = () => {
-  const { t } = useLang();
+  const { t, img, pick, lang } = useLang();
+  usePageTitle(t('nav.insights'));
+  // Admin-managed images (Public Website → Site Content), built-in ones as fallback.
+  const IMG = imageSet(img, 'ins', IMG_DEFAULT);
 
   const [bootPct, setBootPct] = useState(0);
   const [boot, setBoot] = useState(false);
@@ -130,10 +135,12 @@ const InsightsBlog = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [bookmarks, setBookmarks] = useState(new Set());
   const [subscribed, setSubscribed] = useState(false);
   const [email, setEmail] = useState('');
   const [isVisible, setIsVisible] = useState({});
+  const [page, setPage] = useState(1);
+  const [subscribing, setSubscribing] = useState(false);
+  const [subscribeError, setSubscribeError] = useState('');
 
   const sectionRefs = useRef([]);
   const kickText = useDecode(t('ins.kicker'), true);
@@ -159,7 +166,7 @@ const InsightsBlog = () => {
   ];
 
   const filterCats = [
-    { id: 'all',         label: t('ins.f.all'),       count: 48 },
+    { id: 'all',         label: t('ins.f.all') },
     { id: 'training',    label: t('ins.f.training') },
     { id: 'nutrition',   label: t('ins.f.nutrition') },
     { id: 'recovery',    label: t('ins.f.recovery') },
@@ -168,44 +175,18 @@ const InsightsBlog = () => {
   ];
 
   const trendingMetrics = [
-    { l: t('ins.m1.l'), v: '1,420',  sub: t('ins.m1.s'), icon: I.sensor },
-    { l: t('ins.m2.l'), v: '94.2',   sub: t('ins.m2.s'), icon: I.equalizer },
-    { l: t('ins.m3.l'), v: '3.8L',   sub: t('ins.m3.s'), icon: I.flame },
-    { l: t('ins.m4.l'), v: '+18.4%', sub: t('ins.m4.s'), icon: I.bolt },
+    { l: t('ins.m1.l'), v: t('ins.m1.v'), sub: t('ins.m1.s'), icon: I.sensor },
+    { l: t('ins.m2.l'), v: t('ins.m2.v'), sub: t('ins.m2.s'), icon: I.equalizer },
+    { l: t('ins.m3.l'), v: t('ins.m3.v'), sub: t('ins.m3.s'), icon: I.flame },
+    { l: t('ins.m4.l'), v: t('ins.m4.v'), sub: t('ins.m4.s'), icon: I.bolt },
   ];
 
-  const articles = [
-    {
-      id: 1, category: 'biometrics',
-      tag: t('ins.art1.tag'), date: t('ins.art1.date'),
-      title: t('ins.art1.title'), desc: t('ins.art1.desc'), read: t('ins.art1.read'),
-      img: IMG.vo2, authorInitials: 'MK', author: t('ins.art1.author'), line: t('ins.art1.line'),
-    },
-    {
-      id: 2, category: 'nutrition',
-      tag: t('ins.art2.tag'), date: t('ins.art2.date'),
-      title: t('ins.art2.title'), desc: t('ins.art2.desc'), read: t('ins.art2.read'),
-      img: IMG.nutrition, authorInitials: 'SL', author: t('ins.art2.author'), line: t('ins.art2.line'),
-    },
-    {
-      id: 3, category: 'recovery',
-      tag: t('ins.art3.tag'), date: t('ins.art3.date'),
-      title: t('ins.art3.title'), desc: t('ins.art3.desc'), read: t('ins.art3.read'),
-      img: IMG.cryo, authorInitials: 'JT', author: t('ins.art3.author'), line: t('ins.art3.line'),
-    },
-    {
-      id: 4, category: 'training',
-      tag: t('ins.art4.tag'), date: t('ins.art4.date'),
-      title: t('ins.art4.title'), desc: t('ins.art4.desc'), read: t('ins.art4.read'),
-      img: IMG.grip, authorInitials: 'DR', author: t('ins.art4.author'), line: t('ins.art4.line'),
-    },
-    {
-      id: 5, category: 'training',
-      tag: t('ins.art5.tag'), date: t('ins.art5.date'),
-      title: t('ins.art5.title'), desc: t('ins.art5.desc'), read: t('ins.art5.read'),
-      img: IMG.squat, authorInitials: 'EV', author: t('ins.art5.author'), line: t('ins.art5.line'),
-    },
-  ];
+  // Articles come from the admin portal (Public Website → Lists → Articles).
+  // The first one is featured; the rest fill the grid.
+  const { items, loading, error } = useCollection('articles');
+  const allArticles = (items || []).map((item) => articleView(item, { pick, lang, t }));
+  const featured = allArticles[0] || null;
+  const articles = allArticles.slice(1);
 
   const taxonomyTags = [
     t('ins.tax.t1'), t('ins.tax.t2'), t('ins.tax.t3'),
@@ -318,15 +299,6 @@ const InsightsBlog = () => {
     return () => document.body.classList.remove('no-scroll');
   }, [menuOpen]);
 
-  const toggleBookmark = (id) => {
-    setBookmarks((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
   const filtered = articles.filter((a) => {
     const cat = activeFilter === 'all' || a.category === activeFilter;
     const q = searchQuery.toLowerCase().trim();
@@ -337,10 +309,37 @@ const InsightsBlog = () => {
     return cat && s;
   });
 
-  const handleSubscribe = (e) => {
+  const countFor = (id) => (id === 'all' ? articles.length : articles.filter((a) => a.category === id).length);
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const visible = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const goToPage = (n) => {
+    setPage(n);
+    sectionRefs.current[4]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  // Newsletter sign-ups land in the admin portal's Website Inbox.
+  const handleSubscribe = async (e) => {
     e.preventDefault();
-    if (!email.trim()) return;
-    setSubscribed(true);
+    const address = email.trim();
+    if (!address || subscribing) return;
+    setSubscribing(true);
+    setSubscribeError('');
+    try {
+      await publicService.contact({
+        name: address,
+        email: address,
+        topic: 'newsletter',
+        message: 'Newsletter subscription request from the Insights page.',
+        lang,
+        website: '',
+      });
+      setSubscribed(true);
+    } catch (err) {
+      setSubscribeError(err.message || t('ins.news.error'));
+    } finally {
+      setSubscribing(false);
+    }
   };
 
   return (
@@ -457,9 +456,9 @@ const InsightsBlog = () => {
             {filterCats.map((f, i) => (
               <button key={f.id} style={{ '--i': i }}
                 className={`fchip ${activeFilter === f.id ? 'on' : ''}`}
-                onClick={() => setActiveFilter(f.id)}>
+                onClick={() => { setActiveFilter(f.id); setPage(1); }}>
                 {f.label}
-                {f.count && <em>{f.count}</em>}
+                {items && <em>{countFor(f.id)}</em>}
               </button>
             ))}
           </div>
@@ -469,7 +468,7 @@ const InsightsBlog = () => {
             <input
               placeholder={t('ins.search.ph')}
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
             />
             {searchQuery && (
               <button type="button" className="ins-search-clear"
@@ -481,53 +480,48 @@ const InsightsBlog = () => {
       </section>
 
       {/* FEATURED */}
+      {featured && (
       <section data-section="featured" ref={(el) => (sectionRefs.current[2] = el)}
         className={`ins-featured-wrap ${isVisible.featured ? 'is-in' : ''}`}>
         <div className="ins-featured">
           <div className="ins-featured-media">
-            <img src={IMG.featured} alt="Featured article" />
+            <img src={featured.img || IMG.featured} alt={featured.title} />
             <div className="ins-featured-media-shade" />
             <div className="ins-featured-badge">
               <span className="ins-featured-badge-dot" />
               {t('ins.feat.badge')}
             </div>
-            <div className="ins-featured-spark">
-              <span className="ins-featured-spark-lab">{t('ins.feat.sparkLab')}</span>
-              <span className="ins-featured-spark-val">1.18 m/s</span>
-              <svg className="ins-featured-spark-svg" viewBox="0 0 64 16" fill="none" preserveAspectRatio="none">
-                <path d="M1 12L12 8L22 14L34 3L45 9L63 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
           </div>
 
           <div className="ins-featured-body">
             <div className="ins-featured-tags">
-              <span className="ins-featured-tag">{t('ins.feat.tag')}</span>
+              {featured.tag && <span className="ins-featured-tag">{featured.tag}</span>}
               <span className="ins-featured-lab">{t('ins.feat.certified')}</span>
             </div>
 
-            <h2 className="ins-featured-title">{t('ins.feat.title')}</h2>
+            <h2 className="ins-featured-title">{featured.title}</h2>
 
-            <p className="ins-featured-desc">{t('ins.feat.desc')}</p>
+            <p className="ins-featured-desc">{featured.desc}</p>
 
             <div className="ins-featured-foot">
               <div className="ins-featured-author">
-                <div className="ins-featured-avatar">EV</div>
+                {featured.author && <div className="ins-featured-avatar">{featured.authorInitials}</div>}
                 <div>
-                  <div className="ins-featured-author-name">{t('ins.feat.author')}</div>
-                  <div className="ins-featured-author-meta">{t('ins.feat.authorMeta')}</div>
+                  <div className="ins-featured-author-name">{featured.author}</div>
+                  <div className="ins-featured-author-meta">{[featured.line, featured.read].filter(Boolean).join(' • ')}</div>
                 </div>
               </div>
-              <span className="ins-featured-date">{t('ins.feat.date')}</span>
+              <span className="ins-featured-date">{featured.date}</span>
             </div>
 
-            <a href="#read-protocol" className="ins-featured-cta">
+            <Link to={featured.href} className="ins-featured-cta">
               <span>{t('ins.feat.cta')}</span>
               {I.arrow()}
-            </a>
+            </Link>
           </div>
         </div>
       </section>
+      )}
 
       {/* TRENDING METRICS */}
       <section data-section="metrics" ref={(el) => (sectionRefs.current[3] = el)}
@@ -561,12 +555,12 @@ const InsightsBlog = () => {
         </div>
 
         <div className="ins-grid">
-          {filtered.map((a, i) => (
+          {visible.map((a, i) => (
             <article className="ins-card" key={a.id} style={{ '--i': i }}>
               <div className="ins-card-media">
-                <img src={a.img} alt={a.title} loading="lazy" />
-                <span className="ins-card-tag">{a.tag}</span>
-                <span className="ins-card-read">{a.read}</span>
+                {a.img && <img src={a.img} alt={a.title} loading="lazy" />}
+                {a.tag && <span className="ins-card-tag">{a.tag}</span>}
+                {a.read && <span className="ins-card-read">{a.read}</span>}
               </div>
               <div className="ins-card-body">
                 <div className="ins-card-meta">
@@ -579,17 +573,17 @@ const InsightsBlog = () => {
               </div>
               <div className="ins-card-foot">
                 <div className="ins-card-author">
-                  <div className="ins-card-avatar">{a.authorInitials}</div>
+                  {a.author && <div className="ins-card-avatar">{a.authorInitials}</div>}
                   <span>{a.author}</span>
                 </div>
-                <a href={`#read-${a.id}`} className="ins-card-readmore">
+                <Link to={a.href} className="ins-card-readmore">
                   {t('ins.card.read')} {I.chevron}
-                </a>
+                </Link>
               </div>
             </article>
           ))}
 
-          <article className="ins-card ins-card-newsletter" style={{ '--i': filtered.length }}>
+          <article className="ins-card ins-card-newsletter" style={{ '--i': visible.length }}>
             <span className="ins-news-topline" />
             <div className="ins-news-head">
               <span className="ins-news-ico">{I.mail}</span>
@@ -616,8 +610,9 @@ const InsightsBlog = () => {
                   <input type="checkbox" defaultChecked />
                   <span>{t('ins.news.checkbox')}</span>
                 </label>
-                <button type="submit" className="ins-news-cta">
-                  {t('ins.news.cta')} {I.bolt}
+                {subscribeError && <p className="ins-news-error" role="alert">{subscribeError}</p>}
+                <button type="submit" className="ins-news-cta" disabled={subscribing}>
+                  {subscribing ? t('ins.news.sending') : t('ins.news.cta')} {I.bolt}
                 </button>
               </form>
             )}
@@ -629,42 +624,47 @@ const InsightsBlog = () => {
           </article>
         </div>
 
-        {filtered.length === 0 && (
+        {!items && (
+          <p className="ins-empty" role="status">{loading ? t('ins.loading') : error ? t('ins.error') : ''}</p>
+        )}
+
+        {items && filtered.length === 0 && (
           <div className="ins-empty">
             <div className="ins-empty-ico">{I.search}</div>
             <h3>{t('ins.empty.title')}</h3>
             <p>{t('ins.empty.desc')}</p>
             <button
               className="btn btn-ghost btn-sm"
-              onClick={() => { setSearchQuery(''); setActiveFilter('all'); }}
+              onClick={() => { setSearchQuery(''); setActiveFilter('all'); setPage(1); }}
             >{t('ins.empty.reset')}</button>
           </div>
         )}
       </section>
 
       {/* PAGINATION */}
+      {pageCount > 1 && (
       <section data-section="pagination" ref={(el) => (sectionRefs.current[5] = el)}
         className={`ins-pagination ${isVisible.pagination ? 'is-in' : ''}`}>
         <div className="ins-pag-inner">
           <div className="ins-pag-left">
             <span className="ins-pag-label">
-              {t('ins.pag.showing')} {String(Math.min(filtered.length, 6)).padStart(2, '0')} {t('ins.pag.of')} 48 {t('ins.pag.total')}
+              {t('ins.pag.showing')} {String(visible.length).padStart(2, '0')} {t('ins.pag.of')} {filtered.length} {t('ins.pag.total')}
             </span>
-            <div className="ins-pag-bar"><i style={{ width: '12.5%' }} /></div>
+            <div className="ins-pag-bar"><i style={{ width: `${(currentPage / pageCount) * 100}%` }} /></div>
           </div>
           <div className="ins-pag-right">
-            <button className="ins-pag-btn">{t('ins.pag.prev')}</button>
+            <button className="ins-pag-btn" disabled={currentPage === 1} onClick={() => goToPage(currentPage - 1)}>{t('ins.pag.prev')}</button>
             <div className="ins-pag-nums">
-              <span className="on">1</span>
-              <span>2</span>
-              <span>3</span>
-              <span className="dots">…</span>
-              <span>8</span>
+              {Array.from({ length: pageCount }, (_, i) => i + 1).map((n) => (
+                <button type="button" key={n} className={n === currentPage ? 'on' : ''}
+                  aria-current={n === currentPage ? 'page' : undefined} onClick={() => goToPage(n)}>{n}</button>
+              ))}
             </div>
-            <button className="ins-pag-btn primary">{t('ins.pag.next')}</button>
+            <button className="ins-pag-btn primary" disabled={currentPage === pageCount} onClick={() => goToPage(currentPage + 1)}>{t('ins.pag.next')}</button>
           </div>
         </div>
       </section>
+      )}
 
       {/* TAXONOMY */}
       <section data-section="tags" ref={(el) => (sectionRefs.current[6] = el)}
@@ -675,7 +675,8 @@ const InsightsBlog = () => {
         </div>
         <div className="ins-tax-tags">
           {taxonomyTags.map((tag, i) => (
-            <button key={tag} className="ins-tax-tag" style={{ '--i': i }}>{tag}</button>
+            <button key={tag} className="ins-tax-tag" style={{ '--i': i }}
+              onClick={() => { setSearchQuery(tag); setActiveFilter('all'); goToPage(1); }}>{tag}</button>
           ))}
         </div>
       </section>
@@ -688,7 +689,7 @@ const InsightsBlog = () => {
           <span className="cta-eyebrow"><i />{t('ins.cta.eyebrow')}</span>
           <h2>{t('ins.cta.h2a')}<br /><em>{t('ins.cta.h2b')}</em></h2>
           <p>{t('ins.cta.desc')}</p>
-          <button className="btn btn-red btn-lg cta-btn">{t('ins.cta.btn')} {I.arrow()}</button>
+          <Link to="/join" className="btn btn-red btn-lg cta-btn">{t('ins.cta.btn')} {I.arrow()}</Link>
         </div>
       </section>
 

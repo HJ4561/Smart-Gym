@@ -2,6 +2,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useLang } from '../i18n/LangContext';
+import { imageSet } from '../i18n/images';
+import usePageTitle from '../hooks/usePageTitle';
+import { strings } from '../i18n/strings';
+import publicService from '../services/publicService';
 import LangSwitch from '../i18n/LangSwitch';
 import './ContactSupport.css';
 
@@ -90,7 +94,7 @@ const I = {
 /* ============================================================
    STATIC IMAGES
 ============================================================ */
-const IMG = {
+const IMG_DEFAULT = {
   heroBg: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1920&q=80',
   map: 'https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=1400&q=80',
   hub1: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=900&q=80',
@@ -102,7 +106,10 @@ const IMG = {
    COMPONENT
 ============================================================ */
 const ContactSupport = () => {
-  const { t } = useLang();
+  const { t, img, lang } = useLang();
+  usePageTitle(t('nav.contact'));
+  // Admin-managed images (Public Website → Site Content), built-in ones as fallback.
+  const IMG = imageSet(img, 'ct', IMG_DEFAULT);
 
   const [bootPct, setBootPct] = useState(0);
   const [boot, setBoot] = useState(false);
@@ -115,8 +122,9 @@ const ContactSupport = () => {
   const [openFaq, setOpenFaq] = useState(-1);
   const [sent, setSent] = useState(false);
   const [msg, setMsg] = useState('');
-  const [file, setFile] = useState(null);
-  const [occ, setOcc] = useState(74);
+  const [form, setForm] = useState({ name: '', phone: '', email: '', website: '' });
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState('');
   const [activeSection, setActiveSection] = useState('hero');
 
   const sectionRefs = useRef([]);
@@ -168,8 +176,8 @@ const ContactSupport = () => {
   };
 
   const quickActions = [
-    { label: t('ct.qa.call'),    sub: t('ct.qa.callSub'),  meta: t('ct.qa.callMeta'), icon: I.phone, href: 'tel:+18005559090' },
-    { label: t('ct.qa.wa'),      sub: t('ct.qa.waSub'),    meta: t('ct.qa.waMeta'), metaCls: 'live', icon: I.chat, href: 'https://wa.me/18005559090' },
+    { label: t('ct.qa.call'),    sub: t('ct.qa.callSub'),  meta: t('ct.qa.callMeta'), icon: I.phone, href: `tel:${t('ct.phone').replace(/[^\d+]/g, '')}` },
+    { label: t('ct.qa.wa'),      sub: t('ct.qa.waSub'),    meta: t('ct.qa.waMeta'), metaCls: 'live', icon: I.chat, href: `https://wa.me/${t('ct.whatsapp').replace(/\D/g, '')}` },
     { label: t('ct.qa.gps'),     sub: t('ct.qa.gpsSub'),   meta: t('ct.qa.gpsMeta'), icon: I.pin, href: '#map' },
     { label: t('ct.qa.mail'),    sub: t('ct.qa.mailSub'),  meta: t('ct.qa.mailMeta'), icon: I.mail, href: '#enquiry' },
   ];
@@ -228,14 +236,6 @@ const ContactSupport = () => {
     sectionRefs.current.forEach((s) => s && obs.observe(s));
     return () => obs.disconnect();
   }, [boot]);
-
-  /* Live occupancy */
-  useEffect(() => {
-    const id = setInterval(() => {
-      setOcc((o) => Math.max(40, Math.min(92, o + (Math.random() < 0.5 ? -1 : 1) * (1 + Math.floor(Math.random() * 3)))));
-    }, 3000);
-    return () => clearInterval(id);
-  }, []);
 
   /* Master rAF */
   useEffect(() => {
@@ -358,9 +358,34 @@ const ContactSupport = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const setField = (name) => (e) => setForm((f) => ({ ...f, [name]: e.target.value }));
+
+  // English label of a topic key, so the admin inbox reads the same in both site languages.
+  const english = (key) => strings[key]?.en || t(key);
+
+  // Messages land in the admin portal's Website Inbox.
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSent(true);
+    if (sending || sent) return;
+    setSending(true);
+    setSendError('');
+    try {
+      await publicService.contact({
+        name: form.name.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        topic: english(`ct.cat.${category}`),
+        subtopic: english(subTopicKey),
+        message: urgent ? `[PRIORITY] ${msg.trim()}` : msg.trim(),
+        lang,
+        website: form.website,   // honeypot: real visitors never fill it
+      });
+      setSent(true);
+    } catch (err) {
+      setSendError(err.message || t('ct.f.error'));
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -546,18 +571,25 @@ const ContactSupport = () => {
               <div className="ct-row-2">
                 <div className="ct-field">
                   <label>{t('ct.f.name')} <em>*</em></label>
-                  <input type="text" required placeholder={t('ct.f.namePh')} />
+                  <input type="text" required maxLength={120} autoComplete="name"
+                    value={form.name} onChange={setField('name')} placeholder={t('ct.f.namePh')} />
                 </div>
                 <div className="ct-field">
                   <label>{t('ct.f.phone')} <span>{t('ct.f.optional')}</span></label>
-                  <input type="tel" placeholder={t('ct.f.phonePh')} />
+                  <input type="tel" maxLength={30} autoComplete="tel"
+                    value={form.phone} onChange={setField('phone')} placeholder={t('ct.f.phonePh')} />
                 </div>
               </div>
 
               <div className="ct-field">
                 <label>{t('ct.f.email')} <em>*</em></label>
-                <input type="email" required placeholder={t('ct.f.emailPh')} />
+                <input type="email" required maxLength={254} autoComplete="email"
+                  value={form.email} onChange={setField('email')} placeholder={t('ct.f.emailPh')} />
               </div>
+
+              {/* Honeypot for bots — hidden from people and screen readers. */}
+              <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true"
+                className="ct-hp" value={form.website} onChange={setField('website')} />
 
               <div className="ct-field">
                 <div className="ct-field-top">
@@ -576,28 +608,6 @@ const ContactSupport = () => {
                 />
               </div>
 
-              <div className="ct-attach">
-                <div className="ct-attach-info">
-                  <span className="ct-attach-ico">{file ? I.check : I.plus}</span>
-                  <div>
-                    <div className="ct-attach-title">{file || t('ct.f.attachTitle')}</div>
-                    <div className="ct-attach-sub">{t('ct.f.attachSub')}</div>
-                  </div>
-                </div>
-                {file ? (
-                  <button type="button" className="ct-attach-btn ct-attach-clear"
-                    onClick={() => setFile(null)}>
-                    {I.x} {t('ct.f.remove')}
-                  </button>
-                ) : (
-                  <label className="ct-attach-btn">
-                    {t('ct.f.browse')}
-                    <input type="file" hidden accept=".pdf,.png,.log,.csv"
-                      onChange={(e) => setFile(e.target.files?.[0]?.name || null)} />
-                  </label>
-                )}
-              </div>
-
               <div className="ct-cta-row">
                 <span className="ct-sla">
                   <i /> {urgent ? t('ct.f.slaUrgent') : t('ct.f.slaDefault')}
@@ -609,12 +619,13 @@ const ContactSupport = () => {
                   <span className="ct-urgent-track"><i /></span>
                   {t('ct.f.priority')}
                 </button>
-                <button type="submit" className={`btn btn-red btn-lg ct-submit ${urgent ? 'priority' : ''}`} disabled={sent}>
-                  {sent ? <>{I.check} {t('ct.f.sent')}</> : <>{t('ct.f.submit')} {I.arrow()}</>}
+                <button type="submit" className={`btn btn-red btn-lg ct-submit ${urgent ? 'priority' : ''}`} disabled={sent || sending}>
+                  {sent ? <>{I.check} {t('ct.f.sent')}</> : sending ? t('ct.f.sending') : <>{t('ct.f.submit')} {I.arrow()}</>}
                 </button>
               </div>
 
-              {sent && <div className="ct-success">{sentText}</div>}
+              {sendError && <div className="ct-error" role="alert">{sendError}</div>}
+              {sent && <div className="ct-success" role="status">{sentText}</div>}
             </form>
           </div>
 
@@ -631,11 +642,11 @@ const ContactSupport = () => {
               <p className="ct-side-desc">{t('ct.rail.addr')}</p>
 
               <div className="ct-quick">
-                <a className="ct-qa" href="tel:+18005557627">
+                <a className="ct-qa" href={`tel:${t('ct.phone').replace(/[^\d+]/g, '')}`}>
                   <span className="ct-qa-ico">{I.phone}</span>
                   <span className="ct-qa-label">{t('ct.rail.desk')}</span>
                 </a>
-                <a className="ct-qa" href="https://wa.me/18005557627" target="_blank" rel="noopener noreferrer">
+                <a className="ct-qa" href={`https://wa.me/${t('ct.whatsapp').replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer">
                   <span className="ct-qa-ico emerald">{I.chat}</span>
                   <span className="ct-qa-label">{t('ct.rail.wa')}</span>
                 </a>
@@ -645,23 +656,6 @@ const ContactSupport = () => {
                 </a>
               </div>
 
-              <div className="ct-telemetry">
-                <div className="ct-tel-row">
-                  <span>{t('ct.rail.cap')}</span>
-                  <b>{occ}%</b>
-                </div>
-                <div className="ct-tel-bar"><i style={{ '--w': `${occ}%` }} /></div>
-                <div className="ct-tel-grid">
-                  <div>
-                    <span>{t('ct.rail.queue')}</span>
-                    <b>{occ > 85 ? t('ct.rail.queue6') : t('ct.rail.queue0')}</b>
-                  </div>
-                  <div>
-                    <span>{t('ct.rail.avg')}</span>
-                    <b className="hot">{t('ct.rail.avgV')}</b>
-                  </div>
-                </div>
-              </div>
             </div>
 
             <div className="ct-side ct-side-map" id="map">
@@ -670,7 +664,7 @@ const ContactSupport = () => {
                   <i className="ct-map-pin">{I.pin}</i>
                   {t('ct.map.label')}
                 </span>
-                <span className="ct-map-coords">35.6762° N, 139.6503° E</span>
+                <span className="ct-map-coords">{t('ct.map.coords')}</span>
               </div>
 
               <div className="ct-map">
@@ -686,7 +680,7 @@ const ContactSupport = () => {
 
               <div className="ct-map-foot">
                 <span>{t('ct.map.foot')}</span>
-                <a href="#map">{t('ct.map.expand')} {I.arrow(10)}</a>
+                <a href={t('ct.map.url')} target="_blank" rel="noopener noreferrer">{t('ct.map.expand')} {I.arrow(10)}</a>
               </div>
             </div>
 

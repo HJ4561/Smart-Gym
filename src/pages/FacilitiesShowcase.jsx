@@ -2,6 +2,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useLang } from '../i18n/LangContext';
+import { imageSet } from '../i18n/images';
+import usePageTitle from '../hooks/usePageTitle';
+import useCollection from '../hooks/useCollection';
 import LangSwitch from '../i18n/LangSwitch';
 import './FacilitiesShowcase.css';
 
@@ -19,24 +22,6 @@ const MaskWords = ({ text, step = 70 }) => (
     ))}
   </>
 );
-
-const Counter = ({ to, active, decimals = 0, duration = 1500 }) => {
-  const [v, setV] = useState(0);
-  useEffect(() => {
-    if (!active) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { setV(to); return; }
-    let raf, t0;
-    const tick = (ts) => {
-      if (!t0) t0 = ts;
-      const p = Math.min((ts - t0) / duration, 1);
-      setV(to * (1 - Math.pow(1 - p, 4)));
-      if (p < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [active, to, duration]);
-  return <>{decimals ? v.toFixed(decimals) : Math.round(v).toLocaleString('en-US')}</>;
-};
 
 const useDecode = (text, start) => {
   const [out, setOut] = useState(text);
@@ -112,127 +97,30 @@ const I = {
 /* ============================================================
    STATIC IMAGE PATHS
 ============================================================ */
-const IMG = {
+const IMG_DEFAULT = {
   heroBg: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1920&q=80',
-  pool: 'https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=1400&q=80',
-  basketball: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&w=1400&q=80',
-  combat: 'https://images.unsplash.com/photo-1549476464-37392f717541?auto=format&fit=crop&w=1400&q=80',
-  recovery: 'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?auto=format&fit=crop&w=1400&q=80',
-  volleyball: 'https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?auto=format&fit=crop&w=1400&q=80',
-  strength: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1400&q=80',
 };
 
-const SLOT_HOURS = ['06:00', '08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00'];
-const DURATION_KEYS = ['bkm.dur1', 'bkm.dur2', 'bkm.dur3'];
-
-/* ============================================================
-   BOOKING DRAWER
-============================================================ */
-const BookingDrawer = ({ facility, onClose, t }) => {
-  const [slot, setSlot] = useState(null);
-  const [durKey, setDurKey] = useState('bkm.dur2');
-  const [phase, setPhase] = useState('form');
-  const [ref] = useState(() => 'SG-' + Math.random().toString(36).slice(2, 7).toUpperCase());
-  const panelRef = useRef(null);
-
-  const isFull = (i) => (facility.id * 3 + i) % 4 === 0;
-
-  useEffect(() => {
-    const onKey = (e) => e.key === 'Escape' && onClose();
-    window.addEventListener('keydown', onKey);
-    document.body.classList.add('no-scroll');
-    panelRef.current?.focus();
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      document.body.classList.remove('no-scroll');
-    };
-  }, [onClose]);
-
-  useEffect(() => {
-    if (phase !== 'sending') return;
-    const tid = setTimeout(() => setPhase('done'), 1200);
-    return () => clearTimeout(tid);
-  }, [phase]);
-
-  return (
-    <div className="bkm" role="dialog" aria-modal="true"
-      aria-label={`${t('bkm.book')} ${facility.title}`}
-      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="bkm-panel" ref={panelRef} tabIndex={-1}>
-        <button className="bkm-x" onClick={onClose} aria-label={t('bkm.close')}>×</button>
-
-        {phase === 'done' ? (
-          <div className="bkm-done">
-            <svg className="bkm-check" viewBox="0 0 52 52" aria-hidden="true">
-              <circle cx="26" cy="26" r="24" fill="none" />
-              <path fill="none" d="M14 27l8 8 16-16" />
-            </svg>
-            <h3>{t('bkm.confirmed')}</h3>
-            <p className="bkm-done-sum">{facility.title} · {slot} · {t(durKey)}</p>
-            <span className="bkm-ref">{t('bkm.ref')} {ref}</span>
-            <p className="bkm-note">{t('bkm.note')}</p>
-            <button className="btn btn-red" onClick={onClose}>{t('bkm.done')} {I.arrow(11)}</button>
-          </div>
-        ) : (
-          <>
-            <div className="bkm-head">
-              <em className="fc-tag">{facility.tag}</em>
-              <h3>{facility.title}</h3>
-              <span className={`fc-status ${facility.statusCls}`}>
-                <i />{t('bkm.status')} {facility.status}
-              </span>
-            </div>
-
-            <div className="bkm-sec">
-              <span className="bkm-lab">{t('bkm.pickSlot')}</span>
-              <div className="bkm-slots">
-                {SLOT_HOURS.map((s, i) => (
-                  <button key={s}
-                    className={`bkm-slot ${slot === s ? 'on' : ''} ${isFull(i) ? 'full' : ''}`}
-                    disabled={isFull(i)}
-                    onClick={() => setSlot(s)}>
-                    {s}{isFull(i) && <em>{t('bkm.full')}</em>}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="bkm-sec">
-              <span className="bkm-lab">{t('bkm.duration')}</span>
-              <div className="bkm-slots bkm-slots-3">
-                {DURATION_KEYS.map((d) => (
-                  <button key={d} className={`bkm-slot ${durKey === d ? 'on' : ''}`} onClick={() => setDurKey(d)}>
-                    {t(d)}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="bkm-foot">
-              <div className="bkm-price">
-                <span>{t('bkm.rate')}</span>
-                <b>$40</b>
-              </div>
-              <button className="btn btn-red bkm-confirm"
-                disabled={!slot || phase !== 'form'}
-                onClick={() => setPhase('sending')}>
-                {phase === 'sending'
-                  ? <><span className="bkm-spin" />{t('bkm.syncing')}</>
-                  : <>{t('bkm.confirm')} {I.arrow(11)}</>}
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
+/* Card button icon per category (facilities come from the admin portal). */
+const CATEGORY_ICON = {
+  aquatics: I.pool,
+  courts: I.basket,
+  combat: I.mma,
+  recovery: I.cryo,
+  strength: I.dumbbell,
 };
+
+/* status_tone → dot style (ticker uses the shared ok/busy/info dots). */
+const TONE_TICKER = { ok: 'ok', busy: 'busy', closed: 'info' };
 
 /* ============================================================
    COMPONENT
 ============================================================ */
 const FacilitiesShowcase = () => {
-  const { t } = useLang();
+  const { t, img, pick } = useLang();
+  usePageTitle(t('nav.facilities'));
+  // Admin-managed images (Public Website → Site Content), built-in ones as fallback.
+  const IMG = imageSet(img, 'fac', IMG_DEFAULT);
 
   const [bootPct, setBootPct] = useState(0);
   const [boot, setBoot] = useState(false);
@@ -240,7 +128,6 @@ const FacilitiesShowcase = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState('all');
   const [isVisible, setIsVisible] = useState({});
-  const [booking, setBooking] = useState(null);
 
   /* ---------- Translated content ---------- */
   const BELT_ITEMS = [
@@ -262,127 +149,29 @@ const FacilitiesShowcase = () => {
     { id: 'strength', label: t('fac.f.strength') },
   ];
 
-  const facilities = [
-    {
-      id: 1, category: 'aquatics',
-      sector: t('fac.c1.sector'), location: t('fac.c1.location'),
-      title: t('fac.c1.title'), tag: t('fac.c1.tag'),
-      status: t('fac.c1.status'), statusCls: 'ok', load: 75, nextSlot: '10:00',
-      desc: t('fac.c1.desc'),
-      meta: [
-        [t('fac.c1.m1k'), t('fac.c1.m1v'), t('fac.c1.m1s')],
-        [t('fac.c1.m2k'), t('fac.c1.m2v')],
-        [t('fac.c1.m3k'), t('fac.c1.m3v')],
-      ],
-      cta: t('fac.c1.cta'), ctaIcon: I.pool, img: IMG.pool,
-    },
-    {
-      id: 2, category: 'courts',
-      sector: t('fac.c2.sector'), location: t('fac.c2.location'),
-      title: t('fac.c2.title'), tag: t('fac.c2.tag'),
-      status: t('fac.c2.status'), statusCls: 'busy', load: 70, nextSlot: '18:00',
-      desc: t('fac.c2.desc'),
-      meta: [
-        [t('fac.c2.m1k'), t('fac.c2.m1v')],
-        [t('fac.c2.m2k'), t('fac.c2.m2v')],
-        [t('fac.c2.m3k'), t('fac.c2.m3v')],
-      ],
-      cta: t('fac.c2.cta'), ctaIcon: I.basket, img: IMG.basketball,
-    },
-    {
-      id: 3, category: 'combat',
-      sector: t('fac.c3.sector'), location: t('fac.c3.location'),
-      title: t('fac.c3.title'), tag: t('fac.c3.tag'),
-      status: t('fac.c3.status'), statusCls: 'busy', load: 88, nextSlot: '19:15',
-      desc: t('fac.c3.desc'),
-      meta: [
-        [t('fac.c3.m1k'), t('fac.c3.m1v')],
-        [t('fac.c3.m2k'), t('fac.c3.m2v')],
-        [t('fac.c3.m3k'), t('fac.c3.m3v')],
-      ],
-      cta: t('fac.c3.cta'), ctaIcon: I.mma, img: IMG.combat,
-    },
-    {
-      id: 4, category: 'recovery',
-      sector: t('fac.c4.sector'), location: t('fac.c4.location'),
-      title: t('fac.c4.title'), tag: t('fac.c4.tag'),
-      status: t('fac.c4.status'), statusCls: 'ok', load: 45, nextSlot: 'NOW',
-      desc: t('fac.c4.desc'),
-      meta: [
-        [t('fac.c4.m1k'), t('fac.c4.m1v')],
-        [t('fac.c4.m2k'), t('fac.c4.m2v')],
-        [t('fac.c4.m3k'), t('fac.c4.m3v')],
-      ],
-      cta: t('fac.c4.cta'), ctaIcon: I.cryo, img: IMG.recovery,
-    },
-    {
-      id: 5, category: 'courts',
-      sector: t('fac.c5.sector'), location: t('fac.c5.location'),
-      title: t('fac.c5.title'), tag: t('fac.c5.tag'),
-      status: t('fac.c5.status'), statusCls: 'info', load: 65, nextSlot: '19:30',
-      desc: t('fac.c5.desc'),
-      meta: [
-        [t('fac.c5.m1k'), t('fac.c5.m1v')],
-        [t('fac.c5.m2k'), t('fac.c5.m2v')],
-        [t('fac.c5.m3k'), t('fac.c5.m3v')],
-      ],
-      cta: t('fac.c5.cta'), ctaIcon: I.calendar, img: IMG.volleyball, ghost: true,
-    },
-    {
-      id: 6, category: 'strength',
-      sector: t('fac.c6.sector'), location: t('fac.c6.location'),
-      title: t('fac.c6.title'), tag: t('fac.c6.tag'),
-      status: t('fac.c6.status'), statusCls: 'ok', load: 83, nextSlot: 'NOW',
-      desc: t('fac.c6.desc'),
-      meta: [
-        [t('fac.c6.m1k'), t('fac.c6.m1v')],
-        [t('fac.c6.m2k'), t('fac.c6.m2v')],
-        [t('fac.c6.m3k'), t('fac.c6.m3v')],
-      ],
-      cta: t('fac.c6.cta'), ctaIcon: I.dumbbell, img: IMG.strength,
-    },
-  ];
+  const { items, loading, error } = useCollection('facilities');
+  const facilities = (items || []).map((item, i) => {
+    const d = item.data || {};
+    return {
+      id: item.id,
+      num: i + 1,
+      category: d.category,
+      sector: pick(d.sector), location: pick(d.location),
+      title: pick(d.title), tag: pick(d.tag),
+      status: pick(d.status), statusCls: d.status_tone || 'ok',
+      desc: pick(d.description),
+      meta: [1, 2, 3]
+        .map((n) => [pick(d[`stat${n}_label`]), d[`stat${n}_value`]])
+        .filter(([k, v]) => k && v),
+      ctaIcon: CATEGORY_ICON[d.category] || I.grid,
+      img: item.image_url,
+    };
+  });
 
   const telemetryStats = [
-    { v: '0.04s',    l: t('fac.tel.stat1') },
-    { v: 'HEPA 14',  l: t('fac.tel.stat2') },
+    { v: t('fac.tel.stat1v'), l: t('fac.tel.stat1') },
+    { v: t('fac.tel.stat2v'), l: t('fac.tel.stat2') },
   ];
-
-  // live simulated telemetry
-  const [loads, setLoads] = useState(() =>
-    Object.fromEntries(facilities.map((f) => [f.id, f.load]))
-  );
-  useEffect(() => {
-    const id = setInterval(() => {
-      setLoads((prev) => {
-        const next = { ...prev };
-        facilities.forEach((f) => {
-          const drift = (Math.random() - 0.5) * 6;
-          next[f.id] = Math.min(97, Math.max(42, Math.round((prev[f.id] ?? f.load) + drift)));
-        });
-        return next;
-      });
-    }, 4000);
-    return () => clearInterval(id);
-  }, []);
-
-  // ticking clock for next-slot countdowns
-  const [now, setNow] = useState(Date.now());
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 30000);
-    return () => clearInterval(id);
-  }, []);
-
-  const slotCountdown = (hhmm) => {
-    const [h, m] = hhmm.split(':').map(Number);
-    const tt = new Date();
-    tt.setHours(h, m, 0, 0);
-    if (tt.getTime() < now) tt.setDate(tt.getDate() + 1);
-    const diff = Math.max(0, tt - now);
-    const hh = Math.floor(diff / 3600000);
-    const mm = Math.floor((diff % 3600000) / 60000);
-    return `${hh}H ${String(mm).padStart(2, '0')}M`;
-  };
 
   const sectionRefs = useRef([]);
   const kickText = useDecode(t('fac.kicker'), isVisible.hero && boot);
@@ -522,9 +311,9 @@ const FacilitiesShowcase = () => {
     id === 'all' ? facilities.length : facilities.filter((f) => f.category === id).length;
 
   const tickerItems = facilities.map((f) => ({
-    s: f.location.toUpperCase(),
-    st: `${loads[f.id]}% LOAD`,
-    cls: loads[f.id] >= 85 ? 'busy' : loads[f.id] >= 70 ? 'info' : 'ok',
+    s: (f.location || f.title).toUpperCase(),
+    st: f.status,
+    cls: TONE_TICKER[f.statusCls] || 'ok',
   }));
 
   return (
@@ -621,30 +410,6 @@ const FacilitiesShowcase = () => {
             </div>
           </div>
 
-          <div className="fac-capacity">
-            <div className="fac-capacity-ring">
-              <svg viewBox="0 0 36 36">
-                <path className="ring-bg"
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                  fill="none" strokeWidth="3.5" />
-                <path className="ring-progress"
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                  fill="none" strokeDasharray={isVisible.hero ? '82, 100' : '0, 100'}
-                  strokeLinecap="round" strokeWidth="3.5" />
-              </svg>
-              <div className="ring-label">
-                <span className="ring-value">82%</span>
-                <span className="ring-sub">{t('fac.cap.load')}</span>
-              </div>
-            </div>
-            <div className="fac-capacity-info">
-              <div className="fac-capacity-title">{t('fac.cap.title')}</div>
-              <div className="fac-capacity-detail">
-                <b><Counter to={412} active={isVisible.hero} /></b> / 500 {t('fac.cap.detail')}
-              </div>
-              <div className="fac-capacity-status"><span className="live-dot" />{t('fac.cap.status')}</div>
-            </div>
-          </div>
         </div>
 
         <div className="belt" aria-hidden="true">
@@ -661,7 +426,7 @@ const FacilitiesShowcase = () => {
       </section>
 
       {/* TICKER */}
-      <div className="ticker fac-ticker" aria-hidden="true">
+      {tickerItems.length > 0 && <div className="ticker fac-ticker" aria-hidden="true">
         <div className="ticker-track">
           {[0, 1].map((h) => (
             <div className="ticker-half" key={h}>
@@ -669,7 +434,7 @@ const FacilitiesShowcase = () => {
             </div>
           ))}
         </div>
-      </div>
+      </div>}
 
       {/* FILTER + GRID */}
       <section id="facilities-grid" data-section="grid" ref={(el) => (sectionRefs.current[1] = el)}
@@ -693,18 +458,24 @@ const FacilitiesShowcase = () => {
           </div>
         </div>
 
+        {!facilities.length && (
+          <p className="fac-empty" role="status">
+            {loading ? t('fac.loading') : error ? t('fac.error') : t('fac.empty')}
+          </p>
+        )}
+
         <div className="fac-cards" key={activeFilter}>
           {filteredFacilities.map((f, i) => (
             <article className="facility-card" key={f.id} style={{ '--i': i }}
               onMouseMove={cardMove} onMouseLeave={cardLeave}>
               <div className="fc-in">
                 <div className="fc-media">
-                  <img src={f.img} alt={f.title} loading="lazy" />
+                  {f.img && <img src={f.img} alt={f.title} loading="lazy" />}
                   <div className="fc-media-shade" />
                   <span className={`fc-status ${f.statusCls}`}>
-                    <i />{t('bkm.status')} {f.status}
+                    <i />{t('fac.card.status')} {f.status}
                   </span>
-                  <span className="fc-num">S/{String(f.id).padStart(2, '0')}</span>
+                  <span className="fc-num">S/{String(f.num).padStart(2, '0')}</span>
                   <div className="fc-labels">
                     <span className="fc-sector">{f.sector}</span>
                     <span className="fc-location">{f.location}</span>
@@ -716,37 +487,20 @@ const FacilitiesShowcase = () => {
                   <h3>{f.title}</h3>
                   <p>{f.desc}</p>
 
-                  <div className="fc-load">
-                    <div className="fc-load-head">
-                      <span>{t('fac.card.load')}</span>
-                      <b className={loads[f.id] >= 85 ? 'hot' : ''}>{loads[f.id]}%</b>
+                  {f.meta.length > 0 && (
+                    <div className="fc-meta-grid">
+                      {f.meta.map(([k, v]) => (
+                        <div className="fc-meta-item" key={k}>
+                          <span>{k}</span>
+                          <b>{v}</b>
+                        </div>
+                      ))}
                     </div>
-                    <div className="fc-load-bar">
-                      <i className={loads[f.id] >= 85 ? 'hot' : ''} style={{ width: `${loads[f.id]}%` }} />
-                    </div>
-                  </div>
+                  )}
 
-                  <div className="fc-meta-grid">
-                    {f.meta.map(([k, v, sub]) => (
-                      <div className="fc-meta-item" key={k}>
-                        <span>{k}</span>
-                        <b>{v}{sub && <i> {sub}</i>}</b>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="fc-next">
-                    {I.clock}
-                    {f.nextSlot === 'NOW'
-                      ? <span>{t('fac.card.openNow')} <b>{t('fac.card.walkin')}</b></span>
-                      : <span>{t('fac.card.nextPre')} {f.nextSlot} {t('fac.card.nextMid')} <b>{slotCountdown(f.nextSlot)}</b></span>}
-                  </div>
-
-                  <button
-                    className={`btn ${f.ghost ? 'btn-ghost' : 'btn-red'} fc-cta`}
-                    onClick={() => setBooking(f)}>
-                    {f.ctaIcon} {f.cta}
-                  </button>
+                  <Link to="/join" className="btn btn-red fc-cta">
+                    {f.ctaIcon} {t('fac.card.cta')}
+                  </Link>
                 </div>
               </div>
             </article>
@@ -841,8 +595,6 @@ const FacilitiesShowcase = () => {
         <Link to="/join" className="tab-join">{I.flame}<span>{t('fac.tab.join')}</span></Link>
       </nav>
 
-      {/* BOOKING DRAWER */}
-      {booking && <BookingDrawer facility={booking} onClose={() => setBooking(null)} t={t} />}
     </div>
   );
 };

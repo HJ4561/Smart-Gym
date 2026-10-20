@@ -1182,7 +1182,7 @@
   gap: 4px;
   margin: 0 6px;
 }
-.ins-pag-nums span {
+.ins-pag-nums button {
   width: 34px;
   height: 34px;
   border-radius: var(--r-s);
@@ -1195,14 +1195,14 @@
   cursor: pointer;
   transition: all .2s ease;
 }
-.ins-pag-nums span:hover { background: var(--surface-high, #2a2a2b); }
-.ins-pag-nums span.on {
+.ins-pag-nums button:hover { background: var(--surface-high, #2a2a2b); }
+.ins-pag-nums button.on {
   background: var(--red);
   border-color: var(--red);
   color: #fff;
   box-shadow: 0 0 12px rgba(229,25,55,0.4);
 }
-.ins-pag-nums span.dots {
+.ins-pag-nums button.dots {
   background: transparent;
   border: none;
   width: auto;
@@ -1415,8 +1415,8 @@
   .ins-metric { padding: 14px; }
   .ins-metric-val b { font-size: 26px; }
   .ins-archive-head { flex-direction: column; align-items: flex-start; }
-  .ins-pag-nums span { width: 30px; height: 30px; font-size: 10px; }
-  .ins-pag-nums span.dots { padding: 0 2px; }
+  .ins-pag-nums button { width: 30px; height: 30px; font-size: 10px; }
+  .ins-pag-nums button.dots { padding: 0 2px; }
   .ins-pag-btn { padding: 8px 12px; font-size: 9px; }
   .ins-tax-tags { min-width: 0; width: 100%; }
   .ins-tax-tag { font-size: 9px; padding: 6px 10px; }
@@ -1498,3 +1498,11 @@
   .ins-hero-bg img { animation: none !important; }
   .ins-pag-bar i { transition: none; }
 }
+/* Admin-managed articles: page buttons, newsletter error */
+.ins-pag-nums button { padding: 0; }
+.ins-news-error {
+  color: var(--red);
+  font-size: 12px;
+  margin: 0;
+}
+.ins-news-cta:disabled { opacity: 0.6; cursor: wait; }

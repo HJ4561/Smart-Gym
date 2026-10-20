@@ -1,0 +1,49 @@
+/* src/pages/ArticlePage.css — article page and 404 (both use SitePage) */
+.sg-simple { min-height: 100vh; display: flex; flex-direction: column; }
+.simple-main { flex: 1; padding: 120px 16px 64px; }
+
+.art { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+.art-back {
+  font: 700 11px 'Montserrat', sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-decoration: none;
+  align-self: flex-start;
+}
+.art-back:hover { color: #fff; }
+.art-status { color: var(--muted); font-size: 15px; padding: 40px 0; }
+.art-head { display: flex; flex-direction: column; gap: 14px; }
+.art-tag {
+  align-self: flex-start;
+  font: 800 10px 'Montserrat', sans-serif;
+  letter-spacing: 0.16em;
+  color: var(--red);
+  border: 1px solid rgba(229, 25, 55, 0.4);
+  padding: 5px 10px;
+  border-radius: 999px;
+}
+.art-title {
+  font: 900 clamp(28px, 5vw, 46px)/1.08 'Montserrat', sans-serif;
+  color: #fff;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.art-meta { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 13px; }
+.art-meta b { color: #fff; margin-inline-end: 8px; }
+.art-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: grid; place-items: center; flex-shrink: 0;
+  background: var(--red); color: #fff;
+  font: 800 12px 'Montserrat', sans-serif;
+}
+.art-img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 14px; }
+.art-body { display: flex; flex-direction: column; gap: 18px; }
+.art-body p { margin: 0; font-size: 17px; line-height: 1.75; color: rgba(255, 255, 255, 0.86); white-space: pre-line; }
+.art-foot { display: flex; gap: 12px; flex-wrap: wrap; padding-top: 12px; border-top: 1px solid var(--line); }
+
+/* 404 */
+.nf { max-width: 640px; margin: 0 auto; text-align: center; display: flex; flex-direction: column; gap: 18px; align-items: center; padding-top: 6vh; }
+.nf-code { font: 900 clamp(80px, 18vw, 160px)/1 'Montserrat', sans-serif; color: var(--red); }
+.nf p { color: var(--muted); font-size: 16px; margin: 0; }
+.nf-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }

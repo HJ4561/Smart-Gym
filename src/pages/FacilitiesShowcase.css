@@ -881,3 +881,12 @@
     bottom: 0;
   }
 }
+
+/* Admin-managed list states */
+.fac-empty {
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+  padding: 48px 16px;
+}
+.fc-status.closed i { background: rgba(255, 255, 255, 0.35); }

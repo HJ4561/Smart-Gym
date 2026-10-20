@@ -2,6 +2,8 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useLang } from '../i18n/LangContext';
+import { imageSet } from '../i18n/images';
+import usePageTitle from '../hooks/usePageTitle';
 import LangSwitch from '../i18n/LangSwitch';
 import publicService from '../services/publicService';
 import LiveCamera from '../components/LiveCamera';
@@ -163,7 +165,7 @@ const I = {
 /* ============================================================
    STATIC IMAGES
 ============================================================ */
-const IMG = {
+const IMG_DEFAULT = {
   facility: 'https://images.unsplash.com/photo-1540497077202-7c8a3999166f?auto=format&fit=crop&w=1200&q=80',
   avatar: 'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=120&q=80',
 };
@@ -182,7 +184,10 @@ const planVisual = (plan, index = 0) => {
    COMPONENT
 ============================================================ */
 const MembershipSignup = () => {
-  const { t, lang } = useLang();
+  const { t, img, lang } = useLang();
+  usePageTitle(t('nav.membership'));
+  // Admin-managed images (Public Website → Site Content), built-in ones as fallback.
+  const IMG = imageSet(img, 'en', IMG_DEFAULT);
 
   const [bootPct, setBootPct] = useState(0);
   const [boot, setBoot] = useState(false);
@@ -222,7 +227,6 @@ const MembershipSignup = () => {
   // Set once the registration exists: { regId, params (Moyasar form), inputs it was created from }
   const [checkout, setCheckout] = useState(null);
   const [sumOpen, setSumOpen] = useState(true);
-  const [occ, setOcc] = useState(42);
 
   /* ---------- Load plans ---------- */
   useEffect(() => {
@@ -236,7 +240,7 @@ const MembershipSignup = () => {
         setPlansError('');
       } catch (e) {
         if (!alive) return;
-        setPlansError(e.message || 'Failed to load plans.');
+        setPlansError(e.message || true);   // true → generic translated message
       } finally {
         if (alive) setPlansLoading(false);
       }
@@ -245,12 +249,20 @@ const MembershipSignup = () => {
   }, []);
 
   /* ---------- Derived plan object ---------- */
+  // Plans are managed in the admin portal (Public Website → Plans), with Arabic texts.
+  const localPlans = useMemo(() => plansData.map((p) => (lang === 'ar' ? {
+    ...p,
+    display_name: p.display_name_ar || p.display_name,
+    description: p.description_ar || p.description,
+    features: p.features_ar?.length ? p.features_ar : p.features,
+  } : p)), [plansData, lang]);
+
   const plan = useMemo(() => {
-    return plansData.find((p) => p.id === planId) || plansData[0] || {
+    return localPlans.find((p) => p.id === planId) || localPlans[0] || {
       id: 0, display_name: '—', name: '—',
       price_monthly: 0, price_annual: 0, features: [],
     };
-  }, [plansData, planId]);
+  }, [localPlans, planId]);
 
   const monthly = Number(plan.price_monthly || 0);
   const annual = Number(plan.price_annual || 0);
@@ -264,7 +276,7 @@ const MembershipSignup = () => {
   }, [duration, monthly, annual]);
 
   const tweenPrice = useTween(price, 700);
-  const passText = useDecode('PASS #PENDING', boot);
+  const passText = useDecode(t('en.pass.pending'), boot);
 
   /* ---------- i18n-driven static arrays ---------- */
   const NODES = [
@@ -394,14 +406,6 @@ const MembershipSignup = () => {
     els.forEach((el) => io.observe(el));
     return () => io.disconnect();
   }, [boot]);
-
-  /* ---------- Live occupancy ticker ---------- */
-  useEffect(() => {
-    const id = setInterval(() => {
-      setOcc((o) => Math.max(28, Math.min(64, o + (Math.random() < 0.5 ? -1 : 1) * (1 + Math.floor(Math.random() * 3)))));
-    }, 2800);
-    return () => clearInterval(id);
-  }, []);
 
   /* ---------- Master rAF ---------- */
   useEffect(() => {
@@ -556,7 +560,7 @@ const MembershipSignup = () => {
   const hudPct = activeCheckout ? 92 : step2Ok ? 80 : step1Ok ? 58 : step === 2 ? 40 : 12;
   const err = (k, bad, msg) => (touched[k] && bad ? msg : null);
 
-  const PLANS_FOR_SWITCH = plansData.slice(0, 3);
+  const PLANS_FOR_SWITCH = localPlans;
 
   return (
     <div className={`sg ${menuOpen ? 'menu-open' : ''}`}>
@@ -717,8 +721,8 @@ const MembershipSignup = () => {
                     <div className="en-panel-in" style={{ visibility: 'visible', opacity: 1 }}>
 
                       <div className="en-fieldgrid">
-                        <label ref={iqamaRef} className={`en-field ${err('iqama', !iqamaOk, 'ENTER IQAMA #') ? 'bad' : ''}`}>
-                          <span className="en-flabel">IQAMA NUMBER</span>
+                        <label ref={iqamaRef} className={`en-field ${err('iqama', !iqamaOk, t('en.err.iqama')) ? 'bad' : ''}`}>
+                          <span className="en-flabel">{t('en.field.iqama')}</span>
                           <div className="en-input">
                             <input type="text" inputMode="numeric" placeholder="2XXXXXXXXX" value={form.iqama_number}
                               onChange={(e) => setForm({ ...form, iqama_number: e.target.value.replace(/\D/g, '').slice(0, 10) })}
@@ -757,8 +761,8 @@ const MembershipSignup = () => {
                           </div>
                         </label>
 
-                        <label ref={ageRef} className={`en-field ${err('age', !ageOk, 'ENTER VALID AGE') ? 'bad' : ''}`}>
-                          <span className="en-flabel">AGE</span>
+                        <label ref={ageRef} className={`en-field ${err('age', !ageOk, t('en.err.age')) ? 'bad' : ''}`}>
+                          <span className="en-flabel">{t('en.field.age')}</span>
                           <div className="en-input">
                             <input type="number" min="12" max="100" placeholder="25" value={form.age}
                               onChange={(e) => setForm({ ...form, age: e.target.value.replace(/\D/g, '').slice(0, 3) })}
@@ -768,21 +772,21 @@ const MembershipSignup = () => {
                         </label>
 
                         <label className="en-field">
-                          <span className="en-flabel">GENDER</span>
+                          <span className="en-flabel">{t('en.field.gender')}</span>
                           <div className="en-input en-select">
                             <select value={form.gender}
                               onChange={(e) => setForm({ ...form, gender: e.target.value })}>
-                              <option value="male">Male</option>
-                              <option value="female">Female</option>
-                              <option value="other">Other</option>
+                              <option value="male">{t('en.gender.male')}</option>
+                              <option value="female">{t('en.gender.female')}</option>
+                              <option value="other">{t('en.gender.other')}</option>
                             </select>
                             <span className="en-in-ico">{I.user(14)}</span>
                             <span className="en-sel-arrow">{I.chev(11)}</span>
                           </div>
                         </label>
 
-                        <label ref={passwordRef} className={`en-field ${err('password', !passwordOk, 'MIN 8 CHARACTERS') ? 'bad' : ''}`}>
-                          <span className="en-flabel">PASSWORD</span>
+                        <label ref={passwordRef} className={`en-field ${err('password', !passwordOk, t('en.err.password')) ? 'bad' : ''}`}>
+                          <span className="en-flabel">{t('en.field.password')}</span>
                           <div className="en-input">
                             <input type="password" placeholder="••••••••" value={form.password}
                               onChange={(e) => setForm({ ...form, password: e.target.value })}
@@ -791,8 +795,8 @@ const MembershipSignup = () => {
                           </div>
                         </label>
 
-                        <label ref={password2Ref} className={`en-field ${err('password2', !passwordMatch, 'PASSWORDS DO NOT MATCH') ? 'bad' : ''}`}>
-                          <span className="en-flabel">CONFIRM PASSWORD</span>
+                        <label ref={password2Ref} className={`en-field ${err('password2', !passwordMatch, t('en.err.password2')) ? 'bad' : ''}`}>
+                          <span className="en-flabel">{t('en.field.password2')}</span>
                           <div className="en-input">
                             <input type="password" placeholder="••••••••" value={form.password2}
                               onChange={(e) => setForm({ ...form, password2: e.target.value })}
@@ -802,9 +806,9 @@ const MembershipSignup = () => {
                         </label>
 
                         <label className="en-field" style={{ gridColumn: '1 / -1' }}>
-                          <span className="en-flabel">ADDRESS</span>
+                          <span className="en-flabel">{t('en.field.address')}</span>
                           <div className="en-input">
-                            <input type="text" placeholder="City, Street, Building" value={form.address}
+                            <input type="text" placeholder={t('en.field.addressPh')} value={form.address}
                               onChange={(e) => setForm({ ...form, address: e.target.value })} />
                             <span className="en-in-ico">{I.node(14)}</span>
                           </div>
@@ -814,8 +818,8 @@ const MembershipSignup = () => {
                       {/* LIVE PHOTO */}
                       <div className="en-vecwrap" style={{ marginTop: 18 }} ref={photoRef}>
                         <div className="en-vec-head">
-                          <span className="en-flabel">LIVE PHOTO — used to verify your face at the gym entrance</span>
-                          {touched.photo && !photoOk && <span className="en-vec-multi" style={{ color: '#ff8a9a' }}>TAKE A PHOTO</span>}
+                          <span className="en-flabel">{t('en.photo.live')}</span>
+                          {touched.photo && !photoOk && <span className="en-vec-multi" style={{ color: '#ff8a9a' }}>{t('en.photo.take')}</span>}
                         </div>
                         <LiveCamera
                           onCapture={(file) => { setPhotoFile(file); setTouched((x) => ({ ...x, photo: 1 })); }}
@@ -906,21 +910,21 @@ const MembershipSignup = () => {
                           {processing ? (
                             <>{t('en.p2.processing')}<span className="en-dots"><i /><i /><i /></span></>
                           ) : (
-                            <>{I.lock(14)} CONTINUE TO SECURE PAYMENT {I.arrow()}</>
+                            <>{I.lock(14)} {t('en.p2.continuePay')} {I.arrow()}</>
                           )}
                         </button>
                       ) : (
                         <div className="en-pay" ref={payRef}>
                           <div className="en-pay-head">
-                            <span>{I.lock(12)} PAY SAR {(activeCheckout.params.amount / 100).toFixed(2)}</span>
-                            <span>REF #{activeCheckout.regId}</span>
+                            <span>{I.lock(12)} {t('en.p2.payAmount', { amount: (activeCheckout.params.amount / 100).toFixed(2) })}</span>
+                            <span>{t('en.p2.ref')}{activeCheckout.regId}</span>
                           </div>
                           <MoyasarForm checkout={activeCheckout.params} onPaymentCreated={attachPayment} lang={lang} />
                         </div>
                       )}
 
                       <p className="en-secure-note">
-                        {I.lock(11)} Card and STC Pay details are entered on Moyasar's secure form and never reach our servers.
+                        {I.lock(11)} {t('en.p2.secureNote')}
                       </p>
                     </div>
                   </div>
@@ -953,8 +957,8 @@ const MembershipSignup = () => {
                 <div className="en-plan-switch">
                   <span>{t('en.sum.switch')}</span>
                   <div>
-                    {plansLoading && <span style={{ opacity: 0.6, fontSize: 12 }}>Loading plans…</span>}
-                    {plansError && <span style={{ color: '#ff8a9a', fontSize: 12 }}>{plansError}</span>}
+                    {plansLoading && <span style={{ opacity: 0.6, fontSize: 12 }}>{t('en.plan.loading')}</span>}
+                    {plansError && <span style={{ color: '#ff8a9a', fontSize: 12 }}>{plansError === true ? t('en.plan.loadError') : plansError}</span>}
                     {!plansLoading && !plansError && PLANS_FOR_SWITCH.map((p, i) => (
                       <button type="button" key={p.id}
                         className={p.id === planId ? 'on' : ''}
@@ -966,13 +970,13 @@ const MembershipSignup = () => {
                 </div>
 
                 <div className="en-plan-switch" style={{ marginTop: 10 }}>
-                  <span>DURATION (months)</span>
+                  <span>{t('en.field.duration')}</span>
                   <div>
                     {[1, 3, 6, 12].map((m) => (
                       <button type="button" key={m}
                         className={m === duration ? 'on' : ''}
                         onClick={() => setDuration(m)}>
-                        {m} MO{m >= 12 && <i />}
+                        {m} {t('en.field.months')}{m >= 12 && <i />}
                       </button>
                     ))}
                   </div>
@@ -986,9 +990,6 @@ const MembershipSignup = () => {
 
                 <figure className="en-sum-media">
                   <img src={IMG.facility} alt="Smart Gym facility floor" loading="lazy" />
-                  <figcaption>
-                    <span className="en-occ"><i />{t('en.sum.occ')}{occ}%</span>
-                  </figcaption>
                 </figure>
                 <div className="en-sum-media-cap">{I.shield(12)} {t('en.sum.mediaCap')}</div>
 
@@ -1001,14 +1002,14 @@ const MembershipSignup = () => {
                       </li>
                     ))}
                     {(!plan.features || plan.features.length === 0) && (
-                      <li style={{ opacity: 0.5 }}>No features listed for this plan.</li>
+                      <li style={{ opacity: 0.5 }}>{t('en.plan.noFeatures')}</li>
                     )}
                   </ul>
                 </div>
 
                 <div className="en-lines">
-                  <div className="en-line"><span>{plan.display_name} × {duration} MO</span><b>SAR {price.toFixed(2)}</b></div>
-                  <div className="en-line"><span>Tax (0%)</span><b>SAR 0.00</b></div>
+                  <div className="en-line"><span>{plan.display_name} × {duration} {t('en.field.months')}</span><b>SAR {price.toFixed(2)}</b></div>
+                  <div className="en-line"><span>{t('en.sum.tax')}</span><b>SAR 0.00</b></div>
                 </div>
 
                 <div className="en-total" key={`t${planId}-${duration}`}>

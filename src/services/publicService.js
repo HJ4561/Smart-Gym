@@ -71,13 +71,30 @@ export const publicService = {
     return data;
   },
 
-  // ============ CONTACT (stub — wire later) ============
+  // ============ SITE CONTENT (admin-managed) ============
+  /** Every text { key: {en, ar} } and image { key: {url, alt_en, alt_ar} } of the site. */
+  async siteContent() {
+    const { data } = await api.get('/public/site-content/');
+    return data;
+  },
+
+  /** Admin-managed list, e.g. 'facilities' or 'articles' (visible items, display order). */
+  async collection(name) {
+    const { data } = await api.get(`/public/collections/${name}/`);
+    return data;
+  },
+
+  /** One list item by slug, with its full data (article page). */
+  async collectionItem(name, slug) {
+    const { data } = await api.get(`/public/collections/${name}/${encodeURIComponent(slug)}/`);
+    return data;
+  },
+
+  // ============ CONTACT ============
+  /** POST the contact form → admin portal's Website Inbox. */
   async contact(payload) {
-    // Wire this to a real /api/public/contact/ endpoint when ready.
-    // For now, log and resolve so the UI doesn't break.
-    // eslint-disable-next-line no-console
-    console.info('[contact] payload:', payload);
-    return { ok: true };
+    const { data } = await api.post('/public/contact/', payload);
+    return data;
   },
 };
 

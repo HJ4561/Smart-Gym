@@ -2,6 +2,7 @@
 // Live photo capture via getUserMedia — deliberately no file-picker fallback,
 // since this photo is what the gym entry gate compares faces against.
 import React, { useEffect, useRef, useState } from 'react';
+import { useLang } from '../i18n/LangContext';
 
 const MAX_WIDTH = 960;      // plenty for face matching, keeps uploads ~150–300 KB
 const JPEG_QUALITY = 0.9;
@@ -9,25 +10,22 @@ const JPEG_QUALITY = 0.9;
 const PREFERRED = { video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false };
 const BASIC = { video: true, audio: false };
 
+// Errors are text keys (translated at render); `detail` is the browser's own message.
 const cameraError = (e) => {
-  if (!window.isSecureContext) {
-    return 'Camera needs a secure connection — open the site over https (or http://localhost).';
-  }
-  if (!navigator.mediaDevices?.getUserMedia) {
-    return 'This browser does not support camera access. Try the latest Chrome, Edge, Safari or Firefox.';
-  }
+  if (!window.isSecureContext) return { key: 'cam.err.insecure' };
+  if (!navigator.mediaDevices?.getUserMedia) return { key: 'cam.err.unsupported' };
   switch (e?.name) {
     case 'NotAllowedError':
     case 'SecurityError':
-      return 'Camera permission was denied. Click the camera icon in the address bar, allow access, then try again.';
+      return { key: 'cam.err.denied' };
     case 'NotFoundError':
     case 'OverconstrainedError':
-      return 'No camera was found on this device.';
+      return { key: 'cam.err.notFound' };
     case 'NotReadableError':
     case 'AbortError':
-      return 'The camera is in use by another app (e.g. Zoom/Teams). Close it and try again.';
+      return { key: 'cam.err.busy' };
     default:
-      return `Could not start the camera${e?.message ? `: ${e.message}` : '.'}`;
+      return { key: 'cam.err.generic', detail: e?.message };
   }
 };
 
@@ -41,7 +39,8 @@ const LiveCamera = ({ onCapture, invalid = false }) => {
   const mountedRef = useRef(false);
   const [mode, setMode] = useState('idle'); // idle | starting | live | captured
   const [preview, setPreview] = useState('');
-  const [error, setError] = useState('');
+  const { t } = useLang();
+  const [error, setError] = useState(null);
 
   const stop = () => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -70,7 +69,7 @@ const LiveCamera = ({ onCapture, invalid = false }) => {
   }, [mode]);
 
   const start = async () => {
-    setError('');
+    setError(null);
     if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
       setError(cameraError());
       return;
@@ -106,7 +105,7 @@ const LiveCamera = ({ onCapture, invalid = false }) => {
   const capture = () => {
     const video = videoRef.current;
     if (!video?.videoWidth) {
-      setError('Camera is still starting — wait a moment and try again.');
+      setError({ key: 'cam.err.starting' });
       return;
     }
     const scale = Math.min(1, MAX_WIDTH / video.videoWidth);
@@ -116,9 +115,9 @@ const LiveCamera = ({ onCapture, invalid = false }) => {
     // Stored un-mirrored (true orientation); only the live preview is mirrored.
     canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
     canvas.toBlob((blob) => {
-      if (!blob) { setError('Could not capture the photo. Try again.'); return; }
+      if (!blob) { setError({ key: 'cam.err.capture' }); return; }
       stop();
-      setError('');
+      setError(null);
       setPreview(URL.createObjectURL(blob));
       setMode('captured');
       onCapture(new File([blob], 'live-photo.jpg', { type: 'image/jpeg' }));
@@ -134,7 +133,7 @@ const LiveCamera = ({ onCapture, invalid = false }) => {
   return (
     <div className={`en-cam ${invalid ? 'bad' : ''}`}>
       <div className="en-cam-stage">
-        {mode === 'captured' && <img src={preview} alt="Captured face photo" />}
+        {mode === 'captured' && <img src={preview} alt={t('cam.alt')} />}
         {(mode === 'live' || mode === 'starting') && (
           <>
             <video ref={videoRef} className="mirror" playsInline muted autoPlay />
@@ -151,24 +150,28 @@ const LiveCamera = ({ onCapture, invalid = false }) => {
       <div className="en-cam-side">
         <p className="en-cam-hint">
           {mode === 'captured'
-            ? 'Photo captured. Make sure your whole face is clear and well lit.'
-            : 'Face the camera in good light, remove sunglasses or caps, and keep your face inside the oval.'}
+            ? t('cam.hint.captured')
+            : t('cam.hint.live')}
         </p>
         {mode === 'idle' && (
           <button type="button" className="btn btn-ghost btn-sm" onClick={start}>
-            {error ? 'TRY AGAIN' : 'OPEN CAMERA'}
+            {error ? t('cam.retry') : t('cam.open')}
           </button>
         )}
         {mode === 'starting' && (
-          <button type="button" className="btn btn-ghost btn-sm" disabled>WAITING FOR CAMERA…</button>
+          <button type="button" className="btn btn-ghost btn-sm" disabled>{t('cam.waiting')}</button>
         )}
         {mode === 'live' && (
-          <button type="button" className="btn btn-red btn-sm" onClick={capture}>CAPTURE PHOTO</button>
+          <button type="button" className="btn btn-red btn-sm" onClick={capture}>{t('cam.capture')}</button>
         )}
         {mode === 'captured' && (
-          <button type="button" className="btn btn-ghost btn-sm" onClick={retake}>RETAKE</button>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={retake}>{t('cam.retake')}</button>
         )}
-        {error && <p className="en-cam-err" role="alert">{error}</p>}
+        {error && (
+          <p className="en-cam-err" role="alert">
+            {t(error.key)}{error.detail ? ` (${error.detail})` : ''}
+          </p>
+        )}
       </div>
     </div>
   );
