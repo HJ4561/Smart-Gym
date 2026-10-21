@@ -1323,5 +1323,10 @@ export const strings = {
   'cam.err.generic': { en: "Could not start the camera.", ar: "تعذّر تشغيل الكاميرا." },
   'cam.err.starting': { en: "Camera is still starting — wait a moment and try again.", ar: "الكاميرا ما زالت تبدأ — انتظر لحظة ثم حاول مرة أخرى." },
   'cam.err.capture': { en: "Could not capture the photo. Try again.", ar: "تعذّر التقاط الصورة. حاول مرة أخرى." },
+  /* ---------- Facility add-ons ---------- */
+  'fac.card.book': { en: "BOOK · SAR {{price}}/MO", ar: "احجز · {{price}} ر.س/شهر" },
+  'en.fac.title': { en: "FACILITY ADD-ONS", ar: "إضافات المرافق" },
+  'en.fac.perMonth': { en: "/mo", ar: "/شهر" },
+  'en.fac.note': { en: "Charged per month of your membership; access ends with your membership.", ar: "تُحتسب لكل شهر من عضويتك؛ ينتهي الوصول بانتهاء العضوية." },
 };
 

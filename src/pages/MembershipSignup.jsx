@@ -1,6 +1,6 @@
 // src/pages/MembershipSignup.jsx
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useLang } from '../i18n/LangContext';
 import { imageSet } from '../i18n/images';
 import usePageTitle from '../hooks/usePageTitle';
@@ -8,6 +8,7 @@ import LangSwitch from '../i18n/LangSwitch';
 import publicService from '../services/publicService';
 import LiveCamera from '../components/LiveCamera';
 import MoyasarForm from '../components/MoyasarForm';
+import useCollection from '../hooks/useCollection';
 import './MembershipSignup.css';
 
 // Read by the payment callback page after Moyasar redirects back.
@@ -184,7 +185,7 @@ const planVisual = (plan, index = 0) => {
    COMPONENT
 ============================================================ */
 const MembershipSignup = () => {
-  const { t, img, lang } = useLang();
+  const { t, img, lang, pick } = useLang();
   usePageTitle(t('nav.membership'));
   // Admin-managed images (Public Website → Site Content), built-in ones as fallback.
   const IMG = imageSet(img, 'en', IMG_DEFAULT);
@@ -219,6 +220,14 @@ const MembershipSignup = () => {
 
   const [duration, setDuration] = useState(1);
   const [agree, setAgree] = useState(false);
+
+  // ---- facility add-ons (Admin → Facility Pricing); /join?facility=<id> preselects one ----
+  const [params] = useSearchParams();
+  const { items: facilityItems } = useCollection('facilities');
+  const [facilityIds, setFacilityIds] = useState(() => {
+    const id = Number(params.get('facility'));
+    return id ? [id] : [];
+  });
 
   const [touched, setTouched] = useState({});
   const [flash, setFlash] = useState(false);
@@ -275,7 +284,16 @@ const MembershipSignup = () => {
     return monthly * duration;
   }, [duration, monthly, annual]);
 
-  const tweenPrice = useTween(price, 700);
+  const bookableFacilities = useMemo(
+    () => (facilityItems || []).filter((f) => f.bookable && f.monthly_price),
+    [facilityItems],
+  );
+  const chosenFacilities = bookableFacilities.filter((f) => facilityIds.includes(f.id));
+  const facilitiesTotal = chosenFacilities.reduce((sum, f) => sum + Number(f.monthly_price) * duration, 0);
+  const total = price + facilitiesTotal;
+  const toggleFacility = (id) => setFacilityIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
+
+  const tweenPrice = useTween(total, 700);
   const passText = useDecode(t('en.pass.pending'), boot);
 
   /* ---------- i18n-driven static arrays ---------- */
@@ -345,6 +363,7 @@ const MembershipSignup = () => {
     && checkout.inputs.form === form
     && checkout.inputs.planId === planId
     && checkout.inputs.duration === duration
+    && checkout.inputs.facilities === facilityIds.join(',')
     && checkout.inputs.photoFile === photoFile
     ? checkout : null;
 
@@ -357,6 +376,10 @@ const MembershipSignup = () => {
         if (Array.isArray(d.vectors)) setVectors(d.vectors);
         if (d.planId) setPlanId(d.planId);
         if (d.duration) setDuration(d.duration);
+        // A facility picked from the Facilities page wins over an older draft.
+        if (Array.isArray(d.facilityIds) && !new URLSearchParams(window.location.search).get('facility')) {
+          setFacilityIds(d.facilityIds);
+        }
       }
     } catch { /* ignore */ }
   }, []);
@@ -366,10 +389,10 @@ const MembershipSignup = () => {
     try {
       const { password, password2, ...safeForm } = form;
       localStorage.setItem('sg-enroll-draft', JSON.stringify({
-        form: safeForm, vectors, planId, duration,
+        form: safeForm, vectors, planId, duration, facilityIds,
       }));
     } catch { /* ignore */ }
-  }, [form, vectors, planId, duration]);
+  }, [form, vectors, planId, duration, facilityIds]);
 
   /* ---------- Boot ---------- */
   useEffect(() => {
@@ -523,6 +546,7 @@ const MembershipSignup = () => {
         plan: planId,
         duration_months: Number(duration),
         password: form.password,
+        facilities: chosenFacilities.map((f) => f.id).join(','),
       };
 
       const data = await publicService.register(payload, photoFile);
@@ -539,7 +563,7 @@ const MembershipSignup = () => {
       setCheckout({
         regId: data.id,
         params: data.payment,
-        inputs: { form, planId, duration, photoFile },
+        inputs: { form, planId, duration, photoFile, facilities: facilityIds.join(',') },
       });
       focusField(payRef, 80);
     } catch (e) {
@@ -949,7 +973,7 @@ const MembershipSignup = () => {
                 <div className="en-sum-title">
                   <h2 key={planId}>{plan.display_name}</h2>
                   <div className="en-sum-price" key={`p${planId}`}>
-                    <b>SAR {Math.round(tweenPrice)}</b><span>{t('en.sum.perMonth')}</span>
+                    <b>SAR {Math.round(tweenPrice / duration)}</b><span>{t('en.sum.perMonth')}</span>
                   </div>
                 </div>
                 <p className="en-sum-desc">{plan.description || '—'}</p>
@@ -982,6 +1006,23 @@ const MembershipSignup = () => {
                   </div>
                 </div>
 
+                {bookableFacilities.length > 0 && (
+                  <div className="en-plan-switch en-fac-switch" style={{ marginTop: 10 }}>
+                    <span>{t('en.fac.title')}</span>
+                    <div>
+                      {bookableFacilities.map((f) => (
+                        <button type="button" key={f.id}
+                          className={facilityIds.includes(f.id) ? 'on' : ''}
+                          aria-pressed={facilityIds.includes(f.id)}
+                          onClick={() => toggleFacility(f.id)}>
+                          {pick(f.data?.title)} · SAR {Number(f.monthly_price).toFixed(0)}{t('en.fac.perMonth')}
+                        </button>
+                      ))}
+                    </div>
+                    <em className="en-fac-note">{t('en.fac.note')}</em>
+                  </div>
+                )}
+
                 <div className="en-sum-terms">
                   <span>{t('en.sum.terms1')}</span><i />
                   <span>{t('en.sum.terms2')}</span><i />
@@ -1009,10 +1050,16 @@ const MembershipSignup = () => {
 
                 <div className="en-lines">
                   <div className="en-line"><span>{plan.display_name} × {duration} {t('en.field.months')}</span><b>SAR {price.toFixed(2)}</b></div>
+                  {chosenFacilities.map((f) => (
+                    <div className="en-line" key={f.id}>
+                      <span>{pick(f.data?.title)} × {duration} {t('en.field.months')}</span>
+                      <b>SAR {(Number(f.monthly_price) * duration).toFixed(2)}</b>
+                    </div>
+                  ))}
                   <div className="en-line"><span>{t('en.sum.tax')}</span><b>SAR 0.00</b></div>
                 </div>
 
-                <div className="en-total" key={`t${planId}-${duration}`}>
+                <div className="en-total" key={`t${planId}-${duration}-${facilityIds.join('.')}`}>
                   <div>
                     <span>{t('en.sum.total')}</span>
                     <em>{t('en.sum.totalSub')}</em>

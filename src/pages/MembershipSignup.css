@@ -1904,3 +1904,8 @@
   padding: 40px 16px;
 }
 .en-callback .en-success { width: min(560px, 100%); }
+
+/* Facility add-ons in the order summary (wraps: there can be several) */
+.en-fac-switch { flex-wrap: wrap; }
+.en-fac-switch div { flex-wrap: wrap; justify-content: flex-end; }
+.en-fac-note { flex-basis: 100%; font-style: normal; font-size: 11px; opacity: 0.6; }

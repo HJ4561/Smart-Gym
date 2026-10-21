@@ -164,6 +164,8 @@ const FacilitiesShowcase = () => {
         .map((n) => [pick(d[`stat${n}_label`]), d[`stat${n}_value`]])
         .filter(([k, v]) => k && v),
       ctaIcon: CATEGORY_ICON[d.category] || I.grid,
+      bookable: !!item.bookable,
+      monthlyPrice: item.monthly_price,
       img: item.image_url,
     };
   });
@@ -498,8 +500,11 @@ const FacilitiesShowcase = () => {
                     </div>
                   )}
 
-                  <Link to="/join" className="btn btn-red fc-cta">
-                    {f.ctaIcon} {t('fac.card.cta')}
+                  {/* Bookable facilities open signup with this facility added to the plan. */}
+                  <Link to={f.bookable ? `/join?facility=${f.id}` : '/join'} className="btn btn-red fc-cta">
+                    {f.ctaIcon} {f.bookable
+                      ? t('fac.card.book', { price: Number(f.monthlyPrice).toFixed(0) })
+                      : t('fac.card.cta')}
                   </Link>
                 </div>
               </div>
