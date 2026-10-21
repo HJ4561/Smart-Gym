@@ -6,6 +6,8 @@ import { useLang } from '../i18n/LangContext';
 import { imageSet } from '../i18n/images';
 import usePageTitle from '../hooks/usePageTitle';
 import LangSwitch from '../i18n/LangSwitch';
+import publicService from '../services/publicService';
+import { strings } from '../i18n/strings';
 
 /* ============================================================
    MOTION HELPERS
@@ -129,7 +131,7 @@ const IMG_DEFAULT = {
    COMPONENT
 ============================================================ */
 const ServicesCatalog = () => {
-  const { t, img } = useLang();
+  const { t, img, lang } = useLang();
   usePageTitle(t('nav.services'));
   // Admin-managed images (Public Website → Site Content), built-in ones as fallback.
   const IMG = imageSet(img, 'svc', IMG_DEFAULT);
@@ -144,6 +146,30 @@ const ServicesCatalog = () => {
   const [wave, setWave] = useState(true);
   const [activeSection, setActiveSection] = useState('hero');
   const [sent, setSent] = useState(false);
+  // Concierge form → admin portal's Website Inbox (same endpoint as the contact page).
+  const [concGoal, setConcGoal] = useState('force');
+  const [concEmail, setConcEmail] = useState('');
+  const [concSending, setConcSending] = useState(false);
+  const [concError, setConcError] = useState('');
+  const sendConcierge = async (e) => {
+    e.preventDefault();
+    if (concSending || sent) return;
+    const goalKey = { force: 'svc.conc.goal1', cardio: 'svc.conc.goal2', combat: 'svc.conc.goal3', rehab: 'svc.conc.goal4' }[concGoal];
+    const goal = strings[goalKey]?.en || t(goalKey);
+    setConcSending(true);
+    setConcError('');
+    try {
+      await publicService.contact({
+        name: concEmail.trim(), email: concEmail.trim(), topic: 'Services concierge', subtopic: goal,
+        message: `Wants a programme recommendation. Goal: ${goal}.`, lang, website: '',
+      });
+      setSent(true);
+    } catch (err) {
+      setConcError(err.message || t('ct.f.error'));
+    } finally {
+      setConcSending(false);
+    }
+  };
   const [mthStage, setMthStage] = useState(0);
 
   const sectionRefs = useRef([]);
@@ -949,11 +975,11 @@ const ServicesCatalog = () => {
             <div className="svc-side svc-side-concierge">
               <h4 className="svc-concierge-title">{t('svc.conc.title')}</h4>
               <p className="svc-concierge-desc">{t('svc.conc.desc')}</p>
-              <form className="svc-concierge-form" onSubmit={(e) => { e.preventDefault(); setSent(true); }}>
+              <form className="svc-concierge-form" onSubmit={sendConcierge}>
                 <label>
                   <span>{t('svc.conc.goal')}</span>
                   <div className="svc-select">
-                    <select defaultValue="force" disabled={sent}>
+                    <select value={concGoal} onChange={(e) => setConcGoal(e.target.value)} disabled={sent || concSending}>
                       <option value="force">{t('svc.conc.goal1')}</option>
                       <option value="cardio">{t('svc.conc.goal2')}</option>
                       <option value="combat">{t('svc.conc.goal3')}</option>
@@ -964,12 +990,14 @@ const ServicesCatalog = () => {
                 </label>
                 <label>
                   <span>{t('svc.conc.email')}</span>
-                  <input type="email" required placeholder={t('svc.conc.emailPh')} disabled={sent} />
+                  <input type="email" required placeholder={t('svc.conc.emailPh')} disabled={sent || concSending}
+                    value={concEmail} onChange={(e) => setConcEmail(e.target.value)} />
                 </label>
-                <button type="submit" className="svc-concierge-cta" disabled={sent}>
+                <button type="submit" className="svc-concierge-cta" disabled={sent || concSending}>
                   {sent ? <>{I.check} {t('svc.conc.sent')}</> : t('svc.conc.submit')}
                 </button>
                 {sent && <div className="svc-sent">{sentText}</div>}
+                {concError && <div className="svc-sent" role="alert">{concError}</div>}
               </form>
             </div>
 
