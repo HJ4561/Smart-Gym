@@ -9,7 +9,17 @@ import publicService from '../services/publicService';
 import LiveCamera from '../components/LiveCamera';
 import MoyasarForm from '../components/MoyasarForm';
 import useCollection from '../hooks/useCollection';
+import AddressMap from '../components/AddressMap';
 import './MembershipSignup.css';
+
+/** Saudi mobile → +9665XXXXXXXX, or null (accepts 05…, 5…, +9665…, 009665…). */
+const saudiMobile = (v) => {
+  let d = String(v || '').replace(/\D/g, '');
+  if (d.startsWith('00966')) d = d.slice(5);
+  else if (d.startsWith('966')) d = d.slice(3);
+  if (d.startsWith('0')) d = d.slice(1);
+  return d.length === 9 && d.startsWith('5') ? `+966${d}` : null;
+};
 
 // Read by the payment callback page after Moyasar redirects back.
 export const PENDING_KEY = 'sg-enroll-pending';
@@ -210,6 +220,8 @@ const MembershipSignup = () => {
     email: '',
     phone: '',
     address: '',
+    address_lat: null,
+    address_lng: null,
     age: '',
     gender: 'male',
     password: '',
@@ -228,6 +240,8 @@ const MembershipSignup = () => {
     const id = Number(params.get('facility'));
     return id ? [id] : [];
   });
+  // Months per chosen facility (1 … plan months); missing = the whole plan.
+  const [facilityMonths, setFacilityMonths] = useState({});
 
   const [touched, setTouched] = useState({});
   const [flash, setFlash] = useState(false);
@@ -289,7 +303,9 @@ const MembershipSignup = () => {
     [facilityItems],
   );
   const chosenFacilities = bookableFacilities.filter((f) => facilityIds.includes(f.id));
-  const facilitiesTotal = chosenFacilities.reduce((sum, f) => sum + Number(f.monthly_price) * duration, 0);
+  const monthsFor = (id) => Math.min(facilityMonths[id] || duration, duration);
+  const facilitiesTotal = chosenFacilities.reduce((sum, f) => sum + Number(f.monthly_price) * monthsFor(f.id), 0);
+  const facilitySelection = chosenFacilities.map((f) => `${f.id}:${monthsFor(f.id)}`).join(',');
   const total = price + facilitiesTotal;
   const toggleFacility = (id) => setFacilityIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
 
@@ -349,7 +365,7 @@ const MembershipSignup = () => {
   /* ---------- Validation ---------- */
   const nameOk = form.full_name.trim().length >= 2;
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
-  const phoneOk = form.phone.replace(/\D/g, '').length >= 7;
+  const phoneOk = !!saudiMobile(form.phone);
   const iqamaOk = IQAMA_RE.test(form.iqama_number);
   const ageOk = Number(form.age) >= 12 && Number(form.age) <= 100;
   const passwordOk = form.password.length >= 8;
@@ -363,7 +379,7 @@ const MembershipSignup = () => {
     && checkout.inputs.form === form
     && checkout.inputs.planId === planId
     && checkout.inputs.duration === duration
-    && checkout.inputs.facilities === facilityIds.join(',')
+    && checkout.inputs.facilities === facilitySelection
     && checkout.inputs.photoFile === photoFile
     ? checkout : null;
 
@@ -379,6 +395,7 @@ const MembershipSignup = () => {
         // A facility picked from the Facilities page wins over an older draft.
         if (Array.isArray(d.facilityIds) && !new URLSearchParams(window.location.search).get('facility')) {
           setFacilityIds(d.facilityIds);
+          if (d.facilityMonths) setFacilityMonths(d.facilityMonths);
         }
       }
     } catch { /* ignore */ }
@@ -389,10 +406,10 @@ const MembershipSignup = () => {
     try {
       const { password, password2, ...safeForm } = form;
       localStorage.setItem('sg-enroll-draft', JSON.stringify({
-        form: safeForm, vectors, planId, duration, facilityIds,
+        form: safeForm, vectors, planId, duration, facilityIds, facilityMonths,
       }));
     } catch { /* ignore */ }
-  }, [form, vectors, planId, duration, facilityIds]);
+  }, [form, vectors, planId, duration, facilityIds, facilityMonths]);
 
   /* ---------- Boot ---------- */
   useEffect(() => {
@@ -539,14 +556,15 @@ const MembershipSignup = () => {
         iqama_number: form.iqama_number.trim(),
         full_name: form.full_name.trim(),
         email: form.email.trim().toLowerCase(),
-        phone: form.phone.trim(),
+        phone: saudiMobile(form.phone),
         address: form.address.trim(),
+        ...(form.address_lat != null ? { address_lat: form.address_lat, address_lng: form.address_lng } : {}),
         age: Number(form.age),
         gender: form.gender,
         plan: planId,
         duration_months: Number(duration),
         password: form.password,
-        facilities: chosenFacilities.map((f) => f.id).join(','),
+        facilities: facilitySelection,
       };
 
       const data = await publicService.register(payload, photoFile);
@@ -563,7 +581,7 @@ const MembershipSignup = () => {
       setCheckout({
         regId: data.id,
         params: data.payment,
-        inputs: { form, planId, duration, photoFile, facilities: facilityIds.join(',') },
+        inputs: { form, planId, duration, photoFile, facilities: facilitySelection },
       });
       focusField(payRef, 80);
     } catch (e) {
@@ -778,7 +796,7 @@ const MembershipSignup = () => {
                         <label ref={phoneRef} className={`en-field ${err('phone', !phoneOk, t('en.err.phone')) ? 'bad' : ''}`}>
                           <span className="en-flabel">{t('en.p1.phone')}</span>
                           <div className="en-input">
-                            <input type="tel" placeholder={t('en.p1.phonePh')} value={form.phone}
+                            <input type="tel" inputMode="tel" dir="ltr" placeholder={t('en.p1.phonePh')} value={form.phone}
                               onChange={(e) => setForm({ ...form, phone: e.target.value })}
                               onBlur={() => setTouched((x) => ({ ...x, phone: 1 }))} />
                             <span className="en-in-ico">{I.phone(14)}</span>
@@ -829,14 +847,12 @@ const MembershipSignup = () => {
                           </div>
                         </label>
 
-                        <label className="en-field" style={{ gridColumn: '1 / -1' }}>
+                        <div className="en-field" style={{ gridColumn: '1 / -1' }}>
                           <span className="en-flabel">{t('en.field.address')}</span>
-                          <div className="en-input">
-                            <input type="text" placeholder={t('en.field.addressPh')} value={form.address}
-                              onChange={(e) => setForm({ ...form, address: e.target.value })} />
-                            <span className="en-in-ico">{I.node(14)}</span>
-                          </div>
-                        </label>
+                          <AddressMap t={t} lang={lang} placeholder={t('en.field.addressPh')} icon={I.node(14)}
+                            value={{ address: form.address, lat: form.address_lat, lng: form.address_lng }}
+                            onChange={(v) => setForm((f) => ({ ...f, address: v.address ?? f.address, address_lat: v.lat ?? null, address_lng: v.lng ?? null }))} />
+                        </div>
                       </div>
 
                       {/* LIVE PHOTO */}
@@ -1009,16 +1025,34 @@ const MembershipSignup = () => {
                 {bookableFacilities.length > 0 && (
                   <div className="en-plan-switch en-fac-switch" style={{ marginTop: 10 }}>
                     <span>{t('en.fac.title')}</span>
-                    <div>
-                      {bookableFacilities.map((f) => (
-                        <button type="button" key={f.id}
-                          className={facilityIds.includes(f.id) ? 'on' : ''}
-                          aria-pressed={facilityIds.includes(f.id)}
-                          onClick={() => toggleFacility(f.id)}>
-                          {pick(f.data?.title)} · SAR {Number(f.monthly_price).toFixed(0)}{t('en.fac.perMonth')}
-                        </button>
-                      ))}
-                    </div>
+                    <ul className="en-fac-list">
+                      {bookableFacilities.map((f) => {
+                        const on = facilityIds.includes(f.id);
+                        return (
+                          <li key={f.id} className={on ? 'on' : ''}>
+                            <div className="en-fac-name">
+                              <b>{pick(f.data?.title)}</b>
+                              <em>SAR {Number(f.monthly_price).toFixed(0)}{t('en.fac.perMonth')}</em>
+                            </div>
+                            {on && (
+                              <label className="en-fac-months">
+                                <span>{t('en.fac.for')}</span>
+                                <select value={monthsFor(f.id)}
+                                  onChange={(e) => setFacilityMonths((m) => ({ ...m, [f.id]: Number(e.target.value) }))}>
+                                  {Array.from({ length: duration }, (_, i) => i + 1).map((m) => (
+                                    <option key={m} value={m}>{m} {t('en.field.months')}{m === duration ? ` · ${t('en.fac.whole')}` : ''}</option>
+                                  ))}
+                                </select>
+                              </label>
+                            )}
+                            <button type="button" className={on ? 'en-fac-btn remove' : 'en-fac-btn'}
+                              aria-pressed={on} onClick={() => toggleFacility(f.id)}>
+                              {on ? t('en.fac.remove') : t('en.fac.add')}
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
                     <em className="en-fac-note">{t('en.fac.note')}</em>
                   </div>
                 )}
@@ -1052,14 +1086,14 @@ const MembershipSignup = () => {
                   <div className="en-line"><span>{plan.display_name} × {duration} {t('en.field.months')}</span><b>SAR {price.toFixed(2)}</b></div>
                   {chosenFacilities.map((f) => (
                     <div className="en-line" key={f.id}>
-                      <span>{pick(f.data?.title)} × {duration} {t('en.field.months')}</span>
-                      <b>SAR {(Number(f.monthly_price) * duration).toFixed(2)}</b>
+                      <span>{pick(f.data?.title)} × {monthsFor(f.id)} {t('en.field.months')}</span>
+                      <b>SAR {(Number(f.monthly_price) * monthsFor(f.id)).toFixed(2)}</b>
                     </div>
                   ))}
                   <div className="en-line"><span>{t('en.sum.tax')}</span><b>SAR 0.00</b></div>
                 </div>
 
-                <div className="en-total" key={`t${planId}-${duration}-${facilityIds.join('.')}`}>
+                <div className="en-total" key={`t${planId}-${duration}-${facilitySelection}`}>
                   <div>
                     <span>{t('en.sum.total')}</span>
                     <em>{t('en.sum.totalSub')}</em>

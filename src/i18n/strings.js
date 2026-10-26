@@ -688,7 +688,7 @@ export const strings = {
   'en.p1.email': { en: 'ENCRYPTED EMAIL ADDRESS', ar: 'البريد الإلكتروني المشفر' },
   'en.p1.emailPh': { en: 'vance.athletics@domain.io', ar: 'athlete@domain.io' },
   'en.p1.phone': { en: 'MOBILE SECURITY LINE', ar: 'خط الهاتف الآمن' },
-  'en.p1.phonePh': { en: '+966 55 890 4412', ar: '+966 55 890 4412' },
+  'en.p1.phonePh': { en: '05X XXX XXXX', ar: '05X XXX XXXX' },
   'en.p1.vecHead': { en: 'PRIMARY ATHLETIC VECTOR (TELEMETRY CALIBRATION)', ar: 'المتجه الرياضي الأساسي (معايرة القياسات)' },
   'en.p1.vecMulti': { en: 'SELECT MULTIPLE', ar: 'اختر عدة' },
   'en.p1.cta': { en: 'PROCEED TO CHECKOUT', ar: 'المتابعة إلى الدفع' },
@@ -728,7 +728,7 @@ export const strings = {
   /* Errors / validation */
   'en.err.name': { en: 'MIN 2 CHARACTERS', ar: 'حرفان على الأقل' },
   'en.err.email': { en: 'INVALID EMAIL', ar: 'بريد غير صالح' },
-  'en.err.phone': { en: 'ENTER VALID NUMBER', ar: 'أدخل رقمًا صحيحًا' },
+  'en.err.phone': { en: 'SAUDI MOBILE ONLY — e.g. 05X XXX XXXX', ar: 'رقم جوال سعودي فقط — مثل 05X XXX XXXX' },
   'en.err.agree': { en: 'REQUIRED TO ACTIVATE PASS', ar: 'مطلوب لتفعيل التصريح' },
 
   /* ---------- Success ---------- */
@@ -1325,8 +1325,18 @@ export const strings = {
   'cam.err.capture': { en: "Could not capture the photo. Try again.", ar: "تعذّر التقاط الصورة. حاول مرة أخرى." },
   /* ---------- Facility add-ons ---------- */
   'fac.card.book': { en: "BOOK · SAR {{price}}/MO", ar: "احجز · {{price}} ر.س/شهر" },
+  'en.fac.add': { en: "ADD", ar: "إضافة" },
+  'en.fac.remove': { en: "REMOVE", ar: "إزالة" },
+  'en.fac.for': { en: "FOR", ar: "لمدة" },
+  'en.fac.whole': { en: "whole plan", ar: "كامل الخطة" },
+  'en.map.search': { en: "Search your address on the map", ar: "ابحث عن عنوانك على الخريطة" },
+  'en.map.mine': { en: "USE MY LOCATION", ar: "استخدم موقعي" },
+  'en.map.locating': { en: "LOCATING…", ar: "جارٍ تحديد الموقع…" },
+  'en.map.label': { en: "Map of your address", ar: "خريطة عنوانك" },
+  'en.map.hint': { en: "Search above, or click the map to drop a pin on your home.", ar: "ابحث بالأعلى أو انقر على الخريطة لتحديد موقع منزلك." },
+  'en.map.pinned': { en: "Pinned — drag the pin to adjust.", ar: "تم التحديد — اسحب الدبوس للتعديل." },
   'en.fac.title': { en: "FACILITY ADD-ONS", ar: "إضافات المرافق" },
   'en.fac.perMonth': { en: "/mo", ar: "/شهر" },
-  'en.fac.note': { en: "Charged per month of your membership; access ends with your membership.", ar: "تُحتسب لكل شهر من عضويتك؛ ينتهي الوصول بانتهاء العضوية." },
+  'en.fac.note': { en: "Charged per month. Choose how many months each facility runs — up to your plan length.", ar: "تُحتسب شهريًا. اختر عدد أشهر كل مرفق — حتى مدة خطتك." },
 };
 

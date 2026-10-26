@@ -1909,3 +1909,38 @@
 .en-fac-switch { flex-wrap: wrap; }
 .en-fac-switch div { flex-wrap: wrap; justify-content: flex-end; }
 .en-fac-note { flex-basis: 100%; font-style: normal; font-size: 11px; opacity: 0.6; }
+
+/* ---------- Facility add-ons: one row each (add / remove, months) ---------- */
+.en-plan-switch.en-fac-switch { display: block; }
+.en-plan-switch.en-fac-switch > span { display: block; margin-bottom: 4px; }
+.en-fac-switch .en-fac-note { display: block; margin-top: 6px; }
+.en-fac-list li > div, .en-fac-list li > label { justify-content: flex-start; }
+.en-fac-list { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.en-fac-list li {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 8px 10px; background: var(--graphite); border: 1px solid var(--hair); border-radius: var(--r-s);
+  transition: border-color 0.25s ease;
+}
+.en-fac-list li.on { border-color: var(--red); }
+.en-fac-name { flex: 1; min-width: 120px; display: flex; flex-direction: column; gap: 2px; }
+.en-fac-name b { font: 700 11px 'Montserrat', sans-serif; color: #fff; }
+.en-fac-name em { font: 600 9.5px 'Montserrat', sans-serif; font-style: normal; color: var(--muted); }
+.en-fac-months { display: flex; align-items: center; gap: 6px; font: 700 8px 'Montserrat', sans-serif; letter-spacing: 0.16em; color: var(--muted); }
+.en-fac-months select {
+  background: var(--abyss); color: #fff; border: 1px solid var(--hair); border-radius: var(--r-s);
+  padding: 5px 6px; font: 600 10px 'Montserrat', sans-serif;
+}
+.en-fac-btn {
+  padding: 7px 12px; background: transparent; border: 1px solid var(--line); border-radius: var(--r-s);
+  color: #fff; font: 800 8.5px 'Montserrat', sans-serif; letter-spacing: 0.16em; cursor: pointer; transition: all 0.25s ease;
+}
+.en-fac-btn:hover { border-color: var(--red); }
+.en-fac-btn.remove { background: var(--red); border-color: var(--red); }
+
+/* ---------- Address map ---------- */
+.en-map { display: flex; flex-direction: column; gap: 8px; }
+.en-map-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.en-map-search { flex: 1; min-width: 200px; }
+.en-map-search gmp-place-autocomplete { width: 100%; color-scheme: dark; }
+.en-map-canvas { width: 100%; height: 220px; border: 1px solid var(--hair); border-radius: var(--r-s); background: var(--abyss); }
+.en-map-hint { margin: 0; font: 600 10px 'Montserrat', sans-serif; color: var(--muted); }
