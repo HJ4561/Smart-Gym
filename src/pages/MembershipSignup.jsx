@@ -9,7 +9,8 @@ import publicService from '../services/publicService';
 import LiveCamera from '../components/LiveCamera';
 import MoyasarForm from '../components/MoyasarForm';
 import useCollection from '../hooks/useCollection';
-import AddressMap from '../components/AddressMap';
+import AddressAutocomplete from '../components/AddressAutocomplete';
+import SaudiPhoneInput from '../components/SaudiPhoneInput';
 import './MembershipSignup.css';
 
 /** Saudi mobile → +9665XXXXXXXX, or null (accepts 05…, 5…, +9665…, 009665…). */
@@ -796,8 +797,8 @@ const MembershipSignup = () => {
                         <label ref={phoneRef} className={`en-field ${err('phone', !phoneOk, t('en.err.phone')) ? 'bad' : ''}`}>
                           <span className="en-flabel">{t('en.p1.phone')}</span>
                           <div className="en-input">
-                            <input type="tel" inputMode="tel" dir="ltr" placeholder={t('en.p1.phonePh')} value={form.phone}
-                              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                            <SaudiPhoneInput className="en-phone" placeholder={t('en.p1.phonePh')} value={form.phone}
+                              onChange={(phone) => setForm({ ...form, phone })}
                               onBlur={() => setTouched((x) => ({ ...x, phone: 1 }))} />
                             <span className="en-in-ico">{I.phone(14)}</span>
                           </div>
@@ -849,7 +850,7 @@ const MembershipSignup = () => {
 
                         <div className="en-field" style={{ gridColumn: '1 / -1' }}>
                           <span className="en-flabel">{t('en.field.address')}</span>
-                          <AddressMap t={t} lang={lang} placeholder={t('en.field.addressPh')} icon={I.node(14)}
+                          <AddressAutocomplete t={t} lang={lang} placeholder={t('en.field.addressPh')} icon={I.node(14)}
                             value={{ address: form.address, lat: form.address_lat, lng: form.address_lng }}
                             onChange={(v) => setForm((f) => ({ ...f, address: v.address ?? f.address, address_lat: v.lat ?? null, address_lng: v.lng ?? null }))} />
                         </div>

@@ -1937,10 +1937,19 @@
 .en-fac-btn:hover { border-color: var(--red); }
 .en-fac-btn.remove { background: var(--red); border-color: var(--red); }
 
-/* ---------- Address map ---------- */
-.en-map { display: flex; flex-direction: column; gap: 8px; }
-.en-map-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.en-map-search { flex: 1; min-width: 200px; }
-.en-map-search gmp-place-autocomplete { width: 100%; color-scheme: dark; }
-.en-map-canvas { width: 100%; height: 220px; border: 1px solid var(--hair); border-radius: var(--r-s); background: var(--abyss); }
-.en-map-hint { margin: 0; font: 600 10px 'Montserrat', sans-serif; color: var(--muted); }
+/* ---------- Address (Geoapify autocomplete) ---------- */
+.en-geo { display: flex; flex-direction: column; gap: 6px; }
+.en-geo .geoapify-autocomplete-input {
+  background: var(--abyss); color: #fff; border: 1px solid var(--hair); border-radius: var(--r-s);
+  font: 600 12px 'Montserrat', sans-serif; padding: 11px 36px 11px 12px; height: auto;
+}
+.en-geo .geoapify-autocomplete-input:focus { border-color: var(--red); outline: none; }
+.en-geo .geoapify-autocomplete-items { background: var(--graphite); border: 1px solid var(--hair); border-radius: var(--r-s); }
+.en-geo .geoapify-autocomplete-item { font: 500 12px 'Montserrat', sans-serif; }
+.en-geo .geoapify-autocomplete-item.active, .en-geo .geoapify-autocomplete-item:hover { background: rgba(229,25,55,0.18); }
+.en-geo-hint { margin: 0; font: 600 10px 'Montserrat', sans-serif; color: var(--muted); }
+
+/* ---------- +966 phone field ---------- */
+.en-input .saudi-phone { flex: 1; min-width: 0; display: flex; align-items: center; }
+.en-input .saudi-phone-cc { padding-left: 14px; color: #fff; opacity: 0.75; font: 700 12px 'Montserrat', sans-serif; letter-spacing: 0.06em; }
+.en-input .saudi-phone input { padding-left: 8px; }

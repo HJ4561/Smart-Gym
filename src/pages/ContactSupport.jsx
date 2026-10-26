@@ -8,6 +8,7 @@ import { strings } from '../i18n/strings';
 import publicService from '../services/publicService';
 import LangSwitch from '../i18n/LangSwitch';
 import './ContactSupport.css';
+import SaudiPhoneInput from '../components/SaudiPhoneInput';
 
 /* ============================================================
    MOTION HELPERS
@@ -576,8 +577,8 @@ const ContactSupport = () => {
                 </div>
                 <div className="ct-field">
                   <label>{t('ct.f.phone')} <span>{t('ct.f.optional')}</span></label>
-                  <input type="tel" maxLength={30} autoComplete="tel"
-                    value={form.phone} onChange={setField('phone')} placeholder={t('ct.f.phonePh')} />
+                  <SaudiPhoneInput className="ct-phone" value={form.phone} placeholder={t('ct.f.phonePh')}
+                    onChange={(phone) => setForm((f) => ({ ...f, phone }))} />
                 </div>
               </div>
 

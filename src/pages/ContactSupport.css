@@ -1360,3 +1360,12 @@
   color: var(--red);
   font-size: 13px;
 }
+
+/* +966 phone field: the box carries the border, the input inside is bare */
+.ct-field .saudi-phone {
+  display: flex; align-items: center; background: var(--abyss); border: 1px solid var(--hair);
+  border-radius: var(--r-s); transition: border-color .25s ease;
+}
+.ct-field .saudi-phone:focus-within { border-color: var(--hot); }
+.ct-field .saudi-phone-cc { padding-left: 14px; color: #fff; opacity: 0.75; font: 600 13px 'Montserrat', sans-serif; }
+.ct-field .saudi-phone input { border: 0; background: none; padding-left: 8px; }
