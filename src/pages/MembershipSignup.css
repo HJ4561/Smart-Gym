@@ -528,6 +528,20 @@
 }
 .en-field.bad .en-flabel { color: var(--hot); }
 .en-field.bad .en-input { border-color: rgba(229,25,55,0.65); box-shadow: 0 0 0 1px rgba(229,25,55,0.25); }
+/* The reason under a field — plain sentence, readable size (not the tiny label style). */
+.en-ferr {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  font: 600 12px/1.4 'Montserrat', sans-serif;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #ff8a9a;
+  overflow-wrap: anywhere;
+}
+.en-ferr::before { content: '!'; flex: none; width: 15px; height: 15px; border-radius: 50%; background: rgba(229,25,55,0.25);
+  color: #ff8a9a; font-size: 10px; font-weight: 800; display: grid; place-items: center; margin-top: 1px; }
+.en-check .en-ferr { grid-column: 1 / -1; }
 
 .en-input {
   position: relative;

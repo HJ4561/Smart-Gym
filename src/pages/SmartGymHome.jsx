@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom';
 import { useLang } from '../i18n/LangContext';
 import { imageSet } from '../i18n/images';
 import useCollection from '../hooks/useCollection';
+import useLive from '../hooks/useLive';
+import publicService from '../services/publicService';
 import usePageTitle from '../hooks/usePageTitle';
 import LangSwitch from '../i18n/LangSwitch';
 import './SmartGymHome.css';
@@ -159,7 +161,7 @@ const IMG_SERVICES_DEFAULT = {
 ============================================================ */
 
 const SmartGymHome = () => {
-  const { t, img, pick } = useLang();
+  const { t, img, pick, lang } = useLang();
   usePageTitle();
   // Admin-managed images (Public Website → Site Content), built-in ones as fallback.
   const IMG_WHY = imageSet(img, 'home.why', IMG_WHY_DEFAULT);
@@ -180,12 +182,25 @@ const SmartGymHome = () => {
   const skewRef = useVelocitySkew();
   const kickText = useDecode(t('home.kicker'), isVisible.hero && boot);
 
+  /* ---------- Real data: live numbers, plans and courses from the backend ---------- */
+  const live = useLive();
+  const [plans, setPlans] = useState(null);
+  const [courses, setCourses] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    publicService.plans().then((d) => { if (alive) setPlans(Array.isArray(d) ? d : []); }).catch(() => {});
+    publicService.courses().then((d) => { if (alive) setCourses(Array.isArray(d) ? d : []); }).catch(() => {});
+    return () => { alive = false; };
+  }, []);
+  const num = (n) => Number(n || 0).toLocaleString('en-US');
+  const rating = live?.avg_rating ? `${live.avg_rating}/5` : null;
+
   /* ---------- Translated content ---------- */
   const heroStats = [
     { v: t('home.stat1.v'), l: t('home.stat1.l') },
-    { v: t('home.stat2.v'), l: t('home.stat2.l') },
-    { v: t('home.stat3.v'), l: t('home.stat3.l') },
-    { v: t('home.stat4.v'), l: t('home.stat4.l') },
+    { v: live ? num(live.occupancy.current) : t('home.stat2.v'), l: t('home.stat2.l') },
+    { v: live ? num(live.classes_per_week) : t('home.stat3.v'), l: t('home.stat3.l') },
+    { v: rating || t('home.stat4.v'), l: t('home.stat4.l') },
   ];
 
   const BELT_ITEMS = [
@@ -206,23 +221,27 @@ const SmartGymHome = () => {
     { k: t('home.caps.4.k'), t: t('home.caps.4.t'), d: t('home.caps.4.d'), icon: I.chip },
   ];
 
+  // Bars: how full the gym is now; the others fill as the day/week goes on.
   const floorStats = [
-    { label: t('home.floor.tile1.lab'), value: t('home.floor.tile1.v'),   unit: t('home.floor.tile1.unit'), badge: t('home.floor.tile1.badge'), live: true, pct: 72,  note: t('home.floor.tile1.note') },
-    { label: t('home.floor.tile2.lab'), value: t('home.floor.tile2.v'), unit: t('home.floor.tile2.unit'), badge: t('home.floor.tile2.badge'),           pct: 64,  note: t('home.floor.tile2.note') },
-    { label: t('home.floor.tile3.lab'), value: t('home.floor.tile3.v'),   unit: t('home.floor.tile3.unit'), badge: t('home.floor.tile3.badge'),           pct: 81,  note: t('home.floor.tile3.note') },
-    { label: t('home.floor.tile4.lab'), value: t('home.floor.tile4.v'),     unit: t('home.floor.tile4.unit'), badge: t('home.floor.tile4.badge'),           pct: 100, note: t('home.floor.tile4.note') },
+    { label: t('home.floor.tile1.lab'), value: live ? num(live.occupancy.current) : '—', unit: t('home.floor.tile1.unit'), badge: t('home.floor.tile1.badge'), live: true,
+      pct: live?.occupancy.capacity ? live.occupancy.percent : (live?.occupancy.current ? 100 : 0),
+      note: live?.occupancy.peak_window ? `${t('home.floor.tile1.note')} · ${live.occupancy.peak_window}` : t('home.floor.tile1.note') },
+    { label: t('home.floor.tile2.lab'), value: live ? num(live.volume_today_kg) : '—', unit: t('home.floor.tile2.unit'), badge: t('home.floor.tile2.badge'),
+      pct: live ? Math.min(100, Math.round(live.volume_today_kg / 500)) : 0, note: t('home.floor.tile2.note') },
+    { label: t('home.floor.tile3.lab'), value: live ? num(live.sessions_week) : '—', unit: t('home.floor.tile3.unit'), badge: t('home.floor.tile3.badge'),
+      pct: live ? Math.min(100, live.sessions_week) : 0, note: t('home.floor.tile3.note') },
+    { label: t('home.floor.tile4.lab'), value: live ? num(live.machines) : t('home.floor.tile4.v'), unit: t('home.floor.tile4.unit'), badge: t('home.floor.tile4.badge'),
+      pct: live?.machines ? 100 : 0, note: t('home.floor.tile4.note') },
   ];
 
-  const floorFeed = [
-    { s: t('home.feed.p1'),     st: t('home.feed.use'),    cls: 'busy' },
-    { s: t('home.feed.r4'),     st: t('home.feed.open'),   cls: 'ok' },
-    { s: t('home.feed.oly'),    st: t('home.feed.use'),    cls: 'busy' },
-    { s: t('home.feed.plunge'), st: '4°C',                 cls: 'info' },
-    { s: t('home.feed.turf'),   st: t('home.feed.open'),   cls: 'ok' },
-    { s: t('home.feed.sauna'),  st: '45°C',                cls: 'info' },
-    { s: t('home.feed.pit'),    st: t('home.feed.spar'),   cls: 'ok' },
-    { s: t('home.feed.court'),  st: t('home.feed.league'), cls: 'info' },
-  ];
+  // Ticker: today's real classes and the places left in each.
+  const floorFeed = live?.classes_today?.length
+    ? live.classes_today.map((c) => ({
+      s: `${c.name} · ${c.time}${c.location ? ` · ${c.location}` : ''}`,
+      st: c.spots_left > 0 ? `${c.spots_left} ${t('home.feed.spots')}` : t('home.feed.full'),
+      cls: c.spots_left > 0 ? 'ok' : 'busy',
+    }))
+    : [{ s: t('home.feed.none'), st: '', cls: 'info' }];
 
   const whyRows = [
     { n: '01', t: t('home.why.r1.t'), tag: t('home.why.r1.tag'), m: t('home.why.r1.m'), d: t('home.why.r1.d'), img: IMG_WHY.r1 },
@@ -232,10 +251,10 @@ const SmartGymHome = () => {
   ];
 
   const whyChips = [
-    [t('home.why.c1.v'), t('home.why.c1.l')],
-    [t('home.why.c2.v'), t('home.why.c2.l')],
-    [t('home.why.c3.v'), t('home.why.c3.l')],
-  ];
+    [live?.retention_percent != null ? `${live.retention_percent}%` : t('home.why.c1.v'), t('home.why.c1.l')],
+    [rating || t('home.why.c2.v'), t('home.why.c2.l')],
+    [live ? num(live.members_active) : t('home.why.c3.v'), t('home.why.c3.l')],
+  ].filter(([v]) => v && v !== '—');
 
   // Facilities preview: the first four from the admin portal (Public Website → Lists → Facilities).
   const { items: facilityItems } = useCollection('facilities');
@@ -250,62 +269,62 @@ const SmartGymHome = () => {
     };
   });
 
-  const services = [
-    { id: 1, category: 'biometrics', title: t('svc.card1.title'), price: t('svc.card1.price'), per: t('svc.card1.per'), duration: t('svc.card1.duration'), badge: t('svc.card1.tag'),
-      tags: [t('svc.card1.tag1'), t('svc.card1.tag2'), t('svc.card1.tag3')], description: t('svc.card1.desc'), image: IMG_SERVICES[1] },
-    { id: 2, category: 'coaching', title: t('svc.card2.title'), price: t('svc.card2.price'), per: t('svc.card2.per'), duration: t('svc.card2.duration'), badge: t('svc.card2.tag'),
-      tags: [t('svc.card2.tag1'), t('svc.card2.tag2'), t('svc.card2.tag3')], description: t('svc.card2.desc'), image: IMG_SERVICES[2] },
-    { id: 3, category: 'nutrition', title: t('svc.card3.title'), price: t('svc.card3.price'), per: t('svc.card3.per'), duration: t('svc.card3.duration'), badge: t('svc.card3.tag'),
-      tags: [t('svc.card3.tag1'), t('svc.card3.tag2'), t('svc.card3.tag3')], description: t('svc.card3.desc'), image: IMG_SERVICES[3] },
-    { id: 4, category: 'combat', title: t('svc.card4.title'), price: t('svc.card4.price'), per: t('svc.card4.per'), duration: t('svc.card4.duration'), badge: t('svc.card4.tag'),
-      tags: [t('svc.card4.tag1'), t('svc.card4.tag2'), t('svc.card4.tag3')], description: t('svc.card4.desc'), image: IMG_SERVICES[4] },
-    { id: 5, category: 'recovery', title: t('svc.card5.title'), price: t('svc.card5.price'), per: t('svc.card5.per'), duration: t('svc.card5.duration'), badge: t('svc.card5.tag'),
-      tags: [t('svc.card5.tag1'), t('svc.card5.tag2'), t('svc.card5.tag3')], description: t('svc.card5.desc'), image: IMG_SERVICES[5] },
-  ];
-
+  // Programs = the published courses (Admin → Trainers & Courses), newest featured first.
+  const LEVEL = { beginner: 'Beginner', intermediate: 'Intermediate', advanced: 'Advanced', all_levels: 'All levels' };
+  const services = (courses || []).map((c, i) => ({
+    id: c.id,
+    category: (c.category || 'other').toLowerCase(),
+    title: c.title,
+    price: Number(c.price) > 0 ? `SAR ${Number(c.price).toLocaleString('en-US')}` : t('home.svc.free'),
+    per: Number(c.price) > 0 && c.is_included_with_pro ? ` · ${t('home.svc.proFree')}` : '',
+    duration: `${c.duration_weeks} ${t('home.svc.weeks')}`,
+    badge: LEVEL[c.level] || c.level,
+    tags: [c.category, c.trainer_name, c.days_per_week ? `${c.days_per_week}× / ${t('home.svc.week')}` : ''].filter(Boolean),
+    description: c.subtitle || '',
+    image: c.cover_image_url || IMG_SERVICES[(i % 5) + 1],
+  }));
   const serviceCats = [
-    { id: 'all',        label: t('home.svc.all') },
-    { id: 'biometrics', label: t('home.svc.bio') },
-    { id: 'coaching',   label: t('home.svc.coach') },
-    { id: 'nutrition',  label: t('home.svc.nut') },
-    { id: 'combat',     label: t('home.svc.cmb') },
-    { id: 'recovery',   label: t('home.svc.rec') },
+    { id: 'all', label: t('home.svc.all') },
+    ...[...new Set((courses || []).map((c) => c.category).filter(Boolean))]
+      .map((cat) => ({ id: cat.toLowerCase(), label: cat.toUpperCase() })),
   ];
 
-  const tiers = [
-    { label: t('home.pr.t1.label'), name: t('home.pr.t1.name'), short: t('home.pr.t1.short'),
-      monthly: 39, annual: 31, icon: I.dumbbell, featured: false, desc: t('home.pr.t1.desc'),
-      features: [
-        { t: t('home.pr.t1.f1'), ok: true }, { t: t('home.pr.t1.f2'), ok: true },
-        { t: t('home.pr.t1.f3'), ok: true }, { t: t('home.pr.t1.f4'), ok: false },
-        { t: t('home.pr.t1.f5'), ok: false },
-      ] },
-    { label: t('home.pr.t2.label'), name: t('home.pr.t2.name'), short: t('home.pr.t2.short'),
-      monthly: 79, annual: 63, icon: I.bolt, featured: true, desc: t('home.pr.t2.desc'),
-      features: [
-        { t: t('home.pr.t2.f1'), ok: true }, { t: t('home.pr.t2.f2'), ok: true },
-        { t: t('home.pr.t2.f3'), ok: true }, { t: t('home.pr.t2.f4'), ok: true },
-        { t: t('home.pr.t2.f5'), ok: false },
-      ] },
-    { label: t('home.pr.t3.label'), name: t('home.pr.t3.name'), short: t('home.pr.t3.short'),
-      monthly: 159, annual: 127, icon: I.trophy, featured: false, desc: t('home.pr.t3.desc'),
-      features: [
-        { t: t('home.pr.t3.f1'), ok: true }, { t: t('home.pr.t3.f2'), ok: true },
-        { t: t('home.pr.t3.f3'), ok: true }, { t: t('home.pr.t3.f4'), ok: true },
-        { t: t('home.pr.t3.f5'), ok: true },
-      ] },
-  ];
+  // Pricing = the real membership plans (Admin → Website → Plans), cheapest first.
+  const TIER_ICONS = [I.dumbbell, I.bolt, I.trophy];
+  const sortedPlans = [...(plans || [])].sort((a, b) => Number(a.price_monthly) - Number(b.price_monthly));
+  const tiers = sortedPlans.map((p, i) => {
+    const ar = lang === 'ar';
+    const features = (ar && p.features_ar?.length ? p.features_ar : p.features) || [];
+    return {
+      id: p.id,
+      label: p.session_limit_minutes ? `${p.session_limit_minutes} ${t('home.pr.minVisit')}` : t('home.pr.unlimited'),
+      name: (ar && p.display_name_ar) || p.display_name,
+      short: (ar && p.display_name_ar) || p.display_name,
+      monthly: Math.round(Number(p.price_monthly)),
+      annual: Math.round(Number(p.price_annual) / 12),
+      icon: TIER_ICONS[Math.min(i, 2)],
+      featured: sortedPlans.length > 1 && i === Math.floor(sortedPlans.length / 2),
+      desc: (ar && p.description_ar) || p.description,
+      features: features.map((f) => ({ t: f, ok: true })),
+    };
+  });
+  const bestSaving = sortedPlans.reduce((best, p) => {
+    const m = Number(p.price_monthly) * 12;
+    return m > 0 ? Math.max(best, Math.round(100 * (1 - Number(p.price_annual) / m))) : best;
+  }, 0);
 
   const planIncludes = [t('home.pr.inc1'), t('home.pr.inc2'), t('home.pr.inc3'), t('home.pr.inc4')];
 
   const proofStats = [
-    { v: t('home.pf.s1.v'), title: t('home.pf.s1.t'), desc: t('home.pf.s1.d') },
-    { v: t('home.pf.s2.v'), title: t('home.pf.s2.t'), desc: t('home.pf.s2.d'), red: true },
+    { v: live?.retention_percent != null ? `${live.retention_percent}%` : '—', title: t('home.pf.s1.t'), desc: t('home.pf.s1.d') },
+    { v: live ? num(live.sets_30d) : '—', title: t('home.pf.s2.t'), desc: t('home.pf.s2.d'), red: true },
     { v: t('home.pf.s3.v'), title: t('home.pf.s3.t'), desc: t('home.pf.s3.d') },
-    { v: t('home.pf.s4.v'), title: t('home.pf.s4.t'), desc: t('home.pf.s4.d'), red: true },
+    { v: live ? num(live.checkins_today) : '—', title: t('home.pf.s4.t'), desc: t('home.pf.s4.d'), red: true },
   ];
 
-  const QUOTE = t('home.pf.quote');
+  // Testimonial = the latest real review (4★+ with a comment) members left for a coach or course.
+  const review = live?.reviews?.[0] || null;
+  const QUOTE = review ? review.comment : t('home.pf.empty');
   const quoteTokens = QUOTE.split(' ');
 
   /* ---------- Refs ---------- */
@@ -994,8 +1013,10 @@ const SmartGymHome = () => {
 
         {filteredServices.length === 0 && (
           <div className="svc-empty">
-            {t('home.svc.empty1')} “{searchQuery.toUpperCase()}”
-            <button onClick={() => { setSearchQuery(''); setActiveFilter('all'); }}>{t('home.svc.reset')}</button>
+            {courses && courses.length === 0 ? t('home.svc.none') : <>
+              {t('home.svc.empty1')} “{searchQuery.toUpperCase()}”
+              <button onClick={() => { setSearchQuery(''); setActiveFilter('all'); }}>{t('home.svc.reset')}</button>
+            </>}
           </div>
         )}
       </section>
@@ -1010,7 +1031,7 @@ const SmartGymHome = () => {
           <div className="toggle">
             <button className={`t-btn ${!isAnnual ? 'on' : ''}`} onClick={() => setIsAnnual(false)}>{t('home.pr.monthly')}</button>
             <button className={`t-btn ${isAnnual ? 'on' : ''}`} onClick={() => setIsAnnual(true)}>
-              {t('home.pr.annual')} <span className="save">{t('home.pr.save')}</span>
+              {t('home.pr.annual')} {bestSaving > 0 && <span className="save">–{bestSaving}%</span>}
             </button>
           </div>
           <div className="inc-row">
@@ -1018,17 +1039,18 @@ const SmartGymHome = () => {
           </div>
         </header>
 
+        {plans === null && <p className="ssub" style={{ textAlign: 'center' }}>{t('home.pr.loading')}</p>}
         <div className="tier-grid">
           {tiers.map((tr, i) => (
-            <div className={`tier ${tr.featured ? 'featured' : ''}`} key={tr.name} style={{ '--i': i }}>
+            <div className={`tier ${tr.featured ? 'featured' : ''}`} key={tr.id} style={{ '--i': i }}>
               <div className="tier-in">
                 {tr.featured && <span className="tier-flag">{t('home.pr.popular')}</span>}
                 <div className="tier-top"><span>{tr.label}</span><i>{tr.icon}</i></div>
                 <h3>{tr.name}</h3>
                 <p className="tier-desc">{tr.desc}</p>
                 <div className="tier-price">
-                  <b key={`${tr.short}-${isAnnual}`}>${isAnnual ? tr.annual : tr.monthly}</b>
-                  <span>{t('home.pr.and')}<br />{isAnnual ? t('home.pr.billedA') : t('home.pr.billedM')}</span>
+                  <b key={`${tr.id}-${isAnnual}`}><small style={{ fontSize: '0.45em', marginInlineEnd: 4 }}>SAR</small>{isAnnual ? tr.annual : tr.monthly}</b>
+                  <span>{t('home.pr.perMonth')}<br />{isAnnual ? t('home.pr.billedA') : t('home.pr.billedM')}</span>
                 </div>
                 <ul>
                   {tr.features.map((f) => (
@@ -1037,9 +1059,9 @@ const SmartGymHome = () => {
                     </li>
                   ))}
                 </ul>
-                <button className={`btn ${tr.featured ? 'btn-red' : 'btn-ghost'} tier-btn`}>
-                  {tr.featured ? t('home.pr.claim') : `${t('home.pr.select')} ${tr.short.toUpperCase()}`}
-                </button>
+                <Link to={`/join?plan=${tr.id}${isAnnual ? '&months=12' : ''}`} className={`btn ${tr.featured ? 'btn-red' : 'btn-ghost'} tier-btn`}>
+                  {`${t('home.pr.select')} ${tr.short.toUpperCase()}`}
+                </Link>
               </div>
             </div>
           ))}
@@ -1056,7 +1078,7 @@ const SmartGymHome = () => {
 
         <div className="proof-grid">
           <div className="quote-card">
-            <div className="stars">{[...Array(5)].map((_, i) => <span key={i}>{I.star}</span>)}</div>
+            {review && <div className="stars" aria-label={`${review.rating}/5`}>{[...Array(review.rating)].map((_, i) => <span key={i}>{I.star}</span>)}</div>}
             <p className="q-scrub" ref={quoteRef} style={{ '--n': quoteTokens.length }} aria-label={QUOTE}>
               {quoteTokens.map((raw, i) => (
                 <span key={i} className={`qw ${raw.includes('*') ? 'hl' : ''}`} style={{ '--i': i }}>
@@ -1064,10 +1086,15 @@ const SmartGymHome = () => {
                 </span>
               ))}
             </p>
-            <div className="q-author">
-              <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQQP16lPUzghRqa7_k9646XT_M_wPLA0sTTYPNu3pLBT9QC6YSZ49I_8i4avB-a58JnUv6intdGxdCOAGlazijnJAG3Q2-RQVhW_f189J2PkdlPpYo-27GWTxyjvH3A9x8wsqVXR0U54Qn1qz0NCvFP2ozjD-60CJWZA6myDIJjqkrxR9wJf7xeNhQKYMeGstYKP-KwXFnvTEqmSr3968D_ooxdoRLhofRiqsPU1vaewDyETD7pZ5qpg" alt={t('home.pf.author')} />
-              <div><h3>{t('home.pf.author')}</h3><p>{t('home.pf.authorMeta')}</p></div>
-            </div>
+            {review && (
+              <div className="q-author">
+                <span aria-hidden="true" style={{
+                  width: 48, height: 48, borderRadius: '50%', display: 'grid', placeItems: 'center', flex: 'none',
+                  background: 'rgba(229,25,55,0.18)', color: 'var(--red)', fontWeight: 800,
+                }}>{review.name.charAt(0)}</span>
+                <div><h3>{review.name}</h3><p>{review.about}{live.reviews_count > 1 ? ` · ${rating} (${live.reviews_count})` : ''}</p></div>
+              </div>
+            )}
           </div>
 
           <div className="proof-stats">

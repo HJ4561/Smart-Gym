@@ -7,6 +7,7 @@ import { imageSet } from '../i18n/images';
 import usePageTitle from '../hooks/usePageTitle';
 import LangSwitch from '../i18n/LangSwitch';
 import publicService from '../services/publicService';
+import useLive from '../hooks/useLive';
 import { strings } from '../i18n/strings';
 
 /* ============================================================
@@ -160,7 +161,7 @@ const ServicesCatalog = () => {
     setConcError('');
     try {
       await publicService.contact({
-        name: concEmail.trim(), email: concEmail.trim(), topic: 'Services concierge', subtopic: goal,
+        name: 'Website visitor', email: concEmail.trim(), topic: 'Services concierge', subtopic: goal,
         message: `Wants a programme recommendation. Goal: ${goal}.`, lang, website: '',
       });
       setSent(true);
@@ -187,13 +188,24 @@ const ServicesCatalog = () => {
     t('svc.belt.open'),
   ];
 
+  /* ---------- Real offers: coaches (1-on-1), nutritionists and courses from the backend ---------- */
+  const live = useLive();
+  const [offers, setOffers] = useState({ trainers: null, nutritionists: null, courses: null });
+  useEffect(() => {
+    let alive = true;
+    const put = (k) => (d) => { if (alive) setOffers((o) => ({ ...o, [k]: Array.isArray(d) ? d : [] })); };
+    publicService.trainers().then(put('trainers')).catch(() => put('trainers')([]));
+    publicService.nutritionists().then(put('nutritionists')).catch(() => put('nutritionists')([]));
+    publicService.courses().then(put('courses')).catch(() => put('courses')([]));
+    return () => { alive = false; };
+  }, []);
+
+  const courseCats = [...new Set((offers.courses || []).map((c) => c.category).filter(Boolean))];
   const filters = [
-    { id: 'all',         label: t('svc.filter.all') },
-    { id: 'diagnostics', label: t('svc.filter.diagnostics') },
-    { id: 'coaching',    label: t('svc.filter.coaching') },
-    { id: 'nutrition',   label: t('svc.filter.nutrition') },
-    { id: 'combat',      label: t('svc.filter.combat') },
-    { id: 'recovery',    label: t('svc.filter.recovery') },
+    { id: 'all', label: t('svc.filter.all') },
+    ...((offers.trainers || []).length ? [{ id: 'coaching', label: t('svc.filter.coaching') }] : []),
+    ...((offers.nutritionists || []).length ? [{ id: 'nutrition', label: t('svc.filter.nutrition') }] : []),
+    ...courseCats.map((c) => ({ id: c.toLowerCase(), label: c.toUpperCase() })),
   ];
 
   const DOTS = [
@@ -205,69 +217,52 @@ const ServicesCatalog = () => {
   ];
 
   const metrics = [
-    { v: 99.4, d: 1, p: '',      s: '%',  l: t('svc.metric.accuracy'), icon: I.heart },
-    { v: 24,   d: 0, p: '< ',    s: ' HR', l: t('svc.metric.sync'),    icon: I.timer },
-    { v: 110,  d: 0, p: '−',     s: '°C', l: t('svc.metric.cryo'),     icon: I.cryo },
-    { v: 24,   d: 0, p: 'LIVE ', s: '/7', l: t('svc.metric.feedback'), icon: I.speed },
+    { v: live?.trainers ?? 0, d: 0, p: '', s: '', l: t('svc.metric.accuracy'), icon: I.heart },
+    { v: live?.classes_per_week ?? 0, d: 0, p: '', s: '', l: t('svc.metric.sync'), icon: I.timer },
+    { v: live?.avg_rating ?? 0, d: 1, p: '', s: live?.avg_rating ? '/5' : '', l: t('svc.metric.cryo'), icon: I.cryo },
+    { v: live?.machines ?? 0, d: 0, p: '', s: '', l: t('svc.metric.feedback'), icon: I.speed },
   ];
 
+  const sar = (v) => `SAR ${Number(v).toLocaleString('en-US')}`;
+  const stars = (r, n) => (n > 0 ? `★ ${Number(r).toFixed(1)} (${n})` : t('svc.new'));
+  const LEVEL = { beginner: 'BEGINNER', intermediate: 'INTERMEDIATE', advanced: 'ADVANCED', all_levels: 'ALL LEVELS' };
   const services = [
-    {
-      id: 1, category: 'diagnostics',
-      labLabel: t('svc.card1.lab'), labName: t('svc.card1.labName'), labMeta: t('svc.card1.meta'),
-      tag: t('svc.card1.tag'), title: t('svc.card1.title'),
-      price: t('svc.card1.price'), per: t('svc.card1.per'),
-      duration: t('svc.card1.duration'), durationIcon: I.timer, ctaIcon: I.calendar, cta: t('svc.card1.cta'),
-      desc: t('svc.card1.desc'),
-      tags: [t('svc.card1.tag1'), t('svc.card1.tag2'), t('svc.card1.tag3')],
-      img: IMG.vo2,
-    },
-    {
-      id: 2, category: 'coaching',
-      labLabel: t('svc.card2.lab'), labName: t('svc.card2.labName'), labMeta: t('svc.card2.meta'),
-      tag: t('svc.card2.tag'), title: t('svc.card2.title'),
-      price: t('svc.card2.price'), per: t('svc.card2.per'),
-      duration: t('svc.card2.duration'), durationIcon: I.dumbbell, ctaIcon: I.arrow, cta: t('svc.card2.cta'),
-      desc: t('svc.card2.desc'),
-      tags: [t('svc.card2.tag1'), t('svc.card2.tag2'), t('svc.card2.tag3')],
-      img: IMG.coaching,
-    },
-    {
-      id: 3, category: 'nutrition',
-      labLabel: t('svc.card3.lab'), labName: t('svc.card3.labName'), labMeta: t('svc.card3.meta'),
-      tag: t('svc.card3.tag'), title: t('svc.card3.title'),
-      price: t('svc.card3.price'), per: t('svc.card3.per'),
-      duration: t('svc.card3.duration'), durationIcon: I.hub, ctaIcon: I.arrow, cta: t('svc.card3.cta'),
-      desc: t('svc.card3.desc'),
-      tags: [t('svc.card3.tag1'), t('svc.card3.tag2'), t('svc.card3.tag3')],
-      img: IMG.nutrition,
-    },
-    {
-      id: 4, category: 'combat',
-      labLabel: t('svc.card4.lab'), labName: t('svc.card4.labName'), labMeta: t('svc.card4.meta'),
-      tag: t('svc.card4.tag'), title: t('svc.card4.title'),
-      price: t('svc.card4.price'), per: t('svc.card4.per'),
-      duration: t('svc.card4.duration'), durationIcon: I.mma, ctaIcon: I.mma, cta: t('svc.card4.cta'),
-      desc: t('svc.card4.desc'),
-      tags: [t('svc.card4.tag1'), t('svc.card4.tag2'), t('svc.card4.tag3')],
-      img: IMG.combat,
-    },
-    {
-      id: 5, category: 'recovery',
-      labLabel: t('svc.card5.lab'), labName: t('svc.card5.labName'), labMeta: t('svc.card5.meta'),
-      tag: t('svc.card5.tag'), title: t('svc.card5.title'),
-      price: t('svc.card5.price'), per: t('svc.card5.per'),
-      duration: t('svc.card5.duration'), durationIcon: I.cryo, ctaIcon: I.cryo, cta: t('svc.card5.cta'),
-      desc: t('svc.card5.desc'),
-      tags: [t('svc.card5.tag1'), t('svc.card5.tag2'), t('svc.card5.tag3')],
-      img: IMG.recovery,
-    },
+    ...(offers.trainers || []).filter((c) => c.is_accepting_clients && c.offers_1on1 !== false).map((c) => ({
+      id: `t${c.id}`, category: 'coaching',
+      labLabel: t('svc.filter.coaching'), labName: c.user?.full_name, labMeta: stars(c.rating, c.total_reviews),
+      tag: c.title, title: `${t('svc.oneOnOne')} · ${c.user?.full_name}`,
+      price: Number(c.hourly_rate) > 0 ? sar(c.hourly_rate) : t('home.svc.free'), per: ` / ${t('svc.session')}`,
+      duration: `60 ${t('svc.min')}`, durationIcon: I.dumbbell, ctaIcon: I.arrow, cta: t('svc.joinToBook'),
+      desc: c.bio || c.credentials || '',
+      tags: (c.specialties || []).slice(0, 3),
+      img: c.photo_url || IMG.coaching,
+    })),
+    ...(offers.nutritionists || []).filter((n) => n.is_accepting_clients).map((n) => ({
+      id: `n${n.id}`, category: 'nutrition',
+      labLabel: t('svc.filter.nutrition'), labName: n.user?.full_name, labMeta: stars(n.rating, n.total_reviews),
+      tag: n.title, title: `${t('svc.nutritionPlan')} · ${n.user?.full_name}`,
+      price: Number(n.hourly_rate) > 0 ? sar(n.hourly_rate) : t('home.svc.free'), per: ` / ${t('svc.consultation')}`,
+      duration: t('svc.planDuration'), durationIcon: I.hub, ctaIcon: I.arrow, cta: t('svc.joinToBook'),
+      desc: n.bio || n.credentials || '',
+      tags: (n.specialties || []).slice(0, 3),
+      img: n.photo_url || IMG.nutrition,
+    })),
+    ...(offers.courses || []).map((c) => ({
+      id: `c${c.id}`, category: (c.category || 'other').toLowerCase(),
+      labLabel: (c.category || '').toUpperCase(), labName: c.trainer_name, labMeta: stars(c.rating, c.total_reviews),
+      tag: LEVEL[c.level] || c.level, title: c.title,
+      price: Number(c.price) > 0 ? sar(c.price) : t('home.svc.free'), per: c.is_included_with_pro ? ` · ${t('home.svc.proFree')}` : '',
+      duration: `${c.duration_weeks} ${t('home.svc.weeks')}`, durationIcon: I.timer, ctaIcon: I.calendar, cta: t('svc.joinToBook'),
+      desc: c.subtitle || '',
+      tags: [c.trainer_name, c.days_per_week ? `${c.days_per_week}× / ${t('home.svc.week')}` : ''].filter(Boolean),
+      img: c.cover_image_url || IMG.vo2,
+    })),
   ];
 
   const sideTelemetry = [
-    { l: t('svc.tel.lactate'), v: t('svc.tel.lactateV') },
-    { l: t('svc.tel.maxO2'),   v: t('svc.tel.maxO2V') },
-    { l: t('svc.tel.chamber'), v: t('svc.tel.ready'), hl: true },
+    { l: t('svc.tel.lactate'), v: live ? String(live.occupancy.current) : '—' },
+    { l: t('svc.tel.maxO2'), v: live ? String(live.checkins_today) : '—' },
+    { l: t('svc.tel.chamber'), v: live ? String(live.classes_today.length) : '—', hl: true },
   ];
 
   const METHOD = [

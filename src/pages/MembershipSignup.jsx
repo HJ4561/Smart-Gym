@@ -25,6 +25,16 @@ const saudiMobile = (v) => {
 // Read by the payment callback page after Moyasar redirects back.
 export const PENDING_KEY = 'sg-enroll-pending';
 const IQAMA_RE = /^2\d{9}$/;
+const EMAIL_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/;
+const NAME_RE = /^\p{L}+(?:[ '\-.]\p{L}+)*\.?$/u;      // letters (Arabic or Latin), spaces, ' - .
+// Server field → the form key used for touched / refs / messages here.
+const SERVER_FIELD = {
+  iqama_number: 'iqama', full_name: 'name', email: 'email', phone: 'phone', age: 'age',
+  password: 'password', photo: 'photo', address: 'address', plan: 'plan', facilities: 'facilities',
+};
+
+/** The message under a field (role=alert so screen readers announce it). */
+const FieldMsg = ({ children }) => (children ? <span className="en-ferr" role="alert">{children}</span> : null);
 
 /* ============================================================
    HELPERS
@@ -248,6 +258,8 @@ const MembershipSignup = () => {
   const [flash, setFlash] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  // Field errors from the server: { email: { msg, value } } — shown until that field changes.
+  const [serverErrors, setServerErrors] = useState({});
   // Set once the registration exists: { regId, params (Moyasar form), inputs it was created from }
   const [checkout, setCheckout] = useState(null);
   const [sumOpen, setSumOpen] = useState(true);
@@ -260,7 +272,12 @@ const MembershipSignup = () => {
         const data = await publicService.plans();
         if (!alive) return;
         setPlansData(Array.isArray(data) ? data : []);
-        if (Array.isArray(data) && data.length) setPlanId(data[0].id);
+        // ?plan=<id>&months=12 from the home page pricing cards
+        const wanted = Array.isArray(data) && data.find((p) => p.id === Number(params.get('plan')));
+        if (wanted) setPlanId(wanted.id);
+        else if (Array.isArray(data) && data.length) setPlanId(data[0].id);
+        const months = Number(params.get('months'));
+        if ([1, 3, 6, 12].includes(months)) setDuration(months);
         setPlansError('');
       } catch (e) {
         if (!alive) return;
@@ -363,13 +380,13 @@ const MembershipSignup = () => {
   const agreeRef = useRef(null);
   const payRef = useRef(null);
 
-  /* ---------- Validation ---------- */
-  const nameOk = form.full_name.trim().length >= 2;
-  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
+  /* ---------- Validation (same rules as the backend) ---------- */
+  const nameOk = NAME_RE.test(form.full_name.trim().replace(/\s+/g, ' ')) && form.full_name.trim().split(/\s+/).length >= 2;
+  const emailOk = EMAIL_RE.test(form.email.trim()) && !form.email.includes('..');
   const phoneOk = !!saudiMobile(form.phone);
   const iqamaOk = IQAMA_RE.test(form.iqama_number);
-  const ageOk = Number(form.age) >= 12 && Number(form.age) <= 100;
-  const passwordOk = form.password.length >= 8;
+  const ageOk = /^\d+$/.test(form.age) && Number(form.age) >= 12 && Number(form.age) <= 100;
+  const passwordOk = form.password.length >= 8 && !/^\d+$/.test(form.password);
   const passwordMatch = form.password === form.password2;
   const photoOk = !!photoFile;
   const step1Ok = nameOk && emailOk && phoneOk && iqamaOk && ageOk && passwordOk && passwordMatch && photoOk && planId;
@@ -586,8 +603,24 @@ const MembershipSignup = () => {
       });
       focusField(payRef, 80);
     } catch (e) {
-      setSubmitError(e.message || 'Submission failed. Please try again.');
+      const values = {
+        iqama: form.iqama_number, name: form.full_name, email: form.email, phone: form.phone, age: form.age,
+        password: form.password, photo: photoFile, address: form.address,
+      };
+      const mapped = {};
+      Object.entries(e.fields || {}).forEach(([field, msg]) => {
+        const k = SERVER_FIELD[field] || field;
+        mapped[k] = { msg, value: values[k] };
+      });
+      setServerErrors(mapped);
+      const fieldCount = Object.keys(mapped).length;
+      setSubmitError(e.detail || (fieldCount
+        ? t('en.err.fix')
+        : (e.status ? e.message : t('en.err.network'))));
       flashErr();
+      const refs = { iqama: iqamaRef, name: nameRef, email: emailRef, phone: phoneRef, age: ageRef, password: passwordRef, photo: photoRef };
+      const first = ['iqama', 'name', 'email', 'phone', 'age', 'password', 'photo'].find((k) => mapped[k]);
+      if (first) { goStep(1); focusField(refs[first], 120); }
     } finally {
       setProcessing(false);
     }
@@ -601,7 +634,15 @@ const MembershipSignup = () => {
   const primary = () => (step === 1 ? proceed() : submit());
   const paybarOff = processing;
   const hudPct = activeCheckout ? 92 : step2Ok ? 80 : step1Ok ? 58 : step === 2 ? 40 : 12;
-  const err = (k, bad, msg) => (touched[k] && bad ? msg : null);
+  const fieldValue = {
+    iqama: form.iqama_number, name: form.full_name, email: form.email, phone: form.phone, age: form.age,
+    password: form.password, photo: photoFile, address: form.address,
+  };
+  const serverErr = (k) => {
+    const s = serverErrors[k];
+    return s && fieldValue[k] === s.value ? s.msg : null;
+  };
+  const err = (k, bad, msg) => serverErr(k) || (touched[k] && bad ? msg : null);
 
   const PLANS_FOR_SWITCH = localPlans;
 
@@ -772,6 +813,7 @@ const MembershipSignup = () => {
                               onBlur={() => setTouched((x) => ({ ...x, iqama: 1 }))} />
                             <span className="en-in-ico">{I.key(14)}</span>
                           </div>
+                          <FieldMsg>{err('iqama', !iqamaOk, t('en.err.iqama'))}</FieldMsg>
                         </label>
 
                         <label ref={nameRef} className={`en-field ${err('name', !nameOk, t('en.err.name')) ? 'bad' : ''}`}>
@@ -782,6 +824,7 @@ const MembershipSignup = () => {
                               onBlur={() => setTouched((x) => ({ ...x, name: 1 }))} />
                             <span className="en-in-ico">{I.user(14)}</span>
                           </div>
+                          <FieldMsg>{err('name', !nameOk, t('en.err.name'))}</FieldMsg>
                         </label>
 
                         <label ref={emailRef} className={`en-field ${err('email', !emailOk, t('en.err.email')) ? 'bad' : ''}`}>
@@ -792,6 +835,7 @@ const MembershipSignup = () => {
                               onBlur={() => setTouched((x) => ({ ...x, email: 1 }))} />
                             <span className="en-in-ico">{I.mail(14)}</span>
                           </div>
+                          <FieldMsg>{err('email', !emailOk, t('en.err.email'))}</FieldMsg>
                         </label>
 
                         <label ref={phoneRef} className={`en-field ${err('phone', !phoneOk, t('en.err.phone')) ? 'bad' : ''}`}>
@@ -802,6 +846,7 @@ const MembershipSignup = () => {
                               onBlur={() => setTouched((x) => ({ ...x, phone: 1 }))} />
                             <span className="en-in-ico">{I.phone(14)}</span>
                           </div>
+                          <FieldMsg>{err('phone', !phoneOk, t('en.err.phone'))}</FieldMsg>
                         </label>
 
                         <label ref={ageRef} className={`en-field ${err('age', !ageOk, t('en.err.age')) ? 'bad' : ''}`}>
@@ -812,6 +857,7 @@ const MembershipSignup = () => {
                               onBlur={() => setTouched((x) => ({ ...x, age: 1 }))} />
                             <span className="en-in-ico">{I.target(14)}</span>
                           </div>
+                          <FieldMsg>{err('age', !ageOk, t('en.err.age'))}</FieldMsg>
                         </label>
 
                         <label className="en-field">
@@ -836,6 +882,7 @@ const MembershipSignup = () => {
                               onBlur={() => setTouched((x) => ({ ...x, password: 1 }))} />
                             <span className="en-in-ico">{I.lock(14)}</span>
                           </div>
+                          <FieldMsg>{err('password', !passwordOk, t('en.err.password'))}</FieldMsg>
                         </label>
 
                         <label ref={password2Ref} className={`en-field ${err('password2', !passwordMatch, t('en.err.password2')) ? 'bad' : ''}`}>
@@ -846,6 +893,7 @@ const MembershipSignup = () => {
                               onBlur={() => setTouched((x) => ({ ...x, password2: 1 }))} />
                             <span className="en-in-ico">{I.lock(14)}</span>
                           </div>
+                          <FieldMsg>{err('password2', !passwordMatch, t('en.err.password2'))}</FieldMsg>
                         </label>
 
                         <div className="en-field" style={{ gridColumn: '1 / -1' }}>
@@ -853,6 +901,7 @@ const MembershipSignup = () => {
                           <AddressAutocomplete t={t} lang={lang} placeholder={t('en.field.addressPh')} icon={I.node(14)}
                             value={{ address: form.address, lat: form.address_lat, lng: form.address_lng }}
                             onChange={(v) => setForm((f) => ({ ...f, address: v.address ?? f.address, address_lat: v.lat ?? null, address_lng: v.lng ?? null }))} />
+                          <FieldMsg>{serverErr('address')}</FieldMsg>
                         </div>
                       </div>
 
@@ -864,7 +913,8 @@ const MembershipSignup = () => {
                         </div>
                         <LiveCamera
                           onCapture={(file) => { setPhotoFile(file); setTouched((x) => ({ ...x, photo: 1 })); }}
-                          invalid={!!touched.photo && !photoOk}
+                          invalid={(!!touched.photo && !photoOk) || !!serverErr('photo')}
+                          serverError={serverErr('photo') || ''}
                         />
                       </div>
 
@@ -930,6 +980,7 @@ const MembershipSignup = () => {
                             <b>{t('en.p2.agreeB')}</b>
                             <i>{t('en.p2.agreeI')}</i>
                           </span>
+                          <FieldMsg>{err('agree', !agree, t('en.err.agree'))}</FieldMsg>
                         </label>
                       </div>
 

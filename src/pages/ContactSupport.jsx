@@ -359,7 +359,12 @@ const ContactSupport = () => {
     }
   };
 
-  const setField = (name) => (e) => setForm((f) => ({ ...f, [name]: e.target.value }));
+  const [fieldErrors, setFieldErrors] = useState({});
+  const setField = (name) => (e) => {
+    setForm((f) => ({ ...f, [name]: e.target.value }));
+    setFieldErrors((x) => ({ ...x, [name]: '' }));
+  };
+  const FieldErr = ({ name }) => (fieldErrors[name] ? <span className="ct-ferr" role="alert">{fieldErrors[name]}</span> : null);
 
   // English label of a topic key, so the admin inbox reads the same in both site languages.
   const english = (key) => strings[key]?.en || t(key);
@@ -368,6 +373,16 @@ const ContactSupport = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (sending || sent) return;
+    const found = {};
+    const name = form.name.trim();
+    if (!name) found.name = t('ct.err.name');
+    else if (!/^\p{L}+(?:[ '\-.]\p{L}+)*\.?$/u.test(name.replace(/\s+/g, ' '))) found.name = t('ct.err.nameLetters');
+    if (!/^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/.test(form.email.trim()) || form.email.includes('..')) {
+      found.email = t('ct.err.email');
+    }
+    if (msg.trim().length < 10) found.message = t('ct.err.msg');
+    setFieldErrors(found);
+    if (Object.keys(found).length) return;
     setSending(true);
     setSendError('');
     try {
@@ -383,7 +398,9 @@ const ContactSupport = () => {
       });
       setSent(true);
     } catch (err) {
-      setSendError(err.message || t('ct.f.error'));
+      const fields = err.fields || {};
+      setFieldErrors(fields);
+      setSendError(err.detail || (Object.keys(fields).length ? t('en.err.fix') : t('ct.f.error')));
     } finally {
       setSending(false);
     }
@@ -543,7 +560,7 @@ const ContactSupport = () => {
               <span className="ct-form-tag">{t('ct.form.tag')}</span>
             </div>
 
-            <form className="ct-form" onSubmit={handleSubmit}>
+            <form className="ct-form" onSubmit={handleSubmit} noValidate>
               <div className="ct-field">
                 <label>{t('ct.f.domain')} <em>*</em></label>
                 <div className="ct-cats" role="radiogroup" aria-label={t('ct.f.domain')}>
@@ -570,22 +587,25 @@ const ContactSupport = () => {
               </div>
 
               <div className="ct-row-2">
-                <div className="ct-field">
+                <div className={`ct-field ${fieldErrors.name ? 'bad' : ''}`}>
                   <label>{t('ct.f.name')} <em>*</em></label>
-                  <input type="text" required maxLength={120} autoComplete="name"
+                  <input type="text" maxLength={120} autoComplete="name" aria-invalid={!!fieldErrors.name}
                     value={form.name} onChange={setField('name')} placeholder={t('ct.f.namePh')} />
+                  <FieldErr name="name" />
                 </div>
-                <div className="ct-field">
+                <div className={`ct-field ${fieldErrors.phone ? 'bad' : ''}`}>
                   <label>{t('ct.f.phone')} <span>{t('ct.f.optional')}</span></label>
                   <SaudiPhoneInput className="ct-phone" value={form.phone} placeholder={t('ct.f.phonePh')}
-                    onChange={(phone) => setForm((f) => ({ ...f, phone }))} />
+                    onChange={(phone) => { setForm((f) => ({ ...f, phone })); setFieldErrors((x) => ({ ...x, phone: '' })); }} />
+                  <FieldErr name="phone" />
                 </div>
               </div>
 
-              <div className="ct-field">
+              <div className={`ct-field ${fieldErrors.email ? 'bad' : ''}`}>
                 <label>{t('ct.f.email')} <em>*</em></label>
-                <input type="email" required maxLength={254} autoComplete="email"
+                <input type="email" maxLength={254} autoComplete="email" aria-invalid={!!fieldErrors.email}
                   value={form.email} onChange={setField('email')} placeholder={t('ct.f.emailPh')} />
+                <FieldErr name="email" />
               </div>
 
               {/* Honeypot for bots — hidden from people and screen readers. */}
@@ -601,12 +621,13 @@ const ContactSupport = () => {
                 </div>
                 <textarea
                   rows="4"
-                  required
                   maxLength={1000}
                   value={msg}
-                  onChange={(e) => setMsg(e.target.value)}
+                  aria-invalid={!!fieldErrors.message}
+                  onChange={(e) => { setMsg(e.target.value); setFieldErrors((x) => ({ ...x, message: '' })); }}
                   placeholder={t('ct.f.msgPh')}
                 />
+                <FieldErr name="message" />
               </div>
 
               <div className="ct-cta-row">

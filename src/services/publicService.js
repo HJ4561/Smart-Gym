@@ -23,8 +23,19 @@ export const publicService = {
     return data;
   },
 
+  async nutritionists() {
+    const { data } = await api.get('/nutrition/nutritionists/', { params: { accepting: 'true' } });
+    return data;
+  },
+
   async articles() {
     const { data } = await api.get('/public/articles/');
+    return data;
+  },
+
+  /** Real numbers for the home page: who's in now, today's classes, reviews… (cached 1 min server-side). */
+  async live() {
+    const { data } = await api.get('/public/live/');
     return data;
   },
 
