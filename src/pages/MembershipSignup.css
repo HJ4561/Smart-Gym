@@ -1878,6 +1878,7 @@
 }
 .en-cam-hint { margin: 0; font-size: 12px; line-height: 1.5; color: var(--muted); }
 .en-cam-err { margin: 0; font-size: 12px; color: #ff8a9a; }
+.en-cam-ok { margin: 0; font-size: 12px; line-height: 1.5; color: #7ee2a8; font-weight: 600; }
 
 /* ============================================================
    MOYASAR PAYMENT

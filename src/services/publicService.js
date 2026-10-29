@@ -62,6 +62,16 @@ export const publicService = {
     return data;
   },
 
+  /** Does a captured photo show one clear face? Throws with .code / .fields.photo when refused. */
+  async checkPhoto(photoFile) {
+    const form = new FormData();
+    form.append('photo', photoFile);
+    const { data } = await api.post('/public/photo-check/', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return data;
+  },
+
   async registrationStatus(id) {
     const { data } = await api.get(`/public/register/${id}/status/`);
     return data;

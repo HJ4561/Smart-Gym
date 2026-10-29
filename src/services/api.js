@@ -18,22 +18,37 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Normalize errors
+// Normalize errors. Besides the message, the error carries what forms need to show each
+// problem under its own field: `status` (0 = no answer), `detail`, `fields` ({field: message}),
+// `code` and the raw `data`.
 api.interceptors.response.use(
   (r) => r,
   (err) => {
     const payload = err?.response?.data;
+    const isObj = payload && typeof payload === 'object' && !Array.isArray(payload);
+    const fields = {};
+    if (isObj) {
+      Object.entries(payload).forEach(([k, v]) => {
+        if (k === 'detail' || k === 'code') return;
+        const msg = Array.isArray(v) ? v.join(' ') : (typeof v === 'string' ? v : null);
+        if (msg) fields[k] = msg;
+      });
+    }
     const message =
       payload?.detail ||
-      (typeof payload === 'string' ? payload : null) ||
-      (payload && typeof payload === 'object'
-        ? Object.entries(payload)
-            .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
-            .join(' | ')
+      (typeof payload === 'string' && !payload.trimStart().startsWith('<') ? payload : null) ||
+      (Object.keys(fields).length
+        ? Object.entries(fields).map(([k, v]) => `${k}: ${v}`).join(' | ')
         : null) ||
       err.message ||
       'Request failed';
-    return Promise.reject(new Error(message));
+    const error = new Error(message);
+    error.status = err?.response?.status || 0;
+    error.detail = typeof payload?.detail === 'string' ? payload.detail : '';
+    error.fields = fields;
+    error.code = isObj && typeof payload.code === 'string' ? payload.code : '';
+    error.data = payload;
+    return Promise.reject(error);
   },
 );
 

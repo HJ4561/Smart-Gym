@@ -3,6 +3,7 @@
 // since this photo is what the gym entry gate compares faces against.
 import React, { useEffect, useRef, useState } from 'react';
 import { useLang } from '../i18n/LangContext';
+import { publicService } from '../services/publicService';
 
 const MAX_WIDTH = 960;      // plenty for face matching, keeps uploads ~150–300 KB
 const JPEG_QUALITY = 0.9;
@@ -59,6 +60,12 @@ function photoProblem(canvas) {
   return lsq / n - lmean * lmean < BLUR_MIN ? 'cam.err.blurry' : null;
 }
 
+// Server reasons with their own translated text (cam.err.<code>); anything else shows the server's words.
+const SERVER_CODES = new Set([
+  'no_face', 'many_faces', 'face_small', 'face_cut', 'face_turned', 'face_tilted',
+  'face_dark', 'face_bright', 'face_blurry', 'unavailable', 'dark', 'bright', 'flat', 'blurry', 'small',
+]);
+
 // Errors are text keys (translated at render); `detail` is the browser's own message.
 const cameraError = (e) => {
   if (!window.isSecureContext) return { key: 'cam.err.insecure' };
@@ -87,8 +94,9 @@ const LiveCamera = ({ onCapture, invalid = false, serverError = '' }) => {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const mountedRef = useRef(false);
-  const [mode, setMode] = useState('idle'); // idle | starting | live | captured
+  const [mode, setMode] = useState('idle'); // idle | starting | live | checking | captured
   const [preview, setPreview] = useState('');
+  const [verified, setVerified] = useState(false);   // the server found one clear face
   const { t } = useLang();
   const [error, setError] = useState(null);
 
@@ -169,18 +177,38 @@ const LiveCamera = ({ onCapture, invalid = false, serverError = '' }) => {
       setError({ key: problem });
       return;
     }
-    canvas.toBlob((blob) => {
+    canvas.toBlob(async (blob) => {
       if (!blob) { setError({ key: 'cam.err.capture' }); return; }
-      stop();
+      const file = new File([blob], 'live-photo.jpg', { type: 'image/jpeg' });
+      // The server looks for exactly one clear, frontal face (the gate compares against it).
+      // The camera keeps running meanwhile, so a refused photo can be retaken straight away.
       setError(null);
+      setMode('checking');
+      let ok = false;
+      try {
+        await publicService.checkPhoto(file);
+        ok = true;
+      } catch (e) {
+        if (!mountedRef.current) return;
+        if (e.status && e.status !== 429) {   // refused, or the checker is down: don't keep it
+          setMode('live');
+          setError(SERVER_CODES.has(e.code) ? { key: `cam.err.${e.code}` } : { text: e.fields?.photo || e.message });
+          return;
+        }
+        // No answer (offline) or too many checks: keep the photo — signup checks it again.
+      }
+      if (!mountedRef.current) return;
+      stop();
+      setVerified(ok);
       setPreview(URL.createObjectURL(blob));
       setMode('captured');
-      onCapture(new File([blob], 'live-photo.jpg', { type: 'image/jpeg' }));
+      onCapture(file);
     }, 'image/jpeg', JPEG_QUALITY);
   };
 
   const retake = () => {
     onCapture(null);
+    setVerified(false);
     setPreview('');
     start();
   };
@@ -189,7 +217,7 @@ const LiveCamera = ({ onCapture, invalid = false, serverError = '' }) => {
     <div className={`en-cam ${invalid ? 'bad' : ''}`}>
       <div className="en-cam-stage">
         {mode === 'captured' && <img src={preview} alt={t('cam.alt')} />}
-        {(mode === 'live' || mode === 'starting') && (
+        {(mode === 'live' || mode === 'starting' || mode === 'checking') && (
           <>
             <video ref={videoRef} className="mirror" playsInline muted autoPlay />
             <span className="en-cam-guide" aria-hidden="true" />
@@ -203,11 +231,13 @@ const LiveCamera = ({ onCapture, invalid = false, serverError = '' }) => {
       </div>
 
       <div className="en-cam-side">
-        <p className="en-cam-hint">
-          {mode === 'captured'
-            ? t('cam.hint.captured')
-            : t('cam.hint.live')}
-        </p>
+        {mode === 'captured' && verified && !serverError ? (
+          <p className="en-cam-ok" role="status">{t('cam.hint.verified')}</p>
+        ) : (
+          <p className="en-cam-hint">
+            {mode === 'captured' ? t('cam.hint.captured') : t('cam.hint.live')}
+          </p>
+        )}
         {mode === 'idle' && (
           <button type="button" className="btn btn-ghost btn-sm" onClick={start}>
             {error ? t('cam.retry') : t('cam.open')}
@@ -219,12 +249,15 @@ const LiveCamera = ({ onCapture, invalid = false, serverError = '' }) => {
         {mode === 'live' && (
           <button type="button" className="btn btn-red btn-sm" onClick={capture}>{t('cam.capture')}</button>
         )}
+        {mode === 'checking' && (
+          <button type="button" className="btn btn-ghost btn-sm" disabled>{t('cam.checking')}</button>
+        )}
         {mode === 'captured' && (
           <button type="button" className="btn btn-ghost btn-sm" onClick={retake}>{t('cam.retake')}</button>
         )}
         {error && (
           <p className="en-cam-err" role="alert">
-            {t(error.key)}{error.detail ? ` (${error.detail})` : ''}
+            {error.key ? t(error.key) : error.text}{error.detail ? ` (${error.detail})` : ''}
           </p>
         )}
         {!error && serverError && (
